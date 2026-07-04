@@ -1,113 +1,106 @@
 import 'package:flutter/material.dart';
 
-class HudPanel extends StatelessWidget {
-  final String title;
-  final List<String> lines;
-
-  const HudPanel({
-    super.key,
-    required this.title,
-    required this.lines,
-  });
+class HudOverlay extends StatelessWidget {
+  const HudOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 165,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(
-          alpha: 0.35,
-        ),
-        borderRadius: BorderRadius.circular(
-          10,
-        ),
-        border: Border.all(
-          color: Colors.cyanAccent.withValues(
-            alpha: 0.25,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.cyanAccent.withValues(
-              alpha: 0.08,
-            ),
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-
-          // Header
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.cyanAccent,
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          Colors.cyanAccent,
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color:
-                        Colors.cyanAccent,
-                    fontWeight:
-                        FontWeight.bold,
-                    fontSize: 12,
-                    letterSpacing: 1.8,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          Divider(
-            color: Colors.cyanAccent
-                .withValues(
-              alpha: 0.3,
-            ),
-            thickness: 0.5,
-          ),
-
-          const SizedBox(height: 4),
-
-          ...lines.map(
-            (e) => Padding(
-              padding:
-                  const EdgeInsets.only(
-                bottom: 5,
-              ),
-              child: Text(
-                e,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-          ),
-        ],
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _HudPainter(),
+        size: Size.infinite,
       ),
     );
   }
+}
+
+class _HudPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.cyanAccent.withValues(
+        alpha: 0.18,
+      )
+      ..strokeWidth = 1;
+
+    const corner = 40.0;
+
+    // Oben links
+    canvas.drawLine(
+      const Offset(15, 15),
+      const Offset(15 + corner, 15),
+      paint,
+    );
+
+    canvas.drawLine(
+      const Offset(15, 15),
+      const Offset(15, 15 + corner),
+      paint,
+    );
+
+    // Oben rechts
+    canvas.drawLine(
+      Offset(size.width - 15, 15),
+      Offset(size.width - 15 - corner, 15),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(size.width - 15, 15),
+      Offset(size.width - 15, 15 + corner),
+      paint,
+    );
+
+    // Unten links
+    canvas.drawLine(
+      Offset(15, size.height - 15),
+      Offset(15 + corner, size.height - 15),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(15, size.height - 15),
+      Offset(15, size.height - 15 - corner),
+      paint,
+    );
+
+    // Unten rechts
+    canvas.drawLine(
+      Offset(size.width - 15, size.height - 15),
+      Offset(size.width - 15 - corner,
+          size.height - 15),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(size.width - 15, size.height - 15),
+      Offset(size.width - 15,
+          size.height - 15 - corner),
+      paint,
+    );
+
+    // Horizontale Scannerlinien
+
+    final scanner =
+        Colors.cyanAccent.withValues(
+      alpha: 0.04,
+    );
+
+    final scannerPaint = Paint()
+      ..color = scanner
+      ..strokeWidth = 1;
+
+    for (double y = 100;
+        y < size.height;
+        y += 80) {
+      canvas.drawLine(
+        Offset(40, y),
+        Offset(size.width - 40, y),
+        scannerPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }
