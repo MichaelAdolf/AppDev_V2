@@ -1,63 +1,78 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/conversation_entry.dart';
+class HudPanel extends StatelessWidget {
+  final String title;
+  final List<String> lines;
 
-class ConversationTimeline extends StatelessWidget {
-  final List<ConversationEntry> entries;
-
-  const ConversationTimeline({
+  const HudPanel({
     super.key,
-    required this.entries,
+    required this.title,
+    required this.lines,
   });
-
-  String _formatTime(DateTime time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-
-    return '$hour:$minute';
-  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 135,
-      margin: const EdgeInsets.symmetric(
-        horizontal: 18,
-      ),
+      width: 165,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.black.withValues(
+          alpha: 0.35,
+        ),
+        borderRadius: BorderRadius.circular(
+          10,
+        ),
         border: Border.all(
-          color: Colors.cyanAccent.withValues(alpha: 0.35),
+          color: Colors.cyanAccent.withValues(
+            alpha: 0.25,
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.cyanAccent.withValues(alpha: 0.10),
-            blurRadius: 18,
-            spreadRadius: 1,
+            color: Colors.cyanAccent.withValues(
+              alpha: 0.08,
+            ),
+            blurRadius: 12,
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
-          const Row(
+
+          // Header
+          Row(
             children: [
-              Text(
-                'CONVERSATION LOG',
-                style: TextStyle(
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
                   color: Colors.cyanAccent,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.6,
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          Colors.cyanAccent,
+                      blurRadius: 8,
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(width: 8),
+
+              const SizedBox(width: 8),
+
               Expanded(
-                child: Divider(
-                  color: Colors.cyanAccent,
-                  thickness: 0.4,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color:
+                        Colors.cyanAccent,
+                    fontWeight:
+                        FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.8,
+                  ),
                 ),
               ),
             ],
@@ -65,86 +80,32 @@ class ConversationTimeline extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          if (entries.isEmpty)
-            const Expanded(
-              child: Center(
-                child: Text(
-                  'NO ACTIVE CONVERSATION',
-                  style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                  ),
+          Divider(
+            color: Colors.cyanAccent
+                .withValues(
+              alpha: 0.3,
+            ),
+            thickness: 0.5,
+          ),
+
+          const SizedBox(height: 4),
+
+          ...lines.map(
+            (e) => Padding(
+              padding:
+                  const EdgeInsets.only(
+                bottom: 5,
+              ),
+              child: Text(
+                e,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  letterSpacing: 0.4,
                 ),
               ),
-            )
-          else
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final entry = entries[index];
-
-                  final color = entry.isUser
-                      ? Colors.blueAccent
-                      : Colors.greenAccent;
-
-                  final label = entry.isUser
-                      ? 'USER'
-                      : 'JARVIS';
-
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 6,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 38,
-                          child: Text(
-                            _formatTime(entry.timestamp),
-                            style: const TextStyle(
-                              color: Colors.white38,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(
-                          width: 48,
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
-
-                        Expanded(
-                          child: Text(
-                            entry.text,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: entry.isUser
-                                  ? Colors.white70
-                                  : Colors.greenAccent,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
             ),
+          ),
         ],
       ),
     );
