@@ -1,126 +1,152 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-class AmbientParticles extends StatefulWidget {
-  const AmbientParticles({super.key});
+import '../../../core/conversation_entry.dart';
 
-  @override
-  State<AmbientParticles> createState() =>
-      _AmbientParticlesState();
-}
+class ConversationTimeline extends StatelessWidget {
+  final List<ConversationEntry> entries;
 
-class _AmbientParticlesState
-    extends State<AmbientParticles>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  const ConversationTimeline({
+    super.key,
+    required this.entries,
+  });
 
-  final List<_Particle> particles =
-      List.generate(
-    35,
-    (_) => _Particle.random(),
-  );
+  String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
 
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 30),
-    )..repeat();
-
-    _controller.addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    return '$hour:$minute';
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _ParticlePainter(
-        particles,
-        _controller.value,
+    return Container(
+      height: 135,
+      margin: const EdgeInsets.symmetric(
+        horizontal: 18,
       ),
-      size: Size.infinite,
-    );
-  }
-}
-
-class _Particle {
-  final double x;
-  final double y;
-  final double radius;
-  final double speed;
-
-  _Particle({
-    required this.x,
-    required this.y,
-    required this.radius,
-    required this.speed,
-  });
-
-  factory _Particle.random() {
-    final random = math.Random();
-
-    return _Particle(
-      x: random.nextDouble(),
-      y: random.nextDouble(),
-      radius:
-          1 + random.nextDouble() * 2,
-      speed:
-          0.02 + random.nextDouble() * 0.05,
-    );
-  }
-}
-
-class _ParticlePainter extends CustomPainter {
-  final List<_Particle> particles;
-  final double progress;
-
-  _ParticlePainter(
-    this.particles,
-    this.progress,
-  );
-
-  @override
-  void paint(
-    Canvas canvas,
-    Size size,
-  ) {
-    final paint = Paint()
-      ..color =
-          Colors.cyanAccent.withValues(
-        alpha: 0.15,
-      );
-
-    for (final particle in particles) {
-      final y =
-          (particle.y +
-                  progress *
-                      particle.speed) %
-              1.0;
-
-      canvas.drawCircle(
-        Offset(
-          particle.x * size.width,
-          y * size.height,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.cyanAccent.withValues(alpha: 0.35),
         ),
-        particle.radius,
-        paint,
-      );
-    }
-  }
+        boxShadow: [
+          BoxShadow(
+            color: Colors.cyanAccent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text(
+                'CONVERSATION LOG',
+                style: TextStyle(
+                  color: Colors.cyanAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.6,
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Divider(
+                  color: Colors.cyanAccent,
+                  thickness: 0.4,
+                ),
+              ),
+            ],
+          ),
 
-  @override
-  bool shouldRepaint(
-    covariant _ParticlePainter oldDelegate,
-  ) {
-    return true;
+          const SizedBox(height: 8),
+
+          if (entries.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text(
+                  'NO ACTIVE CONVERSATION',
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                physics: const BouncingScrollPhysics(),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+
+                  final color = entry.isUser
+                      ? Colors.blueAccent
+                      : Colors.greenAccent;
+
+                  final label = entry.isUser
+                      ? 'USER'
+                      : 'JARVIS';
+
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 6,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 38,
+                          child: Text(
+                            _formatTime(entry.timestamp),
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(
+                          width: 48,
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+
+                        Expanded(
+                          child: Text(
+                            entry.text,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: entry.isUser
+                                  ? Colors.white70
+                                  : Colors.greenAccent,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
