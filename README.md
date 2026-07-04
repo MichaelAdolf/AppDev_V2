@@ -17,86 +17,138 @@ class HudOverlay extends StatelessWidget {
 class _HudPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    _drawCorners(canvas, size);
+    _drawScannerLines(canvas, size);
+  }
+
+  void _drawCorners(
+    Canvas canvas,
+    Size size,
+  ) {
     final paint = Paint()
       ..color = Colors.cyanAccent.withValues(
-        alpha: 0.18,
+        alpha: 0.20,
+      )
+      ..strokeWidth = 1.5;
+
+    const double cornerLength = 45;
+
+    // ===== oben links =====
+
+    canvas.drawLine(
+      const Offset(15, 15),
+      const Offset(
+        15 + cornerLength,
+        15,
+      ),
+      paint,
+    );
+
+    canvas.drawLine(
+      const Offset(15, 15),
+      const Offset(
+        15,
+        15 + cornerLength,
+      ),
+      paint,
+    );
+
+    // ===== oben rechts =====
+
+    canvas.drawLine(
+      Offset(size.width - 15, 15),
+      Offset(
+        size.width - 15 - cornerLength,
+        15,
+      ),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(size.width - 15, 15),
+      Offset(
+        size.width - 15,
+        15 + cornerLength,
+      ),
+      paint,
+    );
+
+    // ===== unten links =====
+
+    canvas.drawLine(
+      Offset(
+        15,
+        size.height - 15,
+      ),
+      Offset(
+        15 + cornerLength,
+        size.height - 15,
+      ),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(
+        15,
+        size.height - 15,
+      ),
+      Offset(
+        15,
+        size.height - 15 - cornerLength,
+      ),
+      paint,
+    );
+
+    // ===== unten rechts =====
+
+    canvas.drawLine(
+      Offset(
+        size.width - 15,
+        size.height - 15,
+      ),
+      Offset(
+        size.width - 15 - cornerLength,
+        size.height - 15,
+      ),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(
+        size.width - 15,
+        size.height - 15,
+      ),
+      Offset(
+        size.width - 15,
+        size.height - 15 - cornerLength,
+      ),
+      paint,
+    );
+  }
+
+  void _drawScannerLines(
+    Canvas canvas,
+    Size size,
+  ) {
+    final paint = Paint()
+      ..color = Colors.cyanAccent.withValues(
+        alpha: 0.05,
       )
       ..strokeWidth = 1;
 
-    const corner = 40.0;
-
-    // Oben links
-    canvas.drawLine(
-      const Offset(15, 15),
-      const Offset(15 + corner, 15),
-      paint,
-    );
-
-    canvas.drawLine(
-      const Offset(15, 15),
-      const Offset(15, 15 + corner),
-      paint,
-    );
-
-    // Oben rechts
-    canvas.drawLine(
-      Offset(size.width - 15, 15),
-      Offset(size.width - 15 - corner, 15),
-      paint,
-    );
-
-    canvas.drawLine(
-      Offset(size.width - 15, 15),
-      Offset(size.width - 15, 15 + corner),
-      paint,
-    );
-
-    // Unten links
-    canvas.drawLine(
-      Offset(15, size.height - 15),
-      Offset(15 + corner, size.height - 15),
-      paint,
-    );
-
-    canvas.drawLine(
-      Offset(15, size.height - 15),
-      Offset(15, size.height - 15 - corner),
-      paint,
-    );
-
-    // Unten rechts
-    canvas.drawLine(
-      Offset(size.width - 15, size.height - 15),
-      Offset(size.width - 15 - corner,
-          size.height - 15),
-      paint,
-    );
-
-    canvas.drawLine(
-      Offset(size.width - 15, size.height - 15),
-      Offset(size.width - 15,
-          size.height - 15 - corner),
-      paint,
-    );
-
-    // Horizontale Scannerlinien
-
-    final scanner =
-        Colors.cyanAccent.withValues(
-      alpha: 0.04,
-    );
-
-    final scannerPaint = Paint()
-      ..color = scanner
-      ..strokeWidth = 1;
-
-    for (double y = 100;
-        y < size.height;
-        y += 80) {
+    for (
+      double y = 100;
+      y < size.height;
+      y += 80
+    ) {
       canvas.drawLine(
-        Offset(40, y),
-        Offset(size.width - 40, y),
-        scannerPaint,
+        const Offset(40, 0) +
+            Offset(0, y),
+        Offset(
+          size.width - 40,
+          y,
+        ),
+        paint,
       );
     }
   }
