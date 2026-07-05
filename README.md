@@ -1,4 +1,3 @@
-
 class _VoiceRingPainter
     extends CustomPainter {
 
@@ -17,117 +16,94 @@ class _VoiceRingPainter
     Canvas canvas,
     Size size,
   ) {
-
     final center =
         size.center(Offset.zero);
 
-    const segmentCount = 96;
+    final radius =
+        size.width / 2 - 3;
 
-    final baseRadius =
-        size.width / 2 - 6;
+    final path = Path();
 
-    final linePaint = Paint()
-      ..color = color.withValues(
-        alpha: speaking ? 0.95 : 0.45,
-      )
-      ..strokeWidth = 2.1
-      ..strokeCap = StrokeCap.round;
-
-    final glowPaint = Paint()
-      ..color = color.withValues(
-        alpha: speaking ? 0.18 : 0.08,
-      )
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..maskFilter =
-          const MaskFilter.blur(
-        BlurStyle.normal,
-        6,
-      );
+    const pointCount = 220;
 
     for (int i = 0;
-        i < segmentCount;
+        i <= pointCount;
         i++) {
 
       final angle =
           (2 * math.pi /
-                  segmentCount) *
+                  pointCount) *
               i;
 
-      double amplitude = 2;
+      double offset = 0;
 
       if (speaking) {
 
         final wave1 =
             math.sin(
-              angle * 6 +
-                  progress *
-                      math.pi *
-                      10,
+              angle * 2.0 +
+                  progress * 2.5,
             );
 
         final wave2 =
             math.sin(
-              angle * 17 -
-                  progress *
-                      math.pi *
-                      8,
+              angle * 3.5 -
+                  progress * 1.7,
             );
 
-        final wave3 =
-            math.sin(
-              angle * 31 +
-                  progress *
-                      math.pi *
-                      5,
-            );
-
-        amplitude =
-            3 +
-            ((wave1 +
-                        wave2 +
-                        wave3) /
-                    3)
-                .abs() *
-                18;
+        offset =
+            wave1 * 3 +
+            wave2 * 1.5;
       }
 
-      final startRadius =
-          baseRadius;
+      final r =
+          radius + offset;
 
-      final endRadius =
-          baseRadius + amplitude;
+      final x =
+          center.dx +
+          math.cos(angle) * r;
 
-      final start = Offset(
-        center.dx +
-            math.cos(angle) *
-                startRadius,
-        center.dy +
-            math.sin(angle) *
-                startRadius,
-      );
+      final y =
+          center.dy +
+          math.sin(angle) * r;
 
-      final end = Offset(
-        center.dx +
-            math.cos(angle) *
-                endRadius,
-        center.dy +
-            math.sin(angle) *
-                endRadius,
-      );
-
-      canvas.drawLine(
-        start,
-        end,
-        glowPaint,
-      );
-
-      canvas.drawLine(
-        start,
-        end,
-        linePaint,
-      );
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
+
+    path.close();
+
+    final glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..color = color.withValues(
+        alpha: 0.12,
+      )
+      ..maskFilter =
+          const MaskFilter.blur(
+        BlurStyle.normal,
+        8,
+      );
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = color.withValues(
+        alpha: 0.95,
+      );
+
+    canvas.drawPath(
+      path,
+      glowPaint,
+    );
+
+    canvas.drawPath(
+      path,
+      paint,
+    );
   }
 
   @override
