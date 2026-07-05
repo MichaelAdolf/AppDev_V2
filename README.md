@@ -1,145 +1,121 @@
-class _VoiceRingPainter
-    extends CustomPainter {
+import 'dart:async';
+import 'dart:convert';
 
-  final Color color;
-  final double progress;
-  final bool speaking;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
-  _VoiceRingPainter({
-    required this.color,
-    required this.progress,
-    required this.speaking,
+import '../core/ha_response.dart';
+
+class JarvisExternalTriggerService {
+  final String websocketUrl;
+  final void Function(HaResponse response) onResponse;
+  final void Function(String message)? onStatusChanged;
+
+  WebSocketChannel? _channel;
+  StreamSubscription? _subscription;
+  Timer? _reconnectTimer;
+
+  bool _manuallyClosed = false;
+  bool _isConnected = false;
+
+  JarvisExternalTriggerService({
+    required this.websocketUrl,
+    required this.onResponse,
+    this.onStatusChanged,
   });
 
-  @override
-  void paint(
-    Canvas canvas,
-    Size size,
-  ) {
+  bool get isConnected => _isConnected;
 
-    final center =
-        size.center(Offset.zero);
+  void connect() {
+    _manuallyClosed = false;
+    _openConnection();
+  }
 
-    final radius =
-        size.width / 2 - 3;
-
-    const pointCount = 360;
-
-    final path = Path();
-
-    for (int i = 0;
-        i <= pointCount;
-        i++) {
-
-      final angle =
-          (2 * math.pi /
-                  pointCount) *
-              i;
-
-      double offset = 0;
-
-      if (speaking) {
-
-        final hotspot1 =
-            math.exp(
-              -math.pow(
-                    angle -
-                        (progress *
-                            2 *
-                            math.pi),
-                    2,
-                  ) /
-                  0.35,
-            ) *
-            7;
-
-        final hotspot2 =
-            math.exp(
-              -math.pow(
-                    angle -
-                        ((progress +
-                                    0.33) %
-                                1.0) *
-                            2 *
-                            math.pi,
-                    2,
-                  ) /
-                  0.25,
-            ) *
-            4;
-
-        final hotspot3 =
-            math.exp(
-              -math.pow(
-                    angle -
-                        ((progress +
-                                    0.70) %
-                                1.0) *
-                            2 *
-                            math.pi,
-                    2,
-                  ) /
-                  0.18,
-            ) *
-            3;
-
-        offset =
-            hotspot1 +
-            hotspot2 +
-            hotspot3;
-      }
-
-      final r =
-          radius + offset;
-
-      final x =
-          center.dx +
-          math.cos(angle) * r;
-
-      final y =
-          center.dy +
-          math.sin(angle) * r;
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    path.close();
-
-    final glowPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..color = color.withValues(
-        alpha: 0.18,
-      )
-      ..maskFilter =
-          const MaskFilter.blur(
-        BlurStyle.normal,
-        8,
+  void _openConnection() {
+    try {
+      _channel = WebSocketChannel.connect(
+        Uri.parse(websocketUrl),
       );
 
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..color = color;
+      _isConnected = true;
+      onStatusChanged?.call('WebSocket verbunden');
 
-    canvas.drawPath(
-      path,
-      glowPaint,
-    );
+      _subscription = _channel!.stream.listen(
+        _handleMessage,
+        onError: (error) {
+          _isConnected = false;
+          onStatusChanged?.call(
+            'WebSocket Fehler: $error',
+          );
+          _scheduleReconnect();
+        },
+        onDone: () {
+          _isConnected = false;
+          onStatusChanged?.call(
+            'WebSocket getrennt',
+          );
+          _scheduleReconnect();
+        },
+        cancelOnError: true,
+      );
+    } catch (e) {
+      _isConnected = false;
+      onStatusChanged?.call(
+        'WebSocket konnte nicht verbunden werden: $e',
+      );
+      _scheduleReconnect();
+    }
+  }
 
-    canvas.drawPath(
-      path,
-      paint,
+  void _handleMessage(dynamic data) {
+    try {
+      final Map<String, dynamic> json;
+
+      if (data is String) {
+        json = jsonDecode(data) as Map<String, dynamic>;
+      } else if (data is Map<String, dynamic>) {
+        json = data;
+      } else {
+        onStatusChanged?.call(
+          'Unbekanntes WebSocket Payload-Format',
+        );
+        return;
+      }
+
+      final response = HaResponse.fromJson(json);
+      onResponse(response);
+    } catch (e) {
+      onStatusChanged?.call(
+        'WebSocket Nachricht konnte nicht verarbeitet werden: $e',
+      );
+    }
+  }
+
+  void _scheduleReconnect() {
+    if (_manuallyClosed) return;
+
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(
+      const Duration(seconds: 3),
+      () {
+        if (!_manuallyClosed) {
+          _openConnection();
+        }
+      },
     );
   }
 
-  @override
-  bool shouldRepaint(
-          covariant _VoiceRingPainter
-              oldDelegate) =>
-      true;
+  Future<void> dispose() async {
+    _manuallyClosed = true;
+
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+
+    await _subscription?.cancel();
+    _subscription = null;
+
+    await _channel?.sink.close();
+    _channel = null;
+
+    _isConnected = false;
+  }
 }
