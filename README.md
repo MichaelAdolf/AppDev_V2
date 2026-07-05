@@ -1,3 +1,30 @@
+_voiceReactiveRing(
+  color: color,
+),
+
+// Glowing Circle
+Container(
+  width: 160,
+  height: 160,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    border: Border.all(
+      color: color,
+      width: 4,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: color.withValues(alpha: 0.55),
+        blurRadius: _glow(),
+        spreadRadius: 6,
+      ),
+    ],
+  ),
+),
+
+
+
+
 class _VoiceRingPainter
     extends CustomPainter {
 
@@ -16,15 +43,16 @@ class _VoiceRingPainter
     Canvas canvas,
     Size size,
   ) {
+
     final center =
         size.center(Offset.zero);
 
     final radius =
         size.width / 2 - 3;
 
-    final path = Path();
+    const pointCount = 360;
 
-    const pointCount = 220;
+    final path = Path();
 
     for (int i = 0;
         i <= pointCount;
@@ -39,21 +67,53 @@ class _VoiceRingPainter
 
       if (speaking) {
 
-        final wave1 =
-            math.sin(
-              angle * 2.0 +
-                  progress * 2.5,
-            );
+        final hotspot1 =
+            math.exp(
+              -math.pow(
+                    angle -
+                        (progress *
+                            2 *
+                            math.pi),
+                    2,
+                  ) /
+                  0.35,
+            ) *
+            7;
 
-        final wave2 =
-            math.sin(
-              angle * 3.5 -
-                  progress * 1.7,
-            );
+        final hotspot2 =
+            math.exp(
+              -math.pow(
+                    angle -
+                        ((progress +
+                                    0.33) %
+                                1.0) *
+                            2 *
+                            math.pi,
+                    2,
+                  ) /
+                  0.25,
+            ) *
+            4;
+
+        final hotspot3 =
+            math.exp(
+              -math.pow(
+                    angle -
+                        ((progress +
+                                    0.70) %
+                                1.0) *
+                            2 *
+                            math.pi,
+                    2,
+                  ) /
+                  0.18,
+            ) *
+            3;
 
         offset =
-            wave1 * 3 +
-            wave2 * 1.5;
+            hotspot1 +
+            hotspot2 +
+            hotspot3;
       }
 
       final r =
@@ -78,9 +138,9 @@ class _VoiceRingPainter
 
     final glowPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
+      ..strokeWidth = 10
       ..color = color.withValues(
-        alpha: 0.12,
+        alpha: 0.18,
       )
       ..maskFilter =
           const MaskFilter.blur(
@@ -90,10 +150,8 @@ class _VoiceRingPainter
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..color = color.withValues(
-        alpha: 0.95,
-      );
+      ..strokeWidth = 4
+      ..color = color;
 
     canvas.drawPath(
       path,
@@ -108,8 +166,7 @@ class _VoiceRingPainter
 
   @override
   bool shouldRepaint(
-      covariant _VoiceRingPainter
-          oldDelegate) {
-    return true;
-  }
+          covariant _VoiceRingPainter
+              oldDelegate) =>
+      true;
 }
