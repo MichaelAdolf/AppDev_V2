@@ -1,30 +1,3 @@
-_voiceReactiveRing(
-  color: color,
-),
-
-// Glowing Circle
-Container(
-  width: 160,
-  height: 160,
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    border: Border.all(
-      color: color,
-      width: 4,
-    ),
-    boxShadow: [
-      BoxShadow(
-        color: color.withValues(alpha: 0.55),
-        blurRadius: _glow(),
-        spreadRadius: 6,
-      ),
-    ],
-  ),
-),
-
-
-
-
 class _VoiceRingPainter
     extends CustomPainter {
 
