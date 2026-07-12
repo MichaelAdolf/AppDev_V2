@@ -1,48 +1,34 @@
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run
+Launching lib\main.dart on 25028RN03Y in debug mode...
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_foreground_task, flutter_tts, speech_to_text, wakelock_plus
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
 
-class JarvisRuntimeService {
+Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
+If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing 
+an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
-  static Future<void> initialize() async {
+If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+lib/services/jarvis_runtime_service.dart:28:9: Error: No named parameter with the name 'interval'.
+        interval: 5000,
+        ^^^^^^^^
+/C:/Users/Michael/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_foreground_task-9.2.2/lib/models/foreground_task_options.dart:6:9: Context: Found this candidate, but the arguments don't match.
+  const ForegroundTaskOptions({
+        ^^^^^^^^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
 
-    FlutterForegroundTask.init(
 
-      androidNotificationOptions:
-          AndroidNotificationOptions(
-        channelId: 'jarvis_runtime',
-        channelName: 'Jarvis Runtime',
-        channelDescription:
-            'Jarvis Hintergrunddienst',
-        channelImportance:
-            NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
-      ),
+FAILURE: Build failed with an exception.
 
-      iosNotificationOptions:
-          const IOSNotificationOptions(),
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Users\Michael\flutter\bin\flutter.bat'' finished with non-zero exit value 1
 
-      foregroundTaskOptions:
-          const ForegroundTaskOptions(
-        autoRunOnBoot: false,
-        autoRunOnMyPackageReplaced: true,
-      ),
-    );
-  }
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
 
-  static Future<void> start() async {
-
-    if (await FlutterForegroundTask.isRunningService) {
-      return;
-    }
-
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Jarvis aktiv',
-      notificationText:
-          'Hintergrunddienst läuft',
-      callback: startCallback,
-    );
-  }
-}
-
-@pragma('vm:entry-point')
-void startCallback() {
-}
+BUILD FAILED in 11s
+Running Gradle task 'assembleDebug'...                             12,1s
+Error: Gradle task assembleDebug failed with exit code 1
