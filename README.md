@@ -8,12 +8,21 @@ If no such version exists, report the issue to the plugin. If necessary, here is
 an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
 If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+lib/services/jarvis_runtime_service.dart:28:54: Error: Expected '(' after this.
+        eventAction: const ForegroundTaskEventAction.nothing,
+                                                     ^^^^^^^
+lib/services/jarvis_runtime_service.dart:28:28: Error: Cannot invoke a non-'const' factory where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+        eventAction: const ForegroundTaskEventAction.nothing,
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:processDebugMainManifest'.
-> com.android.manifmerger.ManifestMerger2$MergeFailureException: Error parsing D:\Users\Michael\Dokumente\16_AppDev\jarvis_app\android\app\src\main\AndroidManifest.xml
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Users\Michael\flutter\bin\flutter.bat'' finished with non-zero exit value 1
 
 * Try:
 > Run with --stacktrace option to get the stack trace.
@@ -21,6 +30,6 @@ Execution failed for task ':app:processDebugMainManifest'.
 > Run with --scan to generate a Build Scan (Powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 43s
-Running Gradle task 'assembleDebug'...                             44,4s
+BUILD FAILED in 19s
+Running Gradle task 'assembleDebug'...                             20,2s
 Error: Gradle task assembleDebug failed with exit code 1
