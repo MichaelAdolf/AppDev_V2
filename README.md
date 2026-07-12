@@ -1,4 +1,3 @@
-PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run
 Launching lib\main.dart on 25028RN03Y in debug mode...
 WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_foreground_task, flutter_tts, speech_to_text, wakelock_plus
 Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
@@ -8,21 +7,12 @@ If no such version exists, report the issue to the plugin. If necessary, here is
 an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
 If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-lib/services/jarvis_runtime_service.dart:28:54: Error: Expected '(' after this.
-        eventAction: const ForegroundTaskEventAction.nothing,
-                                                     ^^^^^^^
-lib/services/jarvis_runtime_service.dart:28:28: Error: Cannot invoke a non-'const' factory where a const expression is expected.
-Try using a constructor or factory that is 'const'.
-        eventAction: const ForegroundTaskEventAction.nothing,
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^
-Target kernel_snapshot_program failed: Exception
-
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:compileFlutterBuildDebug'.
-> Process 'command 'C:\Users\Michael\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+Execution failed for task ':app:processDebugMainManifest'.
+> com.android.manifmerger.ManifestMerger2$MergeFailureException: Error parsing D:\Users\Michael\Dokumente\16_AppDev\jarvis_app\android\app\src\main\AndroidManifest.xml
 
 * Try:
 > Run with --stacktrace option to get the stack trace.
@@ -30,6 +20,6 @@ Execution failed for task ':app:compileFlutterBuildDebug'.
 > Run with --scan to generate a Build Scan (Powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 19s
-Running Gradle task 'assembleDebug'...                             20,2s
+BUILD FAILED in 53s
+Running Gradle task 'assembleDebug'...                             54,6s
 Error: Gradle task assembleDebug failed with exit code 1
