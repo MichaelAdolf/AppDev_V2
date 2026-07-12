@@ -1,21 +1,16 @@
-companion object {
+override fun configureFlutterEngine(
+    flutterEngine:
+        io.flutter.embedding.engine.FlutterEngine
+) {
 
-    const val CHANNEL_NAME =
-        "jarvis/background"
+    super.configureFlutterEngine(
+        flutterEngine
+    )
 
-    var currentInstance:
-        MainActivity? = null
-
-    fun sendEventToFlutter(
-        event: String
-    ) {
-
-        currentInstance?.channel?.invokeMethod(
-            "backgroundEvent",
-            event
-        )
-    }
+    channel = MethodChannel(
+        flutterEngine
+            .dartExecutor
+            .binaryMessenger,
+        CHANNEL_NAME
+    )
 }
-
-private lateinit var channel:
-    MethodChannel
