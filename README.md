@@ -1,206 +1,277 @@
 package com.example.jarvis_app
 
-import android.content.Context
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.os.PowerManager
 import android.util.Log
-import android.view.WindowManager
-import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import java.util.concurrent.TimeUnit
 
-class MainActivity : FlutterActivity() {
+class JarvisForegroundService : Service() {
 
     companion object {
+        private const val CHANNEL_ID =
+            "jarvis_runtime_channel"
 
-        const val CHANNEL_NAME = "jarvis/background"
+        private const val NOTIFICATION_ID =
+            1001
 
-        private const val EXTRA_JARVIS_EVENT =
-            "jarvis_event"
-
-        var currentInstance: MainActivity? = null
-
-        private var pendingEvent: String? = null
-
-        fun openAndDeliverEvent(
-            context: Context,
-            event: String
-        ) {
-            Log.d(
-                "JARVIS_BRIDGE",
-                "openAndDeliverEvent"
-            )
-
-            pendingEvent = event
-
-            val intent = Intent(
-                context,
-                MainActivity::class.java
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                putExtra(EXTRA_JARVIS_EVENT, event)
-            }
-
-            context.startActivity(intent)
-        }
-
-        fun sendEventToFlutter(
-            event: String
-        ) {
-            Log.d(
-                "JARVIS_BRIDGE",
-                "currentInstance = ${currentInstance != null}"
-            )
-
-            val activity = currentInstance
-
-            if (activity == null) {
-                Log.d(
-                    "JARVIS_BRIDGE",
-                    "Flutter Activity fehlt - Event gepuffert"
-                )
-
-                pendingEvent = event
-                return
-            }
-
-            if (activity.channel == null) {
-                Log.d(
-                    "JARVIS_BRIDGE",
-                    "MethodChannel fehlt - Event gepuffert"
-                )
-
-                pendingEvent = event
-                return
-            }
-
-            Log.d(
-                "JARVIS_BRIDGE",
-                "Sende Event an Flutter"
-            )
-
-            activity.runOnUiThread {
-                activity.channel?.invokeMethod(
-                    "backgroundEvent",
-                    event
-                )
-            }
-        }
+        private const val NODE_RED_WS_URL =
+            "ws://192.168.178.47:1880/endpoint/ws/jarvis-router"
     }
 
-    private var channel: MethodChannel? = null
+    private val mainHandler =
+        Handler(Looper.getMainLooper())
 
-    override fun onCreate(
-        savedInstanceState: Bundle?
-    ) {
-        super.onCreate(savedInstanceState)
+    private var webSocket: WebSocket? = null
 
-        currentInstance = this
+    private var reconnectRunnable: Runnable? = null
 
-        val serviceIntent = Intent(
-            this,
-            JarvisForegroundService::class.java
-        )
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        } else {
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                    or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-                    or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+    private val client: OkHttpClient =
+        OkHttpClient.Builder()
+            .pingInterval(
+                20,
+                TimeUnit.SECONDS
             )
-        }
+            .retryOnConnectionFailure(true)
+            .build()
 
-        handleIncomingIntent(intent)
+    override fun onCreate() {
+        super.onCreate()
+
+        createNotificationChannel()
+        startAsForegroundService()
+        connectWebSocket()
     }
 
-    override fun onNewIntent(
-        intent: Intent
-    ) {
-        super.onNewIntent(intent)
-
-        setIntent(intent)
-        handleIncomingIntent(intent)
-    }
-
-    override fun configureFlutterEngine(
-        flutterEngine: FlutterEngine
-    ) {
-        super.configureFlutterEngine(flutterEngine)
-
-        channel = MethodChannel(
-            flutterEngine
-                .dartExecutor
-                .binaryMessenger,
-            CHANNEL_NAME
-        )
-
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         Log.d(
-            "JARVIS_BRIDGE",
-            "MethodChannel erstellt"
+            "JARVIS_SERVICE",
+            "Foreground Service läuft"
         )
 
-        flushPendingEvent()
+        return START_STICKY
     }
 
     override fun onDestroy() {
-        if (currentInstance == this) {
-            currentInstance = null
+        Log.d(
+            "JARVIS_SERVICE",
+            "Foreground Service beendet"
+        )
+
+        reconnectRunnable?.let {
+            mainHandler.removeCallbacks(it)
         }
+
+        webSocket?.close(
+            1000,
+            "Service beendet"
+        )
+
+        webSocket = null
 
         super.onDestroy()
     }
 
-    private fun handleIncomingIntent(
+    override fun onBind(
         intent: Intent?
-    ) {
-        val event = intent
-            ?.getStringExtra(EXTRA_JARVIS_EVENT)
+    ): IBinder? {
+        return null
+    }
 
-        if (event != null) {
-            Log.d(
-                "JARVIS_BRIDGE",
-                "Intent Event empfangen"
+    private fun startAsForegroundService() {
+        val notification =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Notification.Builder(
+                    this,
+                    CHANNEL_ID
+                )
+                    .setContentTitle("Jarvis aktiv")
+                    .setContentText(
+                        "Jarvis Runtime läuft"
+                    )
+                    .setSmallIcon(
+                        android.R.drawable.ic_dialog_info
+                    )
+                    .build()
+            } else {
+                Notification.Builder(this)
+                    .setContentTitle("Jarvis aktiv")
+                    .setContentText(
+                        "Jarvis Runtime läuft"
+                    )
+                    .setSmallIcon(
+                        android.R.drawable.ic_dialog_info
+                    )
+                    .build()
+            }
+
+        startForeground(
+            NOTIFICATION_ID,
+            notification
+        )
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    "Jarvis Runtime",
+                    NotificationManager.IMPORTANCE_LOW
+                )
+
+            val manager =
+                getSystemService(
+                    NotificationManager::class.java
+                )
+
+            manager.createNotificationChannel(
+                channel
             )
-
-            pendingEvent = event
-            flushPendingEvent()
         }
     }
 
-    private fun flushPendingEvent() {
-        val event = pendingEvent ?: return
+    private fun connectWebSocket() {
+        Log.d(
+            "JARVIS_WS",
+            "Verbinde mit $NODE_RED_WS_URL"
+        )
 
-        if (channel == null) {
-            Log.d(
-                "JARVIS_BRIDGE",
-                "Flush nicht möglich - Channel fehlt"
+        val request =
+            Request.Builder()
+                .url(NODE_RED_WS_URL)
+                .build()
+
+        webSocket =
+            client.newWebSocket(
+                request,
+                object : WebSocketListener() {
+
+                    override fun onOpen(
+                        webSocket: WebSocket,
+                        response: Response
+                    ) {
+                        Log.d(
+                            "JARVIS_WS",
+                            "WebSocket verbunden"
+                        )
+                    }
+
+                    override fun onMessage(
+                        webSocket: WebSocket,
+                        text: String
+                    ) {
+                        Log.d(
+                            "JARVIS_WS",
+                            "Nachricht empfangen: $text"
+                        )
+
+                        handleNodeRedEvent(text)
+                    }
+
+                    override fun onFailure(
+                        webSocket: WebSocket,
+                        t: Throwable,
+                        response: Response?
+                    ) {
+                        Log.d(
+                            "JARVIS_WS",
+                            "WebSocket Fehler: ${t.message}"
+                        )
+
+                        scheduleReconnect()
+                    }
+
+                    override fun onClosed(
+                        webSocket: WebSocket,
+                        code: Int,
+                        reason: String
+                    ) {
+                        Log.d(
+                            "JARVIS_WS",
+                            "WebSocket geschlossen: $reason"
+                        )
+
+                        scheduleReconnect()
+                    }
+                }
             )
+    }
 
-            return
+    private fun scheduleReconnect() {
+        reconnectRunnable?.let {
+            mainHandler.removeCallbacks(it)
         }
 
+        reconnectRunnable =
+            Runnable {
+                connectWebSocket()
+            }
+
+        mainHandler.postDelayed(
+            reconnectRunnable!!,
+            3000
+        )
+    }
+
+    private fun handleNodeRedEvent(
+        payload: String
+    ) {
         Log.d(
-            "JARVIS_BRIDGE",
-            "Gepuffertes Event wird gesendet"
+            "JARVIS_EVENT",
+            "Node-RED Event wird verarbeitet"
         )
 
-        pendingEvent = null
+        wakeDeviceBriefly()
 
-        channel?.invokeMethod(
-            "backgroundEvent",
-            event
+        MainActivity.openAndDeliverEvent(
+            this,
+            payload
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun wakeDeviceBriefly() {
+        try {
+            val powerManager =
+                getSystemService(
+                    POWER_SERVICE
+                ) as PowerManager
+
+            val wakeLock =
+                powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "jarvis:node_red_event"
+                )
+
+            wakeLock.acquire(10_000)
+
+            Log.d(
+                "JARVIS_WAKE",
+                "WakeLock aktiviert"
+            )
+        } catch (e: Exception) {
+            Log.d(
+                "JARVIS_WAKE",
+                "WakeLock Fehler: ${e.message}"
+            )
+        }
     }
 }
