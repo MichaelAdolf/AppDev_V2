@@ -22,9 +22,10 @@ class JarvisRuntimeService {
           const IOSNotificationOptions(),
 
       foregroundTaskOptions:
-          const ForegroundTaskOptions(
+          ForegroundTaskOptions(
         autoRunOnBoot: false,
         autoRunOnMyPackageReplaced: true,
+        eventAction: const ForegroundTaskEventAction.nothing,
       ),
     );
   }
