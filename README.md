@@ -1,16 +1,29 @@
-override fun configureFlutterEngine(
-    flutterEngine:
-        io.flutter.embedding.engine.FlutterEngine
-) {
+import 'package:flutter/services.dart';
 
-    super.configureFlutterEngine(
-        flutterEngine
-    )
+class JarvisBackgroundBridge {
 
-    channel = MethodChannel(
-        flutterEngine
-            .dartExecutor
-            .binaryMessenger,
-        CHANNEL_NAME
-    )
+  static const MethodChannel _channel =
+      MethodChannel(
+    'jarvis/background',
+  );
+
+  static void initialize({
+    required Function(String event)
+        onEvent,
+  }) {
+
+    _channel.setMethodCallHandler(
+      (call) async {
+
+        if (call.method ==
+            'backgroundEvent') {
+
+          final event =
+              call.arguments as String;
+
+          onEvent(event);
+        }
+      },
+    );
+  }
 }
