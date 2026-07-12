@@ -136,3 +136,106 @@ W/mple.jarvis_app(15224): ApkAssets: Deleting an ApkAssets object '<empty> and /
 W/mple.jarvis_app(15224): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.xhdpi.apk' with 1 weak references
 I/mple.jarvis_app(15224): Background concurrent mark compact GC freed 3116KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 3199KB/6399KB, paused 432us,7.043ms total 55.280ms
 D/FlutterJNI(15224): Sending viewport metrics to the engine.
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.inactive
+D/VRI[MainActivity](15224): visibilityChanged oldVisibility=true newVisibility=false
+D/mali_gralloc(15224): unregister: id=23b00000325, handle=0xb40000710e3d9da0, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000326, handle=0xb40000710e3d9e80, base=0x0, importpid=15224, clone_count=0
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.paused
+D/mali_gralloc(15224): unregister: id=23b00000328, handle=0xb400007051015dc0, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000327, handle=0xb40000710e3d9f60, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000324, handle=0xb40000710e3d9be0, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000323, handle=0xb40000710e3d9a20, base=0x0, importpid=15224, clone_count=0
+D/JARVIS_WS(15224): Nachricht empfangen: {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:02. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+D/JARVIS_EVENT(15224): Node-RED Event wird verarbeitet
+W/libc    (15224): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/178.47:1880/...(15224): type=1400 audit(0.0:18301): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c241,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE(15224): WakeLock aktiviert
+D/JARVIS_BRIDGE(15224): openAndDeliverEvent
+D/JARVIS_BRIDGE(15224): Intent Event empfangen
+D/JARVIS_BRIDGE(15224): Gepuffertes Event wird gesendet
+I/flutter (15224): [JARVIS BRIDGE] backgroundEvent
+I/flutter (15224): [JARVIS BRIDGE] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:02. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter (15224): [JARVIS BACKGROUND RAW] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:02. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.inactive
+E/mali_gralloc(15224): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+D/mali_gralloc(15224): register: id=23b0000032e, handle=0xb40000710e3d81a0, importpid=15224
+D/mali_gralloc(15224): register: id=23b0000032e, handle=0xb40000710e3d8280, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b0000032e, handle=0xb40000710e3d8280, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b0000032f, handle=0xb40000710e3d8280, importpid=15224
+D/mali_gralloc(15224): register: id=23b0000032f, handle=0xb40000710e3d8360, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b0000032f, handle=0xb40000710e3d8360, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000330, handle=0xb40000710e3d8360, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000330, handle=0xb40000710e3d8440, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000330, handle=0xb40000710e3d8440, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000331, handle=0xb40000710e3d8440, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000331, handle=0xb40000710e3d8520, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000331, handle=0xb40000710e3d8520, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000332, handle=0xb40000710e3d8520, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000332, handle=0xb40000710e3d8600, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000332, handle=0xb40000710e3d8600, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000333, handle=0xb400007167ac0ee0, importpid=15224
+I/mple.jarvis_app(15224): Background concurrent mark compact GC freed 3197KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 3171KB/6343KB, paused 428us,6.166ms total 100.321ms
+I/Choreographer(15224): Skipped 41 frames!  The application may be doing too much work on its main thread.
+D/mali_gralloc(15224): register: id=23b0000033a, handle=0xb40000710e3da040, importpid=15224
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.resumed
+I/HWUI    (15224): Davey! duration=714ms; Flags=0, FrameTimelineVsyncId=943307, IntendedVsync=18755689382045, Vsync=18756372371689, InputEventId=0, HandleInputStart=18756373365968, AnimationStart=18756373368775, PerformTraversalsStart=18756373370468, DrawStart=18756374439583, FrameDeadline=18755705382045, FrameInterval=18756372680237, FrameStartTime=16658284, SyncQueued=18756374616314, SyncStart=18756375913275, IssueDrawCommandsStart=18756395300698, SwapBuffers=18756403650045, FrameCompleted=18756405302968, DequeueBufferDuration=5584692, QueueBufferDuration=269423, GpuCompleted=18756405302968, SwapBuffersCompleted=18756403999083, DisplayPresentTime=-4294967295, CommandSubmissionCompleted=18756403650045, 
+D/TTS     (15224): Utterance ID has started: 8a8e7950-ee2a-4d07-835f-7e1c2377969f
+D/TTS     (15224): Utterance ID has completed: 8a8e7950-ee2a-4d07-835f-7e1c2377969f
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.inactive
+D/VRI[MainActivity](15224): visibilityChanged oldVisibility=true newVisibility=false
+D/mali_gralloc(15224): unregister: id=23b00000331, handle=0xb40000710e3d8440, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000332, handle=0xb40000710e3d8520, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b0000033a, handle=0xb40000710e3da040, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000333, handle=0xb400007167ac0ee0, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b0000032e, handle=0xb40000710e3d81a0, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b00000330, handle=0xb40000710e3d8360, base=0x0, importpid=15224, clone_count=0
+D/mali_gralloc(15224): unregister: id=23b0000032f, handle=0xb40000710e3d8280, base=0x0, importpid=15224, clone_count=0
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.paused
+D/JARVIS_WS(15224): Nachricht empfangen: {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:06. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+D/JARVIS_EVENT(15224): Node-RED Event wird verarbeitet
+W/178.47:1880/...(15224): type=1400 audit(0.0:18308): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c241,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+W/libc    (15224): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+D/JARVIS_WAKE(15224): WakeLock aktiviert
+D/JARVIS_BRIDGE(15224): openAndDeliverEvent
+D/JARVIS_BRIDGE(15224): Intent Event empfangen
+D/JARVIS_BRIDGE(15224): Gepuffertes Event wird gesendet
+I/flutter (15224): [JARVIS BRIDGE] backgroundEvent
+I/flutter (15224): [JARVIS BRIDGE] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:06. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter (15224): [JARVIS BACKGROUND RAW] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Sonntag, der zwölfter Juli 2026. Die aktuelle Uhrzeit ist 20:06. Draußen sind es aktuell 26 Grad bei klarem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.inactive
+E/mali_gralloc(15224): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(15224): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+D/mali_gralloc(15224): register: id=23b00000350, handle=0xb40000710e3d80c0, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000350, handle=0xb40000710e3d81a0, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000350, handle=0xb40000710e3d81a0, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000351, handle=0xb40000710e3d8360, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000351, handle=0xb40000710e3d8440, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000351, handle=0xb40000710e3d8440, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000352, handle=0xb40000710e3d8440, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000352, handle=0xb40000710e3d8520, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000352, handle=0xb40000710e3d8520, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000353, handle=0xb40000710e3d8520, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000353, handle=0xb40000710e3d8600, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000353, handle=0xb40000710e3d8600, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000354, handle=0xb40000710e3d8600, importpid=15224
+D/mali_gralloc(15224): register: id=23b00000354, handle=0xb40000710e3d87c0, importpid=15224
+D/mali_gralloc(15224): unregister: id=23b00000354, handle=0xb40000710e3d87c0, base=0x0, importpid=15224, clone_count=1
+D/mali_gralloc(15224): register: id=23b00000355, handle=0xb40000716eab21e0, importpid=15224
+D/FlutterJNI(15224): Sending viewport metrics to the engine.
+D/mali_gralloc(15224): register: id=23b00000356, handle=0xb40000710e3da2e0, importpid=15224
+I/flutter (15224): [Jarvis] Lifecycle: AppLifecycleState.resumed
+D/TTS     (15224): Utterance ID has started: f2bd791c-eb69-43fc-b886-3a863823ea41
+D/TTS     (15224): Utterance ID has completed: f2bd791c-eb69-43fc-b886-3a863823ea41
