@@ -1,4 +1,4 @@
-PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run    
+PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run 
 Launching lib\main.dart on 25028RN03Y in debug mode...
 WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_foreground_task, flutter_tts, speech_to_text, wakelock_plus
 Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
@@ -8,12 +8,10 @@ If no such version exists, report the issue to the plugin. If necessary, here is
 an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
 If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-lib/services/jarvis_runtime_service.dart:25:38: Error: Required named parameter 'eventAction' must be provided.
-          const ForegroundTaskOptions(
-                                     ^
-/C:/Users/Michael/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_foreground_task-9.2.2/lib/models/foreground_task_options.dart:6:9: Context: Found this candidate, but the arguments don't match.
-  const ForegroundTaskOptions({
-        ^^^^^^^^^^^^^^^^^^^^^
+lib/services/jarvis_runtime_service.dart:28:48: Error: Cannot invoke a non-'const' factory where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+        eventAction: ForegroundTaskEventAction.repeat(5000),
+                                               ^^^^^^
 Target kernel_snapshot_program failed: Exception
 
 
@@ -29,6 +27,6 @@ Execution failed for task ':app:compileFlutterBuildDebug'.
 > Run with --scan to generate a Build Scan (Powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 20s
-Running Gradle task 'assembleDebug'...                             20,7s
+BUILD FAILED in 11s
+Running Gradle task 'assembleDebug'...                             11,5s
 Error: Gradle task assembleDebug failed with exit code 1
