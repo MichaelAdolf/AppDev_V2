@@ -41,9 +41,11 @@ companion object {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             putExtra(EXTRA_JARVIS_EVENT, event)
         }
 
+        Log.d("JARVIS_BRIDGE", "Bridge Activity in Vordergrund")
         context.startActivity(intent)
     }
 
@@ -99,6 +101,10 @@ override fun onCreate(
     super.onCreate(savedInstanceState)
 
     currentInstance = this
+
+    window.addFlags(
+        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+    )
 
     val serviceIntent = Intent(
         this,
