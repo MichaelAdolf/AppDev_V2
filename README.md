@@ -1,17 +1,13 @@
-private fun restartWakewordListener() {
+private fun onWakewordDetected() {
 
-    mainHandler.postDelayed(
-        {
-            try {
-                speechRecognizer?.cancel()
-                startWakewordRecognition()
-            } catch (e: Exception) {
-                Log.d(
-                    "JARVIS_WAKEWORD",
-                    "Restart Fehler: ${e.message}"
-                )
-            }
-        },
-        1000
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "Wakeword erkannt"
     )
+
+    wakeDeviceBriefly()
+
+    speakWakewordAck()
+
+    MainActivity.sendWakewordToFlutter()
 }
