@@ -532,3 +532,133 @@ D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
 D/JARVIS_WAKEWORD(29287): Fehler: 7
 D/JARVIS_WAKEWORD(29287): Listening gestartet
 D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.inactive
+D/VRI[MainActivity](29287): visibilityChanged oldVisibility=true newVisibility=false
+D/mali_gralloc(29287): unregister: id=23b00000a0b, handle=0xb400006f1ec08400, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a0c, handle=0xb400006f1ec08780, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a0d, handle=0xb400006f1ec08860, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a21, handle=0xb400006f1ec06480, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a10, handle=0xb400006e081ddf60, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a0f, handle=0xb400006f1ec08a20, base=0x0, importpid=29287, clone_count=0
+D/mali_gralloc(29287): unregister: id=23b00000a0e, handle=0xb400006f1ec08940, base=0x0, importpid=29287, clone_count=0
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.paused
+I/flutter (29287): [Jarvis] App pausiert
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Fehler: 7
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.hidden
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.inactive
+E/mali_gralloc(29287): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(29287): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(29287): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(29287): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc(29287): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc(29287): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+D/mali_gralloc(29287): register: id=23b00000a9b, handle=0xb400006f1ec077c0, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000a9b, handle=0xb400006f1ec08160, importpid=29287
+D/mali_gralloc(29287): unregister: id=23b00000a9b, handle=0xb400006f1ec08160, base=0x0, importpid=29287, clone_count=1
+D/mali_gralloc(29287): register: id=23b00000a9c, handle=0xb400006f1ec08160, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000a9c, handle=0xb400006f1ec08400, importpid=29287
+D/mali_gralloc(29287): unregister: id=23b00000a9c, handle=0xb400006f1ec08400, base=0x0, importpid=29287, clone_count=1
+D/mali_gralloc(29287): register: id=23b00000a9d, handle=0xb400006f1ec08860, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000a9d, handle=0xb400006f1ec08940, importpid=29287
+D/mali_gralloc(29287): unregister: id=23b00000a9d, handle=0xb400006f1ec08940, base=0x0, importpid=29287, clone_count=1
+D/mali_gralloc(29287): register: id=23b00000a9e, handle=0xb400006f1ec08940, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000a9e, handle=0xb400006f1ec08a20, importpid=29287
+D/mali_gralloc(29287): unregister: id=23b00000a9e, handle=0xb400006f1ec08a20, base=0x0, importpid=29287, clone_count=1
+D/mali_gralloc(29287): register: id=23b00000a9f, handle=0xb400006f1ec08a20, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000a9f, handle=0xb400006f1ec08b00, importpid=29287
+D/mali_gralloc(29287): unregister: id=23b00000a9f, handle=0xb400006f1ec08b00, base=0x0, importpid=29287, clone_count=1
+D/mali_gralloc(29287): register: id=23b00000aa0, handle=0xb400006f20d57ac0, importpid=29287
+D/mali_gralloc(29287): register: id=23b00000aa1, handle=0xb400006e0cb500e0, importpid=29287
+I/flutter (29287): [Jarvis] Lifecycle: AppLifecycleState.resumed
+I/flutter (29287): [Jarvis] App resumed -> voice neu initialisieren
+D/JARVIS_WAKEWORD(29287): Sprache erkannt
+D/JARVIS_WAKEWORD(29287): Sprachende
+D/JARVIS_WAKEWORD(29287): Erkannt: okay tschüss okay jarvis okay ciao bis
+D/JARVIS_WAKEWORD(29287): Wakeword erkannt
+W/libc    (29287): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/mple.jarvis_app(29287): type=1400 audit(0.0:4076): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c246,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE(29287): WakeLock aktiviert
+D/JARVIS_WAKEWORD(29287): sendWakewordToFlutter
+I/flutter (29287): [JARVIS BRIDGE] wakewordDetected
+I/flutter (29287): [JARVIS BRIDGE] null
+I/flutter (29287): [JARVIS BRIDGE] Wakeword Event empfangen
+I/flutter (29287): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
+I/flutter (29287): [JARVIS] Wakeword Trigger empfangen
+I/flutter (29287): [JARVIS] Controller State: JarvisState.idle
+I/flutter (29287): [JARVIS] Controller Busy: false
+D/JARVIS_WAKEWORD(29287): Wakeword STOP
+I/flutter (29287): [JARVIS] Wakeword gestoppt
+I/flutter (29287): [VOICE] listen() wird gestartet
+I/flutter (29287): [VOICE] verfügbar: true
+D/mali_gralloc(29287): register: id=23b00000aa2, handle=0xb400006f20d56320, importpid=29287
+I/flutter (29287): [VOICE] SpeechToText aktiv
+I/flutter (29287): [JARVIS] startListening verlassen
+I/flutter (29287): [JARVIS] Listening Timeout
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Sprache erkannt
+D/JARVIS_WAKEWORD(29287): Sprachende
+D/JARVIS_WAKEWORD(29287): Erkannt: licht hallo jarvis nicht hallo jarvis
+D/JARVIS_WAKEWORD(29287): Wakeword erkannt
+W/mple.jarvis_app(29287): type=1400 audit(0.0:4078): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c246,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+W/libc    (29287): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+D/JARVIS_WAKE(29287): WakeLock aktiviert
+D/JARVIS_WAKEWORD(29287): sendWakewordToFlutter
+I/flutter (29287): [JARVIS BRIDGE] wakewordDetected
+I/flutter (29287): [JARVIS BRIDGE] null
+I/flutter (29287): [JARVIS BRIDGE] Wakeword Event empfangen
+I/flutter (29287): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
+I/flutter (29287): [JARVIS] Wakeword Trigger empfangen
+I/flutter (29287): [JARVIS] Controller State: JarvisState.idle
+I/flutter (29287): [JARVIS] Controller Busy: false
+D/JARVIS_WAKEWORD(29287): Wakeword STOP
+I/flutter (29287): [JARVIS] Wakeword gestoppt
+I/flutter (29287): [VOICE] listen() wird gestartet
+I/flutter (29287): [VOICE] verfügbar: true
+I/flutter (29287): [VOICE] SpeechToText aktiv
+I/flutter (29287): [JARVIS] startListening verlassen
+I/flutter (29287): [JARVIS] Listening Timeout
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
+D/JARVIS_WAKEWORD(29287): Wakeword STOP
+I/flutter (29287): [JARVIS] Wakeword gestoppt
+I/flutter (29287): [VOICE] listen() wird gestartet
+I/flutter (29287): [VOICE] verfügbar: true
+I/flutter (29287): [VOICE] SpeechToText aktiv
+I/flutter (29287): [JARVIS] startListening verlassen
+I/flutter (29287): [JARVIS] Listening Timeout
+D/JARVIS_WAKEWORD(29287): Listening gestartet
+D/JARVIS_WAKEWORD(29287): Bereit für Wakeword
