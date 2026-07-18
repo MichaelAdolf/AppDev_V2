@@ -1,23 +1,23 @@
-channel?.setMethodCallHandler { call, result ->
+import 'package:flutter/services.dart';
 
-    when (call.method) {
+class JarvisWakewordControl {
 
-        "stopWakeword" -> {
+  static const MethodChannel _channel =
+      MethodChannel(
+    'jarvis/background',
+  );
 
-            JarvisForegroundService.instance
-                ?.stopWakewordListener()
+  static Future<void> stop() async {
 
-            result.success(null)
-        }
+    await _channel.invokeMethod(
+      'stopWakeword',
+    );
+  }
 
-        "startWakeword" -> {
+  static Future<void> start() async {
 
-            JarvisForegroundService.instance
-                ?.startWakewordListener()
-
-            result.success(null)
-        }
-
-        else -> result.notImplemented()
-    }
+    await _channel.invokeMethod(
+      'startWakeword',
+    );
+  }
 }
