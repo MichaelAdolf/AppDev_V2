@@ -1,42 +1,37 @@
-import 'package:flutter/services.dart';
-
-class JarvisBackgroundBridge {
-  static const MethodChannel _channel =
-      MethodChannel(
-    'jarvis/background',
-  );
-
-  static void initialize({
-    required Function(String event) onEvent,
-    Function()? onWakeword,
-  }) {
-    _channel.setMethodCallHandler(
-      (call) async {
-        print(
-          '[JARVIS BRIDGE] ${call.method}',
-        );
-
-        print(
-          '[JARVIS BRIDGE] ${call.arguments}',
-        );
-
-        if (call.method == 'backgroundEvent') {
-          final event =
-              call.arguments as String;
-
-          onEvent(event);
-          return;
-        }
-
-        if (call.method == 'wakewordDetected') {
-          print(
-            '[JARVIS BRIDGE] Wakeword Event empfangen',
-          );
-
-          onWakeword?.call();
-          return;
-        }
-      },
+JarvisBackgroundBridge.initialize(
+  onEvent: (event) async {
+    print(
+      '[JARVIS BACKGROUND RAW] $event',
     );
-  }
-}
+
+    try {
+      final decoded =
+          jsonDecode(event) as Map<String, dynamic>;
+
+      final response =
+          HaResponse.fromJson(decoded);
+
+      await DeviceWakeService.wakeDevice();
+
+      await controller.handleExternalResponse(
+        response,
+        source: 'android-service',
+      );
+    } catch (e) {
+      print(
+        '[JARVIS BACKGROUND ERROR] $e',
+      );
+    }
+  },
+  onWakeword: () async {
+    print(
+      '[JARVIS WAKEWORD] Flutter hat Wakeword erkannt',
+    );
+
+    await DeviceWakeService.wakeDevice();
+
+    // Nächster Schritt:
+    // Hier koppeln wir später direkt controller.startListening()
+    // oder deine bestehende Mikrofon-Startlogik an.
+  },
+);
