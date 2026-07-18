@@ -1,22 +1,32 @@
 package com.example.jarvis_app
 
+import android.Manifest
 import android.app.Notification 
 import android.app.NotificationChannel 
 import android.app.NotificationManager 
 import android.app.Service 
-import android.content.Intent 
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build 
 import android.os.Handler 
 import android.os.IBinder 
 import android.os.Looper 
 import android.os.PowerManager 
-import android.util.Log 
+import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.util.Log
+import androidx.core.content.ContextCompat
 import okhttp3.OkHttpClient 
 import okhttp3.Request 
 import okhttp3.Response 
 import okhttp3.WebSocket 
 import okhttp3.WebSocketListener 
 import java.util.concurrent.TimeUnit
+import java.util.Locale
+import org.json.JSONObject
 
 class JarvisForegroundService : Service() {
 
@@ -35,6 +45,11 @@ private val mainHandler =
     Handler(Looper.getMainLooper())
 
 private var webSocket: WebSocket? = null
+private var tts: TextToSpeech? = null
+
+private var SpeechRecognizer: SpeechRecognizer? = null
+private var wakewordActive: Boolean = false
+private val wakewordText = "jarvis"
 
 private var reconnectRunnable: Runnable? = null
 
@@ -52,7 +67,28 @@ override fun onCreate() {
 
     createNotificationChannel()
     startAsForegroundService()
+
+    tts = TextToSpeech(
+        applicationContext
+    ){ status ->
+
+        if (status == TextToSpeech.SUCCESS) {
+            tts?.language =
+                Locale.GERMAN
+            tts?.setSpeechRate(
+                1.0f
+            )
+
+            Log.d(
+                "JARVIS_TTS",
+                "Android TTS bereit"
+            )
+        }
+
+    }
+
     connectWebSocket()
+    startWakewordListener()
 }
 
 override fun onStartCommand(
@@ -84,6 +120,14 @@ override fun onDestroy() {
     )
 
     webSocket = null
+
+    tts?.stop()
+    tts?.shutdown()
+    tts = null
+
+    SpeechRecognizer?.destroy()
+    SpeechRecognizer = null
+    wakewordActive = false
 
     super.onDestroy()
 }
@@ -239,6 +283,7 @@ private fun handleNodeRedEvent(
     )
 
     wakeDeviceBriefly()
+    speakMessage(payload)
 
     Log.d("JARVIS_EVENT", "Activity wird geöffnet")
 
@@ -271,6 +316,47 @@ private fun handleNodeRedEvent(
     )
 }
 
+private fun speakMessage( 
+    payload: String 
+) {
+    try {
+
+        val json =
+            JSONObject(payload)
+
+        val message =
+            json.optString(
+                "message",
+                ""
+            )
+
+        if (message.isBlank()) {
+            return
+        }
+
+        Log.d(
+            "JARVIS_TTS",
+            "Sprache: $message"
+        )
+
+        tts?.speak(
+            message,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "jarvis_event"
+        )
+
+    } catch (e: Exception) {
+
+        Log.d(
+            "JARVIS_TTS",
+            "Fehler: ${e.message}"
+        )
+    }
+}
+
+
+
 @Suppress("DEPRECATION")
 private fun wakeDeviceBriefly() {
     try {
@@ -298,6 +384,246 @@ private fun wakeDeviceBriefly() {
             "WakeLock Fehler: ${e.message}"
         )
     }
+}
+
+private fun startWakewordListener() {
+
+if (wakewordActive) {
+    return
+}
+
+if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "SpeechRecognizer nicht verfügbar"
+    )
+
+    return
+}
+
+val hasPermission =
+    ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.RECORD_AUDIO
+    ) == PackageManager.PERMISSION_GRANTED
+
+if (!hasPermission) {
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "RECORD_AUDIO Permission fehlt"
+    )
+
+    return
+}
+
+wakewordActive = true
+
+SpeechRecognizer =
+    SpeechRecognizer.createSpeechRecognizer(this)
+
+SpeechRecognizer?.setRecognitionListener(
+    object : RecognitionListener {
+
+        override fun onReadyForSpeech(
+            params: Bundle?
+        ) {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Bereit für Wakeword"
+            )
+        }
+
+        override fun onBeginningOfSpeech() {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Sprache erkannt"
+            )
+        }
+
+        override fun onRmsChanged(
+            rmsdB: Float
+        ) {
+        }
+
+        override fun onBufferReceived(
+            buffer: ByteArray?
+        ) {
+        }
+
+        override fun onEndOfSpeech() {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Sprachende"
+            )
+        }
+
+        override fun onError(
+            error: Int
+        ) {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Fehler: $error"
+            )
+
+            restartWakewordListener()
+        }
+
+        override fun onResults(
+            results: Bundle?
+        ) {
+            val matches =
+                results?.getStringArrayList(
+                    SpeechRecognizer.RESULTS_RECOGNITION
+                )
+
+            val text =
+                matches
+                    ?.joinToString(" ")
+                    ?.lowercase(Locale.GERMAN)
+                    ?: ""
+
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Erkannt: $text"
+            )
+
+            if (text.contains(wakewordText)) {
+                onWakewordDetected()
+            }
+
+            restartWakewordListener()
+        }
+
+        override fun onPartialResults(
+            partialResults: Bundle?
+        ) {
+            val matches =
+                partialResults?.getStringArrayList(
+                    SpeechRecognizer.RESULTS_RECOGNITION
+                )
+
+            val text =
+                matches
+                    ?.joinToString(" ")
+                    ?.lowercase(Locale.GERMAN)
+                    ?: ""
+
+            if (text.contains(wakewordText)) {
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Partial Wakeword erkannt: $text"
+                )
+
+                onWakewordDetected()
+            }
+        }
+
+        override fun onEvent(
+            eventType: Int,
+            params: Bundle?
+        ) {
+        }
+    }
+)
+
+startWakewordRecognition()
+
+}
+private fun startWakewordRecognition() {
+
+val intent =
+    Intent(
+        RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+    ).apply {
+        putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        )
+
+        putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE,
+            "de-DE"
+        )
+
+        putExtra(
+            RecognizerIntent.EXTRA_PARTIAL_RESULTS,
+            true
+        )
+
+        putExtra(
+            RecognizerIntent.EXTRA_MAX_RESULTS,
+            3
+        )
+    }
+
+try {
+    SpeechRecognizer?.startListening(intent)
+
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "Listening gestartet"
+    )
+} catch (e: Exception) {
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "Start Fehler: ${e.message}"
+    )
+
+    restartWakewordListener()
+}
+
+}
+
+private fun restartWakewordListener() {
+
+mainHandler.postDelayed(
+    {
+        try {
+            SpeechRecognizer?.cancel()
+            startWakewordRecognition()
+        } catch (e: Exception) {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Restart Fehler: ${e.message}"
+            )
+        }
+    },
+    1000
+)
+
+}
+
+private fun onWakewordDetected() {
+
+Log.d(
+    "JARVIS_WAKEWORD",
+    "Wakeword erkannt"
+)
+
+wakeDeviceBriefly()
+
+speakWakewordAck()
+
+MainActivity.sendWakewordToFlutter()
+
+}
+
+private fun speakWakewordAck() {
+
+try {
+    tts?.speak(
+        "Ja?",
+        android.speech.tts.TextToSpeech.QUEUE_FLUSH,
+        null,
+        "jarvis_wakeword_ack"
+    )
+} catch (e: Exception) {
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "TTS Fehler: ${e.message}"
+    )
+}
+
 }
 
 }
