@@ -1,39 +1,38 @@
-private fun speakMessage(
-    payload: String
-) {
+import 'package:flutter/foundation.dart';
+import 'package:porcupine_flutter/porcupine_manager.dart';
 
-    try {
+class JarvisWakewordService {
 
-        val json =
-            JSONObject(payload)
+  PorcupineManager? _manager;
 
-        val message =
-            json.optString(
-                "message",
-                ""
-            )
+  Future<void> initialize({
+    required VoidCallback onWakeword,
+  }) async {
 
-        if (message.isBlank()) {
-            return
-        }
+    _manager =
+        await PorcupineManager.fromKeywordPaths(
 
-        Log.d(
-            "JARVIS_TTS",
-            "Sprache: $message"
-        )
+      'DEIN_PORCUPINE_ACCESS_KEY',
 
-        tts?.speak(
-            message,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "jarvis_event"
-        )
+      keywordPaths: [
+        // später eigene Jarvis-Datei
+      ],
 
-    } catch (e: Exception) {
+      onKeywordDetected: (index) {
 
-        Log.d(
-            "JARVIS_TTS",
-            "Fehler: ${e.message}"
-        )
-    }
+        debugPrint(
+          '[JARVIS WAKEWORD] erkannt',
+        );
+
+        onWakeword();
+      },
+    );
+
+    await _manager?.start();
+  }
+
+  Future<void> dispose() async {
+    await _manager?.stop();
+    await _manager?.delete();
+  }
 }
