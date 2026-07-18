@@ -1,13 +1,16 @@
 PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter clean
-Deleting build...                                                1.446ms
-Deleting .dart_tool...                                              20ms
-Deleting ephemeral...                                               10ms
-Deleting Generated.xcconfig...                                       2ms
-Deleting flutter_export_environment.sh...                            4ms
-Deleting ephemeral...                                                4ms
-Deleting ephemeral...                                                7ms
-Deleting ephemeral...                                                9ms
-Deleting .flutter-plugins-dependencies...                            1ms
+Failed to remove build. A program may still be using a file in the directory or the directory itself.
+To find and stop such a program, see:
+https://superuser.com/questions/1333118/cant-delete-empty-folder-because-it-is-used
+Deleting build...                                                1.110ms
+Deleting .dart_tool...                                              81ms
+Deleting ephemeral...                                               16ms
+Deleting Generated.xcconfig...                                      66ms
+Deleting flutter_export_environment.sh...                          113ms
+Deleting ephemeral...                                               50ms
+Deleting ephemeral...                                               42ms
+Deleting ephemeral...                                               18ms
+Deleting .flutter-plugins-dependencies...                           18ms
 PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter pub get
 Resolving dependencies... 
 Downloading packages... 
@@ -26,35 +29,6 @@ Got dependencies!
 Try `flutter pub outdated` for more information.
 PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run    
 Launching lib\main.dart on 25028RN03Y in debug mode...
-Warning: The plugin flutter_tts requires Android SDK version 36 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin jni requires Android SDK version 35 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin jni_flutter requires Android SDK version 35 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin package_info_plus requires Android SDK version 36 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin screen_brightness_android requires Android SDK version 36 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin speech_to_text requires Android SDK version 36 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Warning: The plugin wakelock_plus requires Android SDK version 36 or higher.
-For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
-Your project is configured to compile against Android SDK 34, but the following plugin(s) require to be compiled against a higher Android SDK version:
-- flutter_tts compiles against Android SDK 36
-- jni compiles against Android SDK 35
-- jni_flutter compiles against Android SDK 35
-- package_info_plus compiles against Android SDK 36
-- screen_brightness_android compiles against Android SDK 36
-- speech_to_text compiles against Android SDK 36
-- wakelock_plus compiles against Android SDK 36
-Fix this issue by compiling against the highest Android SDK version (they are backward compatible).
-Add the following to D:\Users\Michael\Dokumente\16_AppDev\jarvis_app\android\app\build.gradle.kts:
-
-    android {
-        compileSdk = 36
-        ...
-    }
 WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_tts, speech_to_text, wakelock_plus
 Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
 
@@ -63,187 +37,6 @@ If no such version exists, report the issue to the plugin. If necessary, here is
 an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
 If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-Checking the license for package Android SDK Platform 34 in C:\Users\Michael\AppData\Local\Android\Sdk\licenses
-License for package Android SDK Platform 34 accepted.
-Preparing "Install Android SDK Platform 34 (revision 3)".
-"Install Android SDK Platform 34 (revision 3)" ready.
-Installing Android SDK Platform 34 in C:\Users\Michael\AppData\Local\Android\Sdk\platforms\android-34
-"Install Android SDK Platform 34 (revision 3)" complete.
-"Install Android SDK Platform 34 (revision 3)" finished.
-Warnung: [options] Quellwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Zielwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Verwenden Sie -Xlint:-options, um Warnungen zu veralteten Optionen zu unterdrücken.
-3 Warnungen
-Warnung: [options] Quellwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Zielwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Verwenden Sie -Xlint:-options, um Warnungen zu veralteten Optionen zu unterdrücken.
-3 Warnungen
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:checkDebugAarMetadata'.
-> A failure occurred while executing com.android.build.gradle.internal.tasks.CheckAarMetadataWorkAction
-   > 7 issues were found when checking AAR metadata:
-
-       1.  Dependency ':flutter_tts' requires libraries and applications that
-           depend on it to compile against version 36 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 36, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       2.  Dependency ':jni_flutter' requires libraries and applications that
-           depend on it to compile against version 35 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 35, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       3.  Dependency ':jni' requires libraries and applications that
-           depend on it to compile against version 35 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 35, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       4.  Dependency ':wakelock_plus' requires libraries and applications that
-           depend on it to compile against version 36 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 36, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       5.  Dependency ':package_info_plus' requires libraries and applications that
-           depend on it to compile against version 36 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 36, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       6.  Dependency ':screen_brightness_android' requires libraries and applications that
-           depend on it to compile against version 36 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 36, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-       7.  Dependency ':speech_to_text' requires libraries and applications that
-           depend on it to compile against version 36 or later of the
-           Android APIs.
-
-           :app is currently compiled against android-34.
-
-           Recommended action: Update this project to use a newer compileSdk
-           of at least 36, for example 36.
-
-           Note that updating a library or application's compileSdk (which
-           allows newer APIs to be used) can be done separately from updating
-           targetSdk (which opts the app in to new runtime behavior) and
-           minSdk (which determines which devices the app can be installed
-           on).
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to generate a Build Scan (Powered by Develocity).
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 2m 5s
-[=========                              ] 25%                                   
-Running Gradle task 'assembleDebug'...                            125,9s
-Error: Gradle task assembleDebug failed with exit code 1PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter clean                             
-Deleting build...                                                  966ms
-Deleting .dart_tool...                                              13ms
-Deleting ephemeral...                                                4ms
-Deleting Generated.xcconfig...                                       1ms
-Deleting flutter_export_environment.sh...                            1ms
-Deleting ephemeral...                                                2ms
-Deleting ephemeral...                                                8ms
-Deleting ephemeral...                                                2ms
-Deleting .flutter-plugins-dependencies...                            1ms
-PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter pub get                           
-Resolving dependencies... 
-Downloading packages... 
-  hooks 2.0.2 (2.1.0 available)
-  matcher 0.12.19 (0.12.20 available)
-  meta 1.18.0 (1.19.0 available)
-  package_config 2.2.0 (3.0.0 available)
-  package_info_plus 10.2.0 (10.2.1 available)
-  porcupine_flutter 3.0.6 (4.0.0 available)
-  record_use 0.6.0 (1.0.0 available)
-  test_api 0.7.11 (0.7.13 available)
-  vector_math 2.2.0 (2.4.0 available)
-  xml 6.6.1 (7.0.1 available)
-Got dependencies!
-10 packages have newer versions incompatible with dependency constraints.
-Try `flutter pub outdated` for more information.
-PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run
-Launching lib\main.dart on 25028RN03Y in debug mode...
-WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_tts, speech_to_text, wakelock_plus
-Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
-
-Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
-If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing 
-an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
-
-If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-Warnung: [options] Quellwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Zielwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Verwenden Sie -Xlint:-options, um Warnungen zu veralteten Optionen zu unterdrücken.
-3 Warnungen
-Warnung: [options] Quellwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Zielwert 8 ist veraltet und wird in einem zukünftigen Release entfernt
-Warnung: [options] Verwenden Sie -Xlint:-options, um Warnungen zu veralteten Optionen zu unterdrücken.
-3 Warnungen
 
 FAILURE: Build failed with an exception.
 
@@ -558,6 +351,6 @@ Execution failed for task ':flutter_voice_processor:checkDebugAarMetadata'.
 > Run with --scan to generate a Build Scan (Powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 1m 20s
-Running Gradle task 'assembleDebug'...                             81,4s
+BUILD FAILED in 1m
+Running Gradle task 'assembleDebug'...                             61,4s
 Error: Gradle task assembleDebug failed with exit code 1
