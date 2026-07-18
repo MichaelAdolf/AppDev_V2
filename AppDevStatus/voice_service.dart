@@ -29,7 +29,13 @@ class VoiceService {
 
     }
 
-    await _speech.listen( localeId: 'de_DE', partialResults: true, listenMode: ListenMode.confirmation, onResult: (result) {
+    await _speech.listen( 
+      localeId: 'de_DE', 
+      partialResults: true, 
+      listenMode: ListenMode.confirmation, 
+      listenFor: const Duration( seconds: 10,),
+      pauseFor: const Duration( seconds: 3),
+      onResult: (result) {
 
       final text =
           result.recognizedWords.trim();

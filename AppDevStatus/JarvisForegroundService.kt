@@ -54,8 +54,10 @@ private var wakewordActive: Boolean = false
 private var wakewordRestartAllowed: Boolean = true
 private val wakewordText = "jarvis"
 private var lastWakewordTimestamp: Long = 0
+private var micOwnedByFlutter = false
 
 private var reconnectRunnable: Runnable? = null
+private var wakewordRestartRunnable: Runnable? = null
 
 private val client: OkHttpClient =
     OkHttpClient.Builder()
@@ -550,6 +552,11 @@ fun stopWakewordListener() {
 
     wakewordActive = false
     wakewordRestartAllowed = false
+    micOwnedByFlutter = true
+    wakewordRestartRunnable?.let {
+        mainHandler.removeCallbacks(it)
+    }
+    wakewordRestartRunnable = null
 
     try{
         speechRecognizer?.cancel()
@@ -564,6 +571,16 @@ fun stopWakewordListener() {
 }
 
 private fun startWakewordRecognition() {
+
+    micOwnedByFlutter = false
+    
+    if (micOwnedByFlutter) {
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Mikrofon gehört Flutter"
+        )
+        return
+    }
 
     val intent =
         Intent(
@@ -617,18 +634,36 @@ private fun restartWakewordListener() {
         return
     }
 
+    wakewordRestartRunnable?.let {
+        mainHandler.removeCallbacks(it)
+    }
+
+    wakewordRestartRunnable = Runnable {
+        if (
+            !wakewordRestartAllowed ||
+            !wakewordActive
+        ) {
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Restart verworfen"
+            )
+            return@Runnable
+        }
+        
+        try {
+            speechRecognizer?.cancel()
+
+            startWakewordRecognition()
+
+        } catch (e: Exception) {
+            Log.d (
+                "JARVIS_WAKEWORD",
+                "Restart Fehler: ${e.message}"
+            )
+        }
+    }
     mainHandler.postDelayed(
-        {
-            try {
-                speechRecognizer?.cancel()
-                startWakewordRecognition()
-            } catch (e: Exception) {
-                Log.d(
-                    "JARVIS_WAKEWORD",
-                    "Restart Fehler: ${e.message}"
-                )
-            }
-        },
+        wakewordRestartRunnable!!,
         1000
     )
 }
