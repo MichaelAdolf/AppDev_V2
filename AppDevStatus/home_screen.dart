@@ -102,10 +102,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   }
 
   Future<void> _startVoiceInput() async {
+    debugPrint(
+      '[JARVIS] _startVoiceInput START',
+    );
     controller.handleEvent(
       JarvisEvent.voiceStarted,
     );
     await JarvisWakewordControl.stop();
+    debugPrint(
+      '[JARVIS] Wakeword gestoppt',
+    );
     await _voice.startListening(
       onPartialResult: (text) {
         controller.updateLiveTranscript(text);

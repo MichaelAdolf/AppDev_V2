@@ -51,6 +51,7 @@ private var tts: TextToSpeech? = null
 
 private var speechRecognizer: SpeechRecognizer? = null
 private var wakewordActive: Boolean = false
+private var wakewordRestartAllowed: Boolean = true
 private val wakewordText = "jarvis"
 
 private var reconnectRunnable: Runnable? = null
@@ -394,7 +395,7 @@ private fun wakeDeviceBriefly() {
 }
 
 fun startWakewordListener() {
-
+wakewordRestartAllowed = true
 if (wakewordActive) {
     return
 }
@@ -544,6 +545,7 @@ fun stopWakewordListener() {
     )
 
     wakewordActive = false
+    wakewordRestartAllowed = false
 
     try{
         speechRecognizer?.cancel()
@@ -599,21 +601,28 @@ try {
 
 private fun restartWakewordListener() {
 
-mainHandler.postDelayed(
-    {
-        try {
-            speechRecognizer?.cancel()
-            startWakewordRecognition()
-        } catch (e: Exception) {
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Restart Fehler: ${e.message}"
-            )
-        }
-    },
-    1000
-)
-
+    if (!wakewordRestartAllowed){
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Restart blockiert"
+        )
+        return
+    }
+    
+    mainHandler.postDelayed(
+        {
+            try {
+                speechRecognizer?.cancel()
+                startWakewordRecognition()
+            } catch (e: Exception) {
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Restart Fehler: ${e.message}"
+                )
+            }
+        },
+        1000
+    )
 }
 
 private fun onWakewordDetected() {
