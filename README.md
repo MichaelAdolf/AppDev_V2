@@ -8,15 +8,15 @@ If no such version exists, report the issue to the plugin. If necessary, here is
 an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
 If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
-Running Gradle task 'assembleDebug'...                              9,4s
+Running Gradle task 'assembleDebug'...                              7,0s
 √ Built build\app\outputs\flutter-apk\app-debug.apk
-Installing build\app\outputs\flutter-apk\app-debug.apk...           6,1s
-I/FlutterActivityAndFragmentDelegate( 7570): If you are attempting to set --enable-dart-profiling via Intent extras to launch a Flutter component outside of using the Flutter CLI, note that support for setting engine flags on Android via Intent will soon be dropped; see https://github.com/flutter/flutter/issues/180686 for more information on this breaking change. To migrate, set --enable-dart-profiling or any other flags specified via Intent extras on the command line instead or see https://github.com/flutter/flutter/blob/main/docs/engine/Flutter-Android-Engine-Flags.md for alternative methods.
-D/FlutterJNI( 7570): Beginning load of flutter...
-D/FlutterJNI( 7570): flutter (null) was loaded normally!
-I/flutter ( 7570): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
-D/FlutterRenderer( 7570): Width is zero. 0,0
-Syncing files to device 25028RN03Y...                              168ms
+Installing build\app\outputs\flutter-apk\app-debug.apk...           5,7s
+I/FlutterActivityAndFragmentDelegate( 9378): If you are attempting to set --enable-dart-profiling via Intent extras to launch a Flutter component outside of using the Flutter CLI, note that support for setting engine flags on Android via Intent will soon be dropped; see https://github.com/flutter/flutter/issues/180686 for more information on this breaking change. To migrate, set --enable-dart-profiling or any other flags specified via Intent extras on the command line instead or see https://github.com/flutter/flutter/blob/main/docs/engine/Flutter-Android-Engine-Flags.md for alternative methods.
+D/FlutterJNI( 9378): Beginning load of flutter...
+D/FlutterJNI( 9378): flutter (null) was loaded normally!
+I/flutter ( 9378): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterRenderer( 9378): Width is zero. 0,0
+Syncing files to device 25028RN03Y...                              131ms
 
 Flutter run key commands.
 r Hot reload. 
@@ -26,125 +26,248 @@ d Detach (terminate "flutter run" but leave application running).
 c Clear the screen
 q Quit (terminate the application on the device).
 
-A Dart VM Service on 25028RN03Y is available at: http://127.0.0.1:60350/9WCoivJUpcY=/
+A Dart VM Service on 25028RN03Y is available at: http://127.0.0.1:63164/Z5qYxby-xpg=/
 The Flutter DevTools debugger and profiler on 25028RN03Y is available at:
-http://127.0.0.1:60350/9WCoivJUpcY=/devtools/?uri=ws://127.0.0.1:60350/9WCoivJUpcY=/ws
-I/mple.jarvis_app( 7570): Compiler allocated 5021KB to compile void android.view.ViewRootImpl.performTraversals()
-D/FlutterRenderer( 7570): Width is zero. 0,0
-I/mple.jarvis_app( 7570): hook_module_init libgui_unisoc_utils.so over, map size:3, library handle:0x42a48a813e9e33af
-I/UnisocBufferQueueHelper( 7570): Unisoc-Graphics: UnisocBufferQueueHelper create, this:0xb400006e0a120840, size:88
-I/mple.jarvis_app( 7570): createUnisocBufferQueueHelperFactory success, get instance 0xb400006e0a120840
-I/mple.jarvis_app( 7570): Unisoc-Graphics: UnisocFrameRecord create, this:0xb400006f25b6cd80, size:296, enable:0
-I/mple.jarvis_app( 7570): createUnisocFrameRecordFactory success, get instance 0xb400006f25b6cd80
-D/FlutterJNI( 7570): Sending viewport metrics to the engine.
-W/libc    ( 7570): Access denied finding property "persist.vendor.gpu.fbc"
-I/mali_gralloc( 7570): Unisoc: get compress property: persist.vendor.gpu.fbc (1)
-E/mali_gralloc( 7570): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
-E/mali_gralloc( 7570): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
-E/mali_gralloc( 7570): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
-E/mali_gralloc( 7570): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
-E/mali_gralloc( 7570): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
-E/mali_gralloc( 7570): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
-D/mali_gralloc( 7570): register: id=23b00000beb, handle=0xb400006f25b2c4e0, importpid=7570
-W/libc    ( 7570): Access denied finding property "persist.vendor.gpu.ionmemtrack"
-I/mali_gralloc( 7570): initIonKernelMemtrack open devices:/dev/systemheap success, fd:208
-D/mali_gralloc( 7570): register: id=23b00000beb, handle=0xb400006f25b2c860, importpid=7570
-D/mali_gralloc( 7570): unregister: id=23b00000beb, handle=0xb400006f25b2c860, base=0x0, importpid=7570, clone_count=1
-D/mali_gralloc( 7570): register: id=23b00000bec, handle=0xb400006f25b2c860, importpid=7570
-D/mali_gralloc( 7570): register: id=23b00000bec, handle=0xb400006f25b2c940, importpid=7570
-D/mali_gralloc( 7570): unregister: id=23b00000bec, handle=0xb400006f25b2c940, base=0x0, importpid=7570, clone_count=1
-D/mali_gralloc( 7570): register: id=23b00000bed, handle=0xb400006f25b2c940, importpid=7570
-D/mali_gralloc( 7570): register: id=23b00000bed, handle=0xb400006f25b2ca20, importpid=7570
-D/mali_gralloc( 7570): unregister: id=23b00000bed, handle=0xb400006f25b2ca20, base=0x0, importpid=7570, clone_count=1
-D/mali_gralloc( 7570): register: id=23b00000bee, handle=0xb400006f25b2ca20, importpid=7570
-D/mali_gralloc( 7570): register: id=23b00000bee, handle=0xb400006f25b2cb00, importpid=7570
-D/mali_gralloc( 7570): unregister: id=23b00000bee, handle=0xb400006f25b2cb00, base=0x0, importpid=7570, clone_count=1
-D/mali_gralloc( 7570): register: id=23b00000bef, handle=0xb400006f25b2cb00, importpid=7570
-D/mali_gralloc( 7570): register: id=23b00000bef, handle=0xb400006f25b2cbe0, importpid=7570
-D/mali_gralloc( 7570): unregister: id=23b00000bef, handle=0xb400006f25b2cbe0, base=0x0, importpid=7570, clone_count=1
-W/Choreographer( 7570): Already have a pending vsync event.  There should only be one at a time.
-I/TextToSpeech( 7570): Sucessfully bound to com.google.android.tts
-D/JARVIS_WS( 7570): Verbinde mit ws://192.168.178.47:1880/endpoint/ws/jarvis-router
-I/TextToSpeech( 7570): Connected to TTS engine
-I/TextToSpeech( 7570): Setting up the connection to TTS engine...
-D/JARVIS_WAKEWORD( 7570): RECORD_AUDIO Permission fehlt
-D/JARVIS_SERVICE( 7570): Foreground Service läuft
-I/Choreographer( 7570): Skipped 58 frames!  The application may be doing too much work on its main thread.
-D/mali_gralloc( 7570): register: id=23b00000bf0, handle=0xb400006e02c45f60, importpid=7570
-D/JARVIS_WS( 7570): WebSocket verbunden
-I/HWUI    ( 7570): Davey! duration=1009ms; Flags=1, FrameTimelineVsyncId=6157171, IntendedVsync=33255326824001, Vsync=33256293490687, InputEventId=0, HandleInputStart=33256294367904, AnimationStart=33256294370366, PerformTraversalsStart=33256294371789, DrawStart=33256297281712, FrameDeadline=33255343490668, FrameInterval=33256294000328, FrameStartTime=16666667, SyncQueued=33256299983481, SyncStart=33256300148097, IssueDrawCommandsStart=33256300955866, SwapBuffers=33256334999058, FrameCompleted=33256336818597, DequeueBufferDuration=2417500, QueueBufferDuration=401270, GpuCompleted=33256336818597, SwapBuffersCompleted=33256335515904, DisplayPresentTime=0, CommandSubmissionCompleted=33256334999058, 
-D/JARVIS_TTS( 7570): Android TTS bereit
-I/flutter ( 7570): [Jarvis] Lifecycle: AppLifecycleState.inactive
-D/FlutterJNI( 7570): Sending viewport metrics to the engine.
-D/ProfileInstaller( 7570): Installing profile for com.example.jarvis_app
-I/flutter ( 7570): [Jarvis] Lifecycle: AppLifecycleState.resumed
-I/flutter ( 7570): [Jarvis] App resumed -> voice neu initialisieren
-I/mple.jarvis_app( 7570): Background concurrent mark compact GC freed 10MB AllocSpace bytes, 3(60KB) LOS objects, 49% free, 2894KB/5724KB, paused 282us,7.660ms total 55.463ms
-W/mple.jarvis_app( 7570): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/base.apk' with 1 weak references
-W/mple.jarvis_app( 7570): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.arm64_v8a.apk' with 1 weak references
-W/mple.jarvis_app( 7570): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.de.apk' with 1 weak references
-W/mple.jarvis_app( 7570): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.xhdpi.apk' with 1 weak references
-D/JARVIS_WAKEWORD( 7570): Listening gestartet
-D/JARVIS_WAKEWORD( 7570): Bereit für Wakeword
-D/JARVIS_WAKEWORD( 7570): Sprache erkannt
-D/JARVIS_WAKEWORD( 7570): Sprachende
-D/JARVIS_WAKEWORD( 7570): Erkannt: okay tschüss
-D/JARVIS_WAKEWORD( 7570): Listening gestartet
-D/JARVIS_WAKEWORD( 7570): Bereit für Wakeword
-D/JARVIS_WAKEWORD( 7570): Sprache erkannt
-D/JARVIS_WAKEWORD( 7570): Sprachende
-D/JARVIS_WAKEWORD( 7570): Erkannt: okay jarvis
-D/JARVIS_WAKEWORD( 7570): Wakeword erkannt
-W/libc    ( 7570): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
-W/mple.jarvis_app( 7570): type=1400 audit(0.0:21176): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c247,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
-D/JARVIS_WAKE( 7570): WakeLock aktiviert
-D/JARVIS_WAKEWORD( 7570): sendWakewordToFlutter
-I/flutter ( 7570): [JARVIS BRIDGE] wakewordDetected
-I/flutter ( 7570): [JARVIS BRIDGE] null
-I/flutter ( 7570): [JARVIS BRIDGE] Wakeword Event empfangen
-I/flutter ( 7570): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
-I/flutter ( 7570): [JARVIS] Wakeword Trigger empfangen
-I/flutter ( 7570): [JARVIS] Controller State: JarvisState.idle
-I/flutter ( 7570): [JARVIS] Controller Busy: false
-D/JARVIS_WAKEWORD( 7570): Wakeword STOP
-D/mali_gralloc( 7570): register: id=23b00000bfe, handle=0xb400006f25b2ab80, importpid=7570
-I/flutter ( 7570): [JARVIS] Wakeword gestoppt
-I/flutter ( 7570): [VOICE] listen() wird gestartet
-I/flutter ( 7570): [VOICE] verfügbar: true
-I/flutter ( 7570): [VOICE] SpeechToText aktiv
-I/flutter ( 7570): [JARVIS] startListening verlassen
-I/flutter ( 7570): [VOICE] Ergebnis:  | final=false
-I/flutter ( 7570): [VOICE] Ergebnis:  | final=false
-I/flutter ( 7570): [VOICE] Ergebnis:  | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir etwas | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir etwas zum | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir etwas zum Licht | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: sage mir etwas zum Licht | final=true
-D/TTS     ( 7570): Utterance ID has started: 27c8096b-b28f-4773-9f8c-0781e557cc8d
-D/TTS     ( 7570): Utterance ID has completed: 27c8096b-b28f-4773-9f8c-0781e557cc8d
-D/JARVIS_WAKEWORD( 7570): Mikrofon gehört Flutter
-D/JARVIS_WAKEWORD( 7570): Wakeword STOP
-I/flutter ( 7570): [JARVIS] Wakeword gestoppt
-I/flutter ( 7570): [VOICE] listen() wird gestartet
-I/flutter ( 7570): [VOICE] verfügbar: true
-I/flutter ( 7570): [VOICE] SpeechToText aktiv
-I/flutter ( 7570): [JARVIS] startListening verlassen
-I/flutter ( 7570): [VOICE] Ergebnis:  | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir etwas | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir etwas | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir etwas zum | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir etwas zum Licht | final=false
-I/flutter ( 7570): [VOICE] Ergebnis: okay sage mir etwas zum Licht | final=true
-D/TTS     ( 7570): Utterance ID has started: 7d3c56dc-0456-4c83-b560-993109dbab60
-D/TTS     ( 7570): Utterance ID has completed: 7d3c56dc-0456-4c83-b560-993109dbab60
-D/JARVIS_WAKEWORD( 7570): Mikrofon gehört Flutter
+http://127.0.0.1:63164/Z5qYxby-xpg=/devtools/?uri=ws://127.0.0.1:63164/Z5qYxby-xpg=/ws
+I/mple.jarvis_app( 9378): Compiler allocated 5021KB to compile void android.view.ViewRootImpl.performTraversals()
+D/FlutterRenderer( 9378): Width is zero. 0,0
+I/mple.jarvis_app( 9378): hook_module_init libgui_unisoc_utils.so over, map size:3, library handle:0x3db63448b7a1c68d
+I/UnisocBufferQueueHelper( 9378): Unisoc-Graphics: UnisocBufferQueueHelper create, this:0xb400006e09c68720, size:88
+I/mple.jarvis_app( 9378): createUnisocBufferQueueHelperFactory success, get instance 0xb400006e09c68720
+I/mple.jarvis_app( 9378): Unisoc-Graphics: UnisocFrameRecord create, this:0xb400006f259f1c40, size:296, enable:0
+I/mple.jarvis_app( 9378): createUnisocFrameRecordFactory success, get instance 0xb400006f259f1c40
+D/FlutterJNI( 9378): Sending viewport metrics to the engine.
+W/libc    ( 9378): Access denied finding property "persist.vendor.gpu.fbc"
+I/mali_gralloc( 9378): Unisoc: get compress property: persist.vendor.gpu.fbc (1)
+E/mali_gralloc( 9378): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc( 9378): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc( 9378): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc( 9378): Requested R8 format is not supported with this allocator. R8 format is only supported with the AIDL allocator
+E/mali_gralloc( 9378): ERROR: Unrecognized and/or unsupported format R8 and usage TEXTURE + RENDER + HWC
+E/mali_gralloc( 9378): ERROR: Unrecognized and/or unsupported format RGBA_10101010 and usage TEXTURE + RENDER + HWC
+D/mali_gralloc( 9378): register: id=23b00000c10, handle=0xb400006f259b85c0, importpid=9378
+W/libc    ( 9378): Access denied finding property "persist.vendor.gpu.ionmemtrack"
+I/mali_gralloc( 9378): initIonKernelMemtrack open devices:/dev/systemheap success, fd:208
+D/mali_gralloc( 9378): register: id=23b00000c10, handle=0xb400006f259b8940, importpid=9378
+D/mali_gralloc( 9378): unregister: id=23b00000c10, handle=0xb400006f259b8940, base=0x0, importpid=9378, clone_count=1
+D/mali_gralloc( 9378): register: id=23b00000c11, handle=0xb400006f259b8940, importpid=9378
+D/mali_gralloc( 9378): register: id=23b00000c11, handle=0xb400006f259b8a20, importpid=9378
+D/mali_gralloc( 9378): unregister: id=23b00000c11, handle=0xb400006f259b8a20, base=0x0, importpid=9378, clone_count=1
+D/mali_gralloc( 9378): register: id=23b00000c12, handle=0xb400006f259b8a20, importpid=9378
+D/mali_gralloc( 9378): register: id=23b00000c12, handle=0xb400006f259b8b00, importpid=9378
+D/mali_gralloc( 9378): unregister: id=23b00000c12, handle=0xb400006f259b8b00, base=0x0, importpid=9378, clone_count=1
+D/mali_gralloc( 9378): register: id=23b00000c13, handle=0xb400006f259b8b00, importpid=9378
+D/mali_gralloc( 9378): register: id=23b00000c13, handle=0xb400006f259b8be0, importpid=9378
+D/mali_gralloc( 9378): unregister: id=23b00000c13, handle=0xb400006f259b8be0, base=0x0, importpid=9378, clone_count=1
+D/mali_gralloc( 9378): register: id=23b00000c14, handle=0xb400006f259b8be0, importpid=9378
+D/mali_gralloc( 9378): register: id=23b00000c14, handle=0xb400006f259b8cc0, importpid=9378
+D/mali_gralloc( 9378): unregister: id=23b00000c14, handle=0xb400006f259b8cc0, base=0x0, importpid=9378, clone_count=1
+W/Choreographer( 9378): Already have a pending vsync event.  There should only be one at a time.
+I/TextToSpeech( 9378): Sucessfully bound to com.google.android.tts
+D/JARVIS_WS( 9378): Verbinde mit ws://192.168.178.47:1880/endpoint/ws/jarvis-router
+I/TextToSpeech( 9378): Connected to TTS engine
+I/TextToSpeech( 9378): Setting up the connection to TTS engine...
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_SERVICE( 9378): Foreground Service läuft
+I/Choreographer( 9378): Skipped 55 frames!  The application may be doing too much work on its main thread.
+D/mali_gralloc( 9378): register: id=23b00000c15, handle=0xb400006e037b2be0, importpid=9378
+D/JARVIS_WS( 9378): WebSocket verbunden
+I/HWUI    ( 9378): Davey! duration=930ms; Flags=1, FrameTimelineVsyncId=6403999, IntendedVsync=33860218223694, Vsync=33861133739504, InputEventId=0, HandleInputStart=33861135423818, AnimationStart=33861135426164, PerformTraversalsStart=33861135427433, DrawStart=33861138441087, FrameDeadline=33860234890361, FrameInterval=33861135067933, FrameStartTime=16645742, SyncQueued=33861139492356, SyncStart=33861139554280, IssueDrawCommandsStart=33861140398010, SwapBuffers=33861147249741, FrameCompleted=33861148764280, DequeueBufferDuration=1677500, QueueBufferDuration=817461, GpuCompleted=33861148764280, SwapBuffersCompleted=33861148214664, DisplayPresentTime=7809597357345302627, CommandSubmissionCompleted=33861147249741, 
+D/JARVIS_TTS( 9378): Android TTS bereit
+D/FlutterJNI( 9378): Sending viewport metrics to the engine.
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/ProfileInstaller( 9378): Installing profile for com.example.jarvis_app
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Erkannt: hey schatz
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+W/mple.jarvis_app( 9378): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/base.apk' with 1 weak references
+W/mple.jarvis_app( 9378): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.arm64_v8a.apk' with 1 weak references
+W/mple.jarvis_app( 9378): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.de.apk' with 1 weak references
+W/mple.jarvis_app( 9378): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~qu_oYd0WvY2oF27paYQ9Ag==/com.google.android.tts-asJUmntKfTsMMdL6ZSNNVQ==/split_config.xhdpi.apk' with 1 weak references
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Erkannt: okay jarvis
+D/JARVIS_WAKEWORD( 9378): Wakeword erkannt
+W/libc    ( 9378): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/mple.jarvis_app( 9378): type=1400 audit(0.0:21215): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c247,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE( 9378): WakeLock aktiviert
+D/JARVIS_WAKEWORD( 9378): sendWakewordToFlutter
+I/flutter ( 9378): [JARVIS BRIDGE] wakewordDetected
+I/flutter ( 9378): [JARVIS BRIDGE] null
+I/flutter ( 9378): [JARVIS BRIDGE] Wakeword Event empfangen
+I/flutter ( 9378): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
+I/flutter ( 9378): [JARVIS] Wakeword Trigger empfangen
+I/flutter ( 9378): [JARVIS] Controller State: JarvisState.idle
+I/flutter ( 9378): [JARVIS] Controller Busy: false
+D/JARVIS_WAKEWORD( 9378): Wakeword STOP
+D/mali_gralloc( 9378): register: id=23b00000c1a, handle=0xb400006f20d57740, importpid=9378
+I/flutter ( 9378): [JARVIS] Wakeword gestoppt
+I/flutter ( 9378): [VOICE] listen() wird gestartet
+I/flutter ( 9378): [VOICE] verfügbar: true
+I/flutter ( 9378): [VOICE] SpeechToText aktiv
+I/flutter ( 9378): [JARVIS] startListening verlassen
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=true
+D/TTS     ( 9378): Utterance ID has started: db627aac-ae35-41cd-a711-8c87b95a37e2
+D/TTS     ( 9378): Utterance ID has completed: db627aac-ae35-41cd-a711-8c87b95a37e2
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Erkannt: okay jarvis
+D/JARVIS_WAKEWORD( 9378): Wakeword erkannt
+W/libc    ( 9378): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/mple.jarvis_app( 9378): type=1400 audit(0.0:21217): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c247,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE( 9378): WakeLock aktiviert
+D/JARVIS_WAKEWORD( 9378): sendWakewordToFlutter
+I/flutter ( 9378): [JARVIS BRIDGE] wakewordDetected
+I/flutter ( 9378): [JARVIS BRIDGE] null
+I/flutter ( 9378): [JARVIS BRIDGE] Wakeword Event empfangen
+I/flutter ( 9378): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
+I/flutter ( 9378): [JARVIS] Wakeword Trigger empfangen
+I/flutter ( 9378): [JARVIS] Controller State: JarvisState.idle
+I/flutter ( 9378): [JARVIS] Controller Busy: false
+D/JARVIS_WAKEWORD( 9378): Wakeword STOP
+I/flutter ( 9378): [JARVIS] Wakeword gestoppt
+I/flutter ( 9378): [VOICE] listen() wird gestartet
+I/flutter ( 9378): [VOICE] verfügbar: true
+I/flutter ( 9378): [VOICE] SpeechToText aktiv
+I/flutter ( 9378): [JARVIS] startListening verlassen
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=true
+D/TTS     ( 9378): Utterance ID has started: 54a55d69-5dac-4035-b283-c26d1fe0cbbb
+D/TTS     ( 9378): Utterance ID has completed: 54a55d69-5dac-4035-b283-c26d1fe0cbbb
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Wakeword STOP
+I/flutter ( 9378): [JARVIS] Wakeword gestoppt
+I/flutter ( 9378): [VOICE] listen() wird gestartet
+I/flutter ( 9378): [VOICE] verfügbar: true
+I/flutter ( 9378): [VOICE] SpeechToText aktiv
+I/flutter ( 9378): [JARVIS] startListening verlassen
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage mir etwas zum Licht | final=true
+D/TTS     ( 9378): Utterance ID has started: f7d7a3cd-e3dc-40ce-bd6c-b3f2bb4e2fa3
+D/TTS     ( 9378): Utterance ID has completed: f7d7a3cd-e3dc-40ce-bd6c-b3f2bb4e2fa3
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Erkannt: okay jarvis
+D/JARVIS_WAKEWORD( 9378): Wakeword erkannt
+W/libc    ( 9378): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/mple.jarvis_app( 9378): type=1400 audit(0.0:21220): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c247,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE( 9378): WakeLock aktiviert
+D/JARVIS_WAKEWORD( 9378): sendWakewordToFlutter
+I/flutter ( 9378): [JARVIS BRIDGE] wakewordDetected
+I/flutter ( 9378): [JARVIS BRIDGE] null
+I/flutter ( 9378): [JARVIS BRIDGE] Wakeword Event empfangen
+I/flutter ( 9378): [JARVIS WAKEWORD] Flutter hat Wakeword erkannt
+I/flutter ( 9378): [JARVIS] Wakeword Trigger empfangen
+I/flutter ( 9378): [JARVIS] Controller State: JarvisState.idle
+I/flutter ( 9378): [JARVIS] Controller Busy: false
+D/JARVIS_WAKEWORD( 9378): Wakeword STOP
+I/flutter ( 9378): [JARVIS] Wakeword gestoppt
+I/flutter ( 9378): [VOICE] listen() wird gestartet
+I/flutter ( 9378): [VOICE] verfügbar: true
+I/flutter ( 9378): [VOICE] SpeechToText aktiv
+I/flutter ( 9378): [JARVIS] startListening verlassen
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: sage | final=true
+D/JARVIS_WAKEWORD( 9378): Wakeword STOP
+I/flutter ( 9378): [JARVIS] Wakeword gestoppt
+I/flutter ( 9378): [VOICE] listen() wird gestartet
+I/flutter ( 9378): [VOICE] verfügbar: true
+I/flutter ( 9378): [VOICE] SpeechToText aktiv
+I/flutter ( 9378): [JARVIS] startListening verlassen
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis:  | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: tagesinformation | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: tagesinformation | final=false
+I/flutter ( 9378): [VOICE] Ergebnis: tagesinformation | final=true
+D/JARVIS_WS( 9378): Nachricht empfangen: {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Samstag, der achtzehnter Juli 2026. Die aktuelle Uhrzeit ist 20:33. Draußen sind es aktuell 22 Grad bei leicht bewölktem Himmel. Du hast aktuell keine anstehenden Termine."}
+D/JARVIS_EVENT( 9378): Node-RED Event wird verarbeitet
+W/libc    ( 9378): Access denied finding property "persist.unipnp.wakelock_upload.enabled"
+W/178.47:1880/...( 9378): type=1400 audit(0.0:21222): avc:  denied  { read } for  name="u:object_r:unipnp_prop:s0" dev="tmpfs" ino=427 scontext=u:r:untrusted_app:s0:c247,c256,c512,c768 tcontext=u:object_r:unipnp_prop:s0 tclass=file permissive=0 app=com.example.jarvis_app
+D/JARVIS_WAKE( 9378): WakeLock aktiviert
+D/JARVIS_TTS( 9378): Sprache: Guten Abend. Heute ist Samstag, der achtzehnter Juli 2026. Die aktuelle Uhrzeit ist 20:33. Draußen sind es aktuell 22 Grad bei leicht bewölktem Himmel. Du hast aktuell keine anstehenden Termine.
+D/JARVIS_EVENT( 9378): Activity wird geöffnet
+D/JARVIS_BRIDGE( 9378): openAndDeliverEvent
+D/JARVIS_BRIDGE( 9378): Bridge Activity in Vordergrund
+I/flutter ( 9378): [Jarvis] Lifecycle: AppLifecycleState.inactive
+I/flutter ( 9378): [Jarvis] Lifecycle: AppLifecycleState.resumed
+I/flutter ( 9378): [Jarvis] App resumed -> voice neu initialisieren
+I/flutter ( 9378): [Jarvis] Lifecycle: AppLifecycleState.inactive
+D/JARVIS_BRIDGE( 9378): Intent Event empfangen
+D/JARVIS_BRIDGE( 9378): Gepuffertes Event wird gesendet
+I/flutter ( 9378): [JARVIS BRIDGE] backgroundEvent
+I/flutter ( 9378): [JARVIS BRIDGE] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Samstag, der achtzehnter Juli 2026. Die aktuelle Uhrzeit ist 20:33. Draußen sind es aktuell 22 Grad bei leicht bewölktem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter ( 9378): [JARVIS BACKGROUND RAW] {"success":true,"intent":"dailyInfo","entity":"jarvis.daily_info","state":"executed","message":"Guten Abend. Heute ist Samstag, der achtzehnter Juli 2026. Die aktuelle Uhrzeit ist 20:33. Draußen sind es aktuell 22 Grad bei leicht bewölktem Himmel. Du hast aktuell keine anstehenden Termine."}
+I/flutter ( 9378): [Jarvis] Lifecycle: AppLifecycleState.resumed
+I/flutter ( 9378): [Jarvis] App resumed -> voice neu initialisieren
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/FlutterJNI( 9378): Sending viewport metrics to the engine.
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Erkannt: guten abend heute ist samstag der 18 juli 2026 die aktuelle uhrzeit ist 20:33 uhr draußen sind es aktuell 22 grad bei leicht bewölktem himmel du hast
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
+D/JARVIS_WAKEWORD( 9378): Listening gestartet
+D/JARVIS_WAKEWORD( 9378): Bereit für Wakeword
+D/JARVIS_WAKEWORD( 9378): Sprache erkannt
+D/JARVIS_WAKEWORD( 9378): Sprachende
+D/JARVIS_WAKEWORD( 9378): Fehler: 7
