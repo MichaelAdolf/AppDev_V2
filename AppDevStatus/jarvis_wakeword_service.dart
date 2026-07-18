@@ -1,38 +1,16 @@
 import 'package:flutter/foundation.dart';
-import 'package:porcupine_flutter/porcupine_manager.dart';
 
 class JarvisWakewordService {
 
-  PorcupineManager? _manager;
+Future initialize({ required VoidCallback onWakeword, }) async {
 
-  Future<void> initialize({
-    required VoidCallback onWakeword,
-  }) async {
+debugPrint(
+  '[JARVIS WAKEWORD] Service initialisiert',
+);
 
-    _manager =
-        await PorcupineManager.fromKeywordPaths(
+// Porcupine wird
+// im nächsten Schritt angeschlossen.
 
-      'DEIN_PORCUPINE_ACCESS_KEY',
-
-      keywordPaths: [
-        // später eigene Jarvis-Datei
-      ],
-
-      onKeywordDetected: (index) {
-
-        debugPrint(
-          '[JARVIS WAKEWORD] erkannt',
-        );
-
-        onWakeword();
-      },
-    );
-
-    await _manager?.start();
-  }
-
-  Future<void> dispose() async {
-    await _manager?.stop();
-    await _manager?.delete();
-  }
 }
+
+Future dispose() async { } }

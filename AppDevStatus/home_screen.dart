@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../../../core/constants.dart';
 import '../../../core/jarvis_event.dart';
@@ -30,7 +31,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
+  StreamSubscription? _wakewordSubscription;
+
   bool _isSpeaking = false;
+  bool _wakewordListenerRegistered = false;
   
   late final JarvisController controller;
   late final VoidCallback _controllerListener;
@@ -40,10 +44,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addObserver(this);
 
     controller = widget.controller;
-
+    
     _controllerListener = () {
       if (!mounted) return;
 
@@ -70,13 +75,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     controller.initialize();
     _voice.initialize();
 
-    JarvisWakewordBus.stream.listen(
+    _wakewordSubscription = JarvisWakewordBus.stream.listen(
       (_) async {
+
         debugPrint(
           '[JARVIS] Wakeword Trigger empfangen',
         );
 
+        debugPrint(
+          '[JARVIS] Controller State: ${controller.state}',
+        );
+
+        debugPrint(
+          '[JARVIS] Controller Busy: ${controller.isBusy}',
+        );
+
         if (controller.isBusy) {
+          debugPrint(
+            '[JARVIS] Wakeword ignoriert - Controller Busy',
+          );
           return;
         }
         await _startVoiceInput();
@@ -87,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
   @override
   void dispose() {
+    _wakewordSubscription?.cancel();
     controller.removeListener(_controllerListener);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -102,17 +120,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   }
 
   Future<void> _startVoiceInput() async {
-    debugPrint(
-      '[JARVIS] _startVoiceInput START',
-    );
-    controller.handleEvent(
-      JarvisEvent.voiceStarted,
-    );
+       
     await JarvisWakewordControl.stop();
+
     debugPrint(
       '[JARVIS] Wakeword gestoppt',
     );
-    await _voice.startListening(
+
+    final started = await _voice.startListening(
       onPartialResult: (text) {
         controller.updateLiveTranscript(text);
       },
@@ -124,6 +139,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
         controller.handleTextInput(text);
       },
     );
+
+    debugPrint(
+      '[JARVIS] startListening verlassen',
+    );
+
+    if (started) {
+      controller.handleEvent(
+        JarvisEvent.voiceStarted,
+      );
+    } else {
+      debugPrint(
+        '[JARVIS] STT konnte nicht gestartet werden',
+      );
+      await JarvisWakewordControl.start();
+    }
   }
 
   void _onMicPressed() async {

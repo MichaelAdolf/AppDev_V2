@@ -53,6 +53,7 @@ private var speechRecognizer: SpeechRecognizer? = null
 private var wakewordActive: Boolean = false
 private var wakewordRestartAllowed: Boolean = true
 private val wakewordText = "jarvis"
+private var lastWakewordTimestamp: Long = 0
 
 private var reconnectRunnable: Runnable? = null
 
@@ -395,147 +396,150 @@ private fun wakeDeviceBriefly() {
 }
 
 fun startWakewordListener() {
-wakewordRestartAllowed = true
-if (wakewordActive) {
-    return
-}
+    wakewordRestartAllowed = true
+    if (wakewordActive) {
+        return
+    }
 
-if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-    Log.d(
-        "JARVIS_WAKEWORD",
-        "SpeechRecognizer nicht verfügbar"
-    )
+    if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "SpeechRecognizer nicht verfügbar"
+        )
 
-    return
-}
+        return
+    }
 
-val hasPermission =
-    ContextCompat.checkSelfPermission(
-        this,
-        Manifest.permission.RECORD_AUDIO
-    ) == PackageManager.PERMISSION_GRANTED
+    val hasPermission =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
 
-if (!hasPermission) {
-    Log.d(
-        "JARVIS_WAKEWORD",
-        "RECORD_AUDIO Permission fehlt"
-    )
+    if (!hasPermission) {
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "RECORD_AUDIO Permission fehlt"
+        )
 
-    return
-}
+        return
+    }
 
-wakewordActive = true
+    wakewordActive = true
+    
+    speechRecognizer?.destroy()
 
-speechRecognizer =
-    SpeechRecognizer.createSpeechRecognizer(this)
+    speechRecognizer = null
 
-speechRecognizer?.setRecognitionListener(
-    object : RecognitionListener {
+    speechRecognizer =
+        SpeechRecognizer.createSpeechRecognizer(this)
 
-        override fun onReadyForSpeech(
-            params: Bundle?
-        ) {
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Bereit für Wakeword"
-            )
-        }
+    speechRecognizer?.setRecognitionListener(
+        object : RecognitionListener {
 
-        override fun onBeginningOfSpeech() {
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Sprache erkannt"
-            )
-        }
-
-        override fun onRmsChanged(
-            rmsdB: Float
-        ) {
-        }
-
-        override fun onBufferReceived(
-            buffer: ByteArray?
-        ) {
-        }
-
-        override fun onEndOfSpeech() {
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Sprachende"
-            )
-        }
-
-        override fun onError(
-            error: Int
-        ) {
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Fehler: $error"
-            )
-
-            restartWakewordListener()
-        }
-
-        override fun onResults(
-            results: Bundle?
-        ) {
-            val matches =
-                results?.getStringArrayList(
-                    SpeechRecognizer.RESULTS_RECOGNITION
-                )
-
-            val text =
-                matches
-                    ?.joinToString(" ")
-                    ?.lowercase(Locale.GERMAN)
-                    ?: ""
-
-            Log.d(
-                "JARVIS_WAKEWORD",
-                "Erkannt: $text"
-            )
-
-            if (text.contains(wakewordText)) {
-                onWakewordDetected()
-            }
-
-            restartWakewordListener()
-        }
-
-        override fun onPartialResults(
-            partialResults: Bundle?
-        ) {
-            val matches =
-                partialResults?.getStringArrayList(
-                    SpeechRecognizer.RESULTS_RECOGNITION
-                )
-
-            val text =
-                matches
-                    ?.joinToString(" ")
-                    ?.lowercase(Locale.GERMAN)
-                    ?: ""
-
-            if (text.contains(wakewordText)) {
+            override fun onReadyForSpeech(
+                params: Bundle?
+            ) {
                 Log.d(
                     "JARVIS_WAKEWORD",
-                    "Partial Wakeword erkannt: $text"
+                    "Bereit für Wakeword"
+                )
+            }
+
+            override fun onBeginningOfSpeech() {
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Sprache erkannt"
+                )
+            }
+
+            override fun onRmsChanged(
+                rmsdB: Float
+            ) {
+            }
+
+            override fun onBufferReceived(
+                buffer: ByteArray?
+            ) {
+            }
+
+            override fun onEndOfSpeech() {
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Sprachende"
+                )
+            }
+
+            override fun onError(
+                error: Int
+            ) {
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Fehler: $error"
                 )
 
-                onWakewordDetected()
+                restartWakewordListener()
+            }
+
+            override fun onResults(
+                results: Bundle?
+            ) {
+                val matches =
+                    results?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+
+                val text =
+                    matches
+                        ?.joinToString(" ")
+                        ?.lowercase(Locale.GERMAN)
+                        ?: ""
+
+                Log.d(
+                    "JARVIS_WAKEWORD",
+                    "Erkannt: $text"
+                )
+
+                if (text.contains(wakewordText)) {
+                    onWakewordDetected()
+                }
+
+                restartWakewordListener()
+            }
+
+            override fun onPartialResults(
+                partialResults: Bundle?
+            ) {
+                val matches =
+                    partialResults?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+
+                val text =
+                    matches
+                        ?.joinToString(" ")
+                        ?.lowercase(Locale.GERMAN)
+                        ?: ""
+
+                if (text.contains(wakewordText)) {
+                    Log.d(
+                        "JARVIS_WAKEWORD",
+                        "Partial Wakeword erkannt: $text"
+                    )
+
+                    onWakewordDetected()
+                }
+            }
+
+            override fun onEvent(
+                eventType: Int,
+                params: Bundle?
+            ) {
             }
         }
+    )
 
-        override fun onEvent(
-            eventType: Int,
-            params: Bundle?
-        ) {
-        }
-    }
-)
-
-startWakewordRecognition()
-
+    startWakewordRecognition()
 }
 
 fun stopWakewordListener() {
@@ -549,6 +553,11 @@ fun stopWakewordListener() {
 
     try{
         speechRecognizer?.cancel()
+
+        speechRecognizer?.destroy()
+
+        speechRecognizer = null
+
     } catch (_: Exception) {
 
     }
@@ -556,47 +565,46 @@ fun stopWakewordListener() {
 
 private fun startWakewordRecognition() {
 
-val intent =
-    Intent(
-        RecognizerIntent.ACTION_RECOGNIZE_SPEECH
-    ).apply {
-        putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+    val intent =
+        Intent(
+            RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+        ).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                "de-DE"
+            )
+
+            putExtra(
+                RecognizerIntent.EXTRA_PARTIAL_RESULTS,
+                true
+            )
+
+            putExtra(
+                RecognizerIntent.EXTRA_MAX_RESULTS,
+                3
+            )
+        }
+
+    try {
+        speechRecognizer?.startListening(intent)
+
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Listening gestartet"
+        )
+    } catch (e: Exception) {
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Start Fehler: ${e.message}"
         )
 
-        putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE,
-            "de-DE"
-        )
-
-        putExtra(
-            RecognizerIntent.EXTRA_PARTIAL_RESULTS,
-            true
-        )
-
-        putExtra(
-            RecognizerIntent.EXTRA_MAX_RESULTS,
-            3
-        )
+        restartWakewordListener()
     }
-
-try {
-    speechRecognizer?.startListening(intent)
-
-    Log.d(
-        "JARVIS_WAKEWORD",
-        "Listening gestartet"
-    )
-} catch (e: Exception) {
-    Log.d(
-        "JARVIS_WAKEWORD",
-        "Start Fehler: ${e.message}"
-    )
-
-    restartWakewordListener()
-}
-
 }
 
 private fun restartWakewordListener() {
@@ -608,7 +616,7 @@ private fun restartWakewordListener() {
         )
         return
     }
-    
+
     mainHandler.postDelayed(
         {
             try {
@@ -626,17 +634,32 @@ private fun restartWakewordListener() {
 }
 
 private fun onWakewordDetected() {
+    
+    val now = System.currentTimeMillis()
 
-Log.d(
-    "JARVIS_WAKEWORD",
-    "Wakeword erkannt"
-)
+    if (
+        now - lastWakewordTimestamp <
+        3000
+    ) {
 
-wakeDeviceBriefly()
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Wakeword Cooldown aktiv"
+        )
+        return
+    }
+    lastWakewordTimestamp = now
 
-speakWakewordAck()
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "Wakeword erkannt"
+    )
 
-MainActivity.sendWakewordToFlutter()
+    wakeDeviceBriefly()
+
+    speakWakewordAck()
+
+    MainActivity.sendWakewordToFlutter()
 
 }
 
