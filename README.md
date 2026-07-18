@@ -1,37 +1,39 @@
-JarvisBackgroundBridge.initialize(
-  onEvent: (event) async {
-    print(
-      '[JARVIS BACKGROUND RAW] $event',
-    );
+fun sendWakewordToFlutter() {
 
-    try {
-      final decoded =
-          jsonDecode(event) as Map<String, dynamic>;
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "sendWakewordToFlutter"
+    )
 
-      final response =
-          HaResponse.fromJson(decoded);
+    val activity = currentInstance
 
-      await DeviceWakeService.wakeDevice();
+    if (activity == null) {
 
-      await controller.handleExternalResponse(
-        response,
-        source: 'android-service',
-      );
-    } catch (e) {
-      print(
-        '[JARVIS BACKGROUND ERROR] $e',
-      );
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Flutter Activity fehlt - Wakeword gepuffert"
+        )
+
+        pendingWakeword = true
+        return
     }
-  },
-  onWakeword: () async {
-    print(
-      '[JARVIS WAKEWORD] Flutter hat Wakeword erkannt',
-    );
 
-    await DeviceWakeService.wakeDevice();
+    if (activity.channel == null) {
 
-    // Nächster Schritt:
-    // Hier koppeln wir später direkt controller.startListening()
-    // oder deine bestehende Mikrofon-Startlogik an.
-  },
-);
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "MethodChannel fehlt - Wakeword gepuffert"
+        )
+
+        pendingWakeword = true
+        return
+    }
+
+    activity.runOnUiThread {
+        activity.channel?.invokeMethod(
+            "wakewordDetected",
+            null
+        )
+    }
+}
+``
