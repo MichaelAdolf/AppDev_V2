@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meta/meta.dart';
 import 'dart:async';
 
 import '../../../core/constants.dart';
@@ -113,15 +114,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(
     AppLifecycleState state,
-  ) {
+  ) async {
     debugPrint(
       '[Jarvis] Lifecycle: $state',
     );
+
+    if (
+      state == AppLifecycleState.paused
+      ) {
+        debugPrint(
+          '[Jarvis] App pausiert',
+        );
+
+        await _voice.stopListening();
+        await controller.interrupt();
+        await JarvisWakewordControl.stop();
+      }
+
+    if (
+      state == AppLifecycleState.resumed
+      ) {
+        debugPrint(
+          '[Jarvis] App resumed -> voice neu initialisieren',
+        );
+
+        await _voice.stopListening();
+        await _voice.initialize();
+        await JarvisWakewordControl.start();
+      }
   }
 
   Future<void> _startVoiceInput() async {
-       
+    
     await JarvisWakewordControl.stop();
+
+    await Future.delayed(
+      const Duration(milliseconds: 500)
+    );
 
     debugPrint(
       '[JARVIS] Wakeword gestoppt',
@@ -133,9 +162,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
       },
 
       onFinalResult: (text) {
+        
         controller.handleEvent(
           JarvisEvent.voiceStopped,
         );
+        
         controller.handleTextInput(text);
       },
     );
@@ -148,6 +179,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
       controller.handleEvent(
         JarvisEvent.voiceStarted,
       );
+      Future.delayed(
+        const Duration(seconds: 12),
+        () async {
+          if (
+            controller.state ==
+            JarvisState.listening
+          ) {
+            debugPrint(
+              '[JARVIS] Listening Timeout',
+            );
+
+            await _voice.stopListening();
+
+            controller.clearLiveTranscript();
+
+            await controller.interrupt();
+
+            await JarvisWakewordControl.start();
+            }
+          }
+          );
     } else {
       debugPrint(
         '[JARVIS] STT konnte nicht gestartet werden',

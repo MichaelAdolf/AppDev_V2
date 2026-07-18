@@ -493,7 +493,7 @@ fun startWakewordListener() {
 
                 val text =
                     matches
-                        ?.joinToString(" ")
+                        ?.firstOrNull()
                         ?.lowercase(Locale.GERMAN)
                         ?: ""
 
@@ -502,7 +502,10 @@ fun startWakewordListener() {
                     "Erkannt: $text"
                 )
 
-                if (text.contains(wakewordText)) {
+                if (
+                    wakewordActive &&
+                    text.contains(wakewordText)
+                ) {
                     onWakewordDetected()
                 }
 
@@ -519,11 +522,14 @@ fun startWakewordListener() {
 
                 val text =
                     matches
-                        ?.joinToString(" ")
+                        ?.firstOrNull()
                         ?.lowercase(Locale.GERMAN)
                         ?: ""
 
-                if (text.contains(wakewordText)) {
+                if (
+                    wakewordActive &&
+                    text.contains(wakewordText)
+                ) {
                     Log.d(
                         "JARVIS_WAKEWORD",
                         "Partial Wakeword erkannt: $text"
@@ -571,8 +577,6 @@ fun stopWakewordListener() {
 }
 
 private fun startWakewordRecognition() {
-
-    micOwnedByFlutter = false
     
     if (micOwnedByFlutter) {
         Log.d(
@@ -625,6 +629,10 @@ private fun startWakewordRecognition() {
 }
 
 private fun restartWakewordListener() {
+
+    micOwnedByFlutter = false
+
+    wakewordRestartAllowed = true
 
     if (!wakewordRestartAllowed){
         Log.d(
