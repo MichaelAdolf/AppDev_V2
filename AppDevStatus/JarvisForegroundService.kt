@@ -39,6 +39,8 @@ companion object {
 
     private const val NODE_RED_WS_URL =
         "ws://192.168.178.47:1880/endpoint/ws/jarvis-router"
+
+    var instance: JarvisForegroundService? = null
 }
 
 private val mainHandler =
@@ -47,7 +49,7 @@ private val mainHandler =
 private var webSocket: WebSocket? = null
 private var tts: TextToSpeech? = null
 
-private var SpeechRecognizer: SpeechRecognizer? = null
+private var speechRecognizer: SpeechRecognizer? = null
 private var wakewordActive: Boolean = false
 private val wakewordText = "jarvis"
 
@@ -63,6 +65,7 @@ private val client: OkHttpClient =
         .build()
 
 override fun onCreate() {
+    instance = this
     super.onCreate()
 
     createNotificationChannel()
@@ -125,9 +128,13 @@ override fun onDestroy() {
     tts?.shutdown()
     tts = null
 
-    SpeechRecognizer?.destroy()
-    SpeechRecognizer = null
+    speechRecognizer?.destroy()
+    speechRecognizer = null
     wakewordActive = false
+
+    if (instance == this) {
+        instance = null
+    }
 
     super.onDestroy()
 }
@@ -386,7 +393,7 @@ private fun wakeDeviceBriefly() {
     }
 }
 
-private fun startWakewordListener() {
+fun startWakewordListener() {
 
 if (wakewordActive) {
     return
@@ -418,10 +425,10 @@ if (!hasPermission) {
 
 wakewordActive = true
 
-SpeechRecognizer =
+speechRecognizer =
     SpeechRecognizer.createSpeechRecognizer(this)
 
-SpeechRecognizer?.setRecognitionListener(
+speechRecognizer?.setRecognitionListener(
     object : RecognitionListener {
 
         override fun onReadyForSpeech(
@@ -529,6 +536,22 @@ SpeechRecognizer?.setRecognitionListener(
 startWakewordRecognition()
 
 }
+
+fun stopWakewordListener() {
+    Log.d(
+        "JARVIS_WAKEWORD",
+        "Wakeword STOP"
+    )
+
+    wakewordActive = false
+
+    try{
+        speechRecognizer?.cancel()
+    } catch (_: Exception) {
+
+    }
+}
+
 private fun startWakewordRecognition() {
 
 val intent =
@@ -557,7 +580,7 @@ val intent =
     }
 
 try {
-    SpeechRecognizer?.startListening(intent)
+    speechRecognizer?.startListening(intent)
 
     Log.d(
         "JARVIS_WAKEWORD",
@@ -579,7 +602,7 @@ private fun restartWakewordListener() {
 mainHandler.postDelayed(
     {
         try {
-            SpeechRecognizer?.cancel()
+            speechRecognizer?.cancel()
             startWakewordRecognition()
         } catch (e: Exception) {
             Log.d(

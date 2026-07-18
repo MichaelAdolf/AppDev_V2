@@ -13,7 +13,8 @@ import '../widgets/ambient_particles.dart';
 import '../widgets/conversation_timeline.dart';
 import '../widgets/hud_overlay.dart';
 import '../widgets/ambient_connections.dart';
-import '../../../services/device_wake_service.dart';
+import '../../../services/jarvis_wakeword_bus.dart';
+import '../../../services/jarvis_wakeword_control.dart';
 import 'package:flutter/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -69,6 +70,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     controller.initialize();
     _voice.initialize();
 
+    JarvisWakewordBus.stream.listen(
+      (_) async {
+        debugPrint(
+          '[JARVIS] Wakeword Trigger empfangen',
+        );
+
+        if (controller.isBusy) {
+          return;
+        }
+        await _startVoiceInput();
+      },
+    );
+
   }
 
   @override
@@ -91,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     controller.handleEvent(
       JarvisEvent.voiceStarted,
     );
-
+    await JarvisWakewordControl.stop();
     await _voice.startListening(
       onPartialResult: (text) {
         controller.updateLiveTranscript(text);

@@ -7,7 +7,7 @@ import 'services/home_assistant_service.dart';
 import 'services/real_home_assistant_service.dart';
 import 'services/jarvis_background_bridge.dart';
 import 'services/device_wake_service.dart';
-import 'services/jarvis_wakeword_service.dart';
+import 'services/jarvis_wakeword_bus.dart';
 //import 'services/mock_home_assistant_service.dart';
 import 'core/constants.dart';
 import 'core/theme.dart';
@@ -38,28 +38,38 @@ Future<void> main() async {
     homeAssistantService: haService,
   );
 
-  JarvisBackgroundBridge.initialize(
+  JarvisBackgroundBridge.initialize( 
     onEvent: (event) async { 
-      print( '[JARVIS BACKGROUND RAW] $event', );
-    
-    try {
-      final decoded =
-          jsonDecode(event) as Map<String, dynamic>;
+      print( 
+        '[JARVIS BACKGROUND RAW] $event', 
+        );
 
-      final response =
-          HaResponse.fromJson(decoded);
+      try {
+        final decoded =
+            jsonDecode(event) as Map<String, dynamic>;
+
+        final response =
+            HaResponse.fromJson(decoded);
+
+        await DeviceWakeService.wakeDevice();
+
+        await controller.handleExternalResponse(
+          response,
+          source: 'android-service',
+        );
+      } catch (e) {
+        print(
+          '[JARVIS BACKGROUND ERROR] $e',
+        );
+      }
+
+      }, onWakeword: () async { 
+        print( '[JARVIS WAKEWORD] Flutter hat Wakeword erkannt', 
+        );
 
       await DeviceWakeService.wakeDevice();
 
-      await controller.handleExternalResponse(
-        response,
-        source: 'android-service',
-      );
-    } catch (e) {
-      print(
-        '[JARVIS BACKGROUND ERROR] $e',
-      );
-      }
+      JarvisWakewordBus.fire();
     }, 
   );
 
@@ -67,16 +77,6 @@ Future<void> main() async {
     JarvisApp(
       controller: controller,
     ),
-  );
-
-  final wakewordService = JarvisWakewordService();
-
-  await wakewordService.initialize(
-    onWakeword: (){
-      print(
-        '[JARVIS] Wakeword erkannt',
-      );
-    }
   );
 }
 

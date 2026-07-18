@@ -23,6 +23,8 @@ companion object {
 
     private var pendingEvent: String? = null
 
+    private var pendingWakeword: Boolean = false
+
     fun openAndDeliverEvent(
         context: Context,
         event: String
@@ -92,6 +94,45 @@ companion object {
             )
         }
     }
+
+    fun sendWakewordToFlutter() {
+
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "sendWakewordToFlutter"
+        )
+
+        val activity = currentInstance
+
+        if (activity == null) {
+
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "Flutter Activity fehlt - Wakeword gepuffert"
+            )
+
+            pendingWakeword = true
+            return
+        }
+
+        if (activity.channel == null) {
+
+            Log.d(
+                "JARVIS_WAKEWORD",
+                "MethodChannel fehlt - Wakeword gepuffert"
+            )
+
+            pendingWakeword = true
+            return
+        }
+
+        activity.runOnUiThread {
+            activity.channel?.invokeMethod(
+                "wakewordDetected",
+                null
+            )
+        }
+    }
 }
 
 private var channel: MethodChannel? = null
@@ -153,6 +194,30 @@ override fun configureFlutterEngine(
         CHANNEL_NAME
     )
 
+    channel?.setMethodCallHandler { call, result ->
+        when (call.method) {
+
+            "stopWakeword" -> {
+
+                JarvisForegroundService.instance
+                    ?.stopWakewordListener()
+
+                result.success(null)
+            }
+
+            "startWakeword" -> {
+
+                JarvisForegroundService.instance
+                    ?.startWakewordListener()
+
+                result.success(null)
+            }
+
+            else -> result.notImplemented()
+        }
+
+    }
+
     Log.d(
         "JARVIS_BRIDGE",
         "MethodChannel erstellt"
@@ -187,7 +252,6 @@ private fun handleIncomingIntent(
 }
 
 private fun flushPendingEvent() {
-    val event = pendingEvent ?: return
 
     if (channel == null) {
         Log.d(
@@ -198,17 +262,35 @@ private fun flushPendingEvent() {
         return
     }
 
-    Log.d(
-        "JARVIS_BRIDGE",
-        "Gepuffertes Event wird gesendet"
-    )
+    val event = pendingEvent
 
-    pendingEvent = null
+    if (event != null) {
+        Log.d(
+            "JARVIS_BRIDGE",
+            "Gepuffertes Event wird gesendet"
+        )
 
-    channel?.invokeMethod(
-        "backgroundEvent",
-        event
-    )
+        pendingEvent = null
+
+        channel?.invokeMethod(
+            "backgroundEvent",
+            event
+        )
+    }
+    
+    if (pendingWakeword) {
+        Log.d(
+            "JARVIS_WAKEWORD",
+            "Gepuffertes Wakeword wird gesendet"
+        )
+        
+        pendingWakeword = false
+
+        channel?.invokeMethod(
+            "wakewordDetected",
+            null
+        )
+    }
 }
 
 }
