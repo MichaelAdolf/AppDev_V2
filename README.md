@@ -1,23 +1,21 @@
-Future<void> _toggleWakeword() async {
+# StockMind
 
-  setState(() {
-    _wakewordEnabled = !_wakewordEnabled;
-  });
+StockMind ist eine modulare Aktienanalyse-Plattform.
 
-  if (_wakewordEnabled) {
+Ziele:
 
-    await JarvisWakewordControl.start();
+- tägliche Marktanalyse
+- Watchlist-Verwaltung
+- technische Analyse
+- Fundamentalanalyse
+- Backtesting
+- Home Assistant Integration
+- Node-RED Integration
+- Jarvis Integration
+- Streamlit Dashboard
 
-    debugPrint(
-      '[JARVIS] Wakeword aktiviert',
-    );
+Architektur:
 
-  } else {
-
-    await JarvisWakewordControl.stop();
-
-    debugPrint(
-      '[JARVIS] Wakeword deaktiviert',
-    );
-  }
-}
+- Clean Architecture
+- SOLID
+- Domain Driven Design
