@@ -1,23 +1,5 @@
-from stockmind.shared.config.settings import Settings
-from stockmind.shared.logging.logger import (
-    configure_logging
-)
-
-import logging
-
-
-settings = Settings.load()
-
-configure_logging(
-    settings.log_level
-)
-
-logger = logging.getLogger(
-    "startup"
-)
-
-logger.info(
-    "StockMind gestartet."
-)
-
-print(settings)
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_startup.py
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_startup.py", line 1, in <module>
+    from stockmind.shared.config.settings import settings
+ModuleNotFoundError: No module named 'stockmind'
