@@ -1,21 +1,35 @@
-# StockMind
+from dataclasses import dataclass
+from pathlib import Path
+import os
 
-StockMind ist eine modulare Aktienanalyse-Plattform.
+from dotenv import load_dotenv
 
-Ziele:
 
-- tägliche Marktanalyse
-- Watchlist-Verwaltung
-- technische Analyse
-- Fundamentalanalyse
-- Backtesting
-- Home Assistant Integration
-- Node-RED Integration
-- Jarvis Integration
-- Streamlit Dashboard
+@dataclass(frozen=True)
+class Settings:
+    app_name: str
+    app_version: str
+    environment: str
+    database_url: str
+    log_level: str
 
-Architektur:
+    @classmethod
+    def load(cls) -> "Settings":
+        load_dotenv()
 
-- Clean Architecture
-- SOLID
-- Domain Driven Design
+        return cls(
+            app_name="StockMind",
+            app_version="1.0.0",
+            environment=os.getenv(
+                "APP_ENV",
+                "development"
+            ),
+            database_url=os.getenv(
+                "DATABASE_URL",
+                "sqlite:///stockmind.db"
+            ),
+            log_level=os.getenv(
+                "LOG_LEVEL",
+                "INFO"
+            )
+        )
