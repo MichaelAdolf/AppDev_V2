@@ -398,7 +398,11 @@ private fun wakeDeviceBriefly() {
 }
 
 fun startWakewordListener() {
+    
+    micOwnedByFlutter = false
+
     wakewordRestartAllowed = true
+
     if (wakewordActive) {
         return
     }
@@ -629,10 +633,6 @@ private fun startWakewordRecognition() {
 }
 
 private fun restartWakewordListener() {
-
-    micOwnedByFlutter = false
-
-    wakewordRestartAllowed = true
 
     if (!wakewordRestartAllowed){
         Log.d(

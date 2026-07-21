@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   StreamSubscription? _wakewordSubscription;
 
   bool _isSpeaking = false;
-  bool _wakewordListenerRegistered = false;
+  bool _wakewordEnabled = true;
   
   late final JarvisController controller;
   late final VoidCallback _controllerListener;
@@ -62,9 +62,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
         AudioService.speak(
           controller.responseText,
-          onComplete: () {
+          onComplete: () async {
             _isSpeaking = false;
             controller.onSpeechFinished();
+
+            if (_wakewordEnabled) {
+              await JarvisWakewordControl.start();
+            }
           },
         );
       }
@@ -78,6 +82,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
     _wakewordSubscription = JarvisWakewordBus.stream.listen(
       (_) async {
+        
+        if (!_wakewordEnabled)
+        {
+          return;
+        }
 
         debugPrint(
           '[JARVIS] Wakeword Trigger empfangen',
@@ -140,7 +149,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
         await _voice.stopListening();
         await _voice.initialize();
-        await JarvisWakewordControl.start();
+        if (_wakewordEnabled) {
+          await JarvisWakewordControl.start();
+        }
       }
   }
 
@@ -196,7 +207,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
             await controller.interrupt();
 
-            await JarvisWakewordControl.start();
+            if (_wakewordEnabled) {
+              await JarvisWakewordControl.start();
+            }
             }
           }
           );
@@ -204,7 +217,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
       debugPrint(
         '[JARVIS] STT konnte nicht gestartet werden',
       );
-      await JarvisWakewordControl.start();
+      if (_wakewordEnabled) {
+        await JarvisWakewordControl.start();
+      }
     }
   }
 
@@ -223,6 +238,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     }
 
     await _startVoiceInput();
+  }
+
+  Future _toggleWakeword() async {
+
+    setState(() { _wakewordEnabled = !_wakewordEnabled; });
+
+    if (_wakewordEnabled) {
+
+    await JarvisWakewordControl.start();
+
+    debugPrint(
+      '[JARVIS] Wakeword aktiviert',
+    );
+
+    } else {
+
+    await JarvisWakewordControl.stop();
+
+    debugPrint(
+      '[JARVIS] Wakeword deaktiviert',
+    );
+    } 
   }
 
   Color _voiceHudColor() {
@@ -355,6 +392,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
                 const SizedBox(height: 18),
                 // RESPONSE TEXT
               ],
+            ),
+          ),
+          Positioned(
+            right: 20,
+            top: 180,
+            child: GestureDetector(
+              onTap: _toggleWakeword,
+              child: AnimatedContainer(
+                duration: const Duration(
+                  milliseconds: 250,
+                ),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _wakewordEnabled
+                    ? const Color(0xFF002D72)
+                    : Colors.black,
+                  border: Border.all(
+                    color: Colors.cyanAccent,
+                    width: 2,
+                    ),
+                  boxShadow: _wakewordEnabled
+                    ? [
+                      BoxShadow(
+                        color: Colors.blueAccent
+                        .withOpacity(0.7),
+                        blurRadius: 20,
+                        spreadRadius: 3,
+                        ),
+                    ]
+                    :[],
+                ),
+                child: Icon(
+                  Icons.mic,
+                  color: _wakewordEnabled
+                    ? Colors.cyanAccent
+                    : Colors.grey,
+                  size: 34,
+                ),
+              ),
             ),
           ),
           Positioned(

@@ -6,7 +6,6 @@ import '../../../core/ha_response.dart';
 import '../../../services/home_assistant_service.dart';
 import '../../../core/jarvis_intent_parser.dart';
 import '../../../services/conversation_service.dart';
-import '../../../services/jarvis_wakeword_control.dart';
 import '../../../core/conversation_entry.dart';
 
 class JarvisController extends ChangeNotifier {
@@ -152,7 +151,6 @@ class JarvisController extends ChangeNotifier {
     _responseText = '';
     _liveTranscript = '';
     _setState(JarvisState.idle);
-    await JarvisWakewordControl.start();
   }
 
   Future<void> handleExternalResponse(

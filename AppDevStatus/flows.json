@@ -1,0 +1,649 @@
+[
+    {
+        "id": "subflow_jarvis_light_demo",
+        "type": "subflow",
+        "name": "Jarvis Subflow - Licht Demo",
+        "info": "Demo-Subflow für lightOn/lightOff. Später kann hier ein echter Home-Assistant Call-Service Node ergänzt werden.",
+        "category": "Jarvis",
+        "in": [
+            {
+                "x": 60,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "light_demo_mapper"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 520,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "light_demo_mapper",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "light_demo_mapper",
+        "type": "function",
+        "z": "subflow_jarvis_light_demo",
+        "name": "Licht Demo Response",
+        "func": "const text = (msg.payload.rawText || \"\").toLowerCase();\n\nlet entityId = \"light.living_room\"\nlet action = \"turn_on\"\n\nif (text.includes(\"Schlafzimmer\")) {\n    entityId = 'light.bedroom';\n}\n\nif (text.includes(\"wohnzimmer\")) {\n    entityId = 'light.living_room';\n}\n\nif (text.includes(\"aus\")) {\n    action = 'turn_off';\n}\n\nif (text.includes(\"an\")) {\n    action = 'turn_on';\n}\n\nmsg.payload = {\n    success: true,\n    intent: \"light\",\n    entity: entityId,\n    state: action,\n    message: `${entityId} wurde über den Jarvis Router verarbeitet (${action}).`\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "subflow_jarvis_daily_info",
+        "type": "subflow",
+        "name": "Jarvis Subflow - Tagesinfo",
+        "info": "Erzeugt Tagesinfo, triggert Benachrichtigung/TTS und gibt Response an die App zurück.",
+        "category": "Jarvis",
+        "in": [
+            {
+                "x": 40,
+                "y": 160,
+                "wires": [
+                    {
+                        "id": "daily_weather_request"
+                    },
+                    {
+                        "id": "daily_calendar_state"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 1400,
+                "y": 260,
+                "wires": [
+                    {
+                        "id": "daily_response_mapper",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [],
+        "meta": {},
+        "color": "#3FADB5"
+    },
+    {
+        "id": "daily_weather_request",
+        "type": "http request",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Abgriff Wetterdaten",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=48.14&longitude=11.58&current_weather=true",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 230,
+        "y": 100,
+        "wires": [
+            [
+                "daily_weather_mapper"
+            ]
+        ]
+    },
+    {
+        "id": "daily_calendar_state",
+        "type": "api-current-state",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Kalender",
+        "server": "daf816ed.cff788",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "calendar.mihi_adolf_gmail_com",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 210,
+        "y": 260,
+        "wires": [
+            [
+                "daily_calendar_mapper"
+            ]
+        ]
+    },
+    {
+        "id": "daily_weather_mapper",
+        "type": "function",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Erzeuge Wetter",
+        "func": "msg.topic = 'weather';\nmsg.parts = { id: 'Tagesinfo' };\nmsg.weather = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 100,
+        "wires": [
+            [
+                "daily_join"
+            ]
+        ]
+    },
+    {
+        "id": "daily_calendar_mapper",
+        "type": "function",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Erzeuge Kalender",
+        "func": "msg.topic = 'calendar';\nmsg.calendar = msg.payload;\nmsg.parts = { id: 'Tagesinfo' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 260,
+        "wires": [
+            [
+                "daily_join"
+            ]
+        ]
+    },
+    {
+        "id": "daily_join",
+        "type": "join",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Join Wetter + Kalender",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": true,
+        "accumulate": false,
+        "timeout": "10",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 710,
+        "y": 180,
+        "wires": [
+            [
+                "daily_generate_text"
+            ]
+        ]
+    },
+    {
+        "id": "daily_generate_text",
+        "type": "function",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Erzeuge Tagesinfo",
+        "func": "let now = new Date();\nlet weather = msg.payload.weather;\nlet calendar = msg.payload.calendar;\n\nfunction dayToText(day) {\n    const days = {\n        1: 'erster', 2: 'zweiter', 3: 'dritter', 4: 'vierter', 5: 'fünfter',\n        6: 'sechster', 7: 'siebter', 8: 'achter', 9: 'neunter', 10: 'zehnter',\n        11: 'elfter', 12: 'zwölfter', 13: 'dreizehnter', 14: 'vierzehnter', 15: 'fünfzehnter',\n        16: 'sechzehnter', 17: 'siebzehnter', 18: 'achtzehnter', 19: 'neunzehnter', 20: 'zwanzigster',\n        21: 'einundzwanzigster', 22: 'zweiundzwanzigster', 23: 'dreiundzwanzigster', 24: 'vierundzwanzigster',\n        25: 'fünfundzwanzigster', 26: 'sechsundzwanzigster', 27: 'siebenundzwanzigster', 28: 'achtundzwanzigster',\n        29: 'neunundzwanzigster', 30: 'dreißigster', 31: 'einunddreißigster'\n    };\n    return days[day] || day;\n}\n\nlet tempRaw = weather?.current_weather?.temperature ?? null;\nlet temp = tempRaw !== null ? Math.round(tempRaw) : null;\nlet weatherCode = weather?.current_weather?.weathercode ?? -1;\nlet event = calendar?.attributes?.message ?? 'keine Termine';\n\nlet time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });\nlet weekday = now.toLocaleDateString('de-DE', { weekday: 'long' });\nlet month = now.toLocaleDateString('de-DE', { month: 'long' });\nlet year = now.getFullYear();\nlet spokenDay = dayToText(now.getDate());\nlet date = `${weekday}, der ${spokenDay} ${month} ${year}`;\n\nlet hour = now.getHours();\nlet greeting = 'Hallo';\n\nif (hour < 12) {\n    greeting = 'Guten Morgen';\n} else if (hour < 18) {\n    greeting = 'Guten Tag';\n} else {\n    greeting = 'Guten Abend';\n}\n\nlet weatherDescription = 'wechselhaftem Wetter';\n\nswitch (weatherCode) {\n    case 0:\n        weatherDescription = 'klarem Himmel';\n        break;\n    case 1:\n    case 2:\n    case 3:\n        weatherDescription = 'leicht bewölktem Himmel';\n        break;\n    case 45:\n    case 48:\n        weatherDescription = 'nebligem Wetter';\n        break;\n    case 51:\n    case 53:\n    case 55:\n        weatherDescription = 'leichtem Regen';\n        break;\n    case 61:\n    case 63:\n    case 65:\n        weatherDescription = 'regnerischem Wetter';\n        break;\n    case 71:\n    case 73:\n    case 75:\n        weatherDescription = 'Schneefall';\n        break;\n    case 80:\n    case 81:\n    case 82:\n        weatherDescription = 'Regenschauern';\n        break;\n    case 95:\n        weatherDescription = 'Gewitter';\n        break;\n}\n\nlet weatherText = 'Ich konnte das Wetter momentan nicht abrufen.';\nif (temp !== null) {\n    weatherText = `Draußen sind es aktuell ${temp} Grad bei ${weatherDescription}.`;\n}\n\nlet eventText = '';\nif (event === 'keine Termine') {\n    eventText = 'Du hast aktuell keine anstehenden Termine.';\n} else {\n    eventText = `Dein nächster Termin ist ${event}.`;\n}\n\nlet message =\n    `${greeting}. ` +\n    `Heute ist ${date}. ` +\n    `Die aktuelle Uhrzeit ist ${time}. ` +\n    `${weatherText} ` +\n    `${eventText}`;\n\nmsg.payload = {\n    message: message,\n    title: 'Jarvis Tagesinfo',\n    data: {\n        tts_text: message\n    }\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 180,
+        "wires": [
+            [
+                "daily_persistent_notification",
+                "daily_response_mapper"
+            ]
+        ]
+    },
+    {
+        "id": "daily_notify_smartphone",
+        "type": "api-call-service",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Notify Jarvis Smartphone",
+        "server": "daf816ed.cff788",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.mobile_app_smartphone",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\t  \"message\": $$.payload.message,\t  \"title\": $$.payload.title,\t  data: {\t        tts_text: $$.payload.message\t    }\t}",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "mobile_app_smartphone",
+        "x": 1240,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "daily_persistent_notification",
+        "type": "api-call-service",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Persistent Notification",
+        "server": "daf816ed.cff788",
+        "version": 7,
+        "debugenabled": false,
+        "action": "persistent_notification.create",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\t  \"message\": $$.payload.message,\t  \"title\": $$.payload.title\t}",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "persistent_notification",
+        "service": "create",
+        "x": 1240,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "daily_tts",
+        "type": "api-call-service",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Sprachausgabe",
+        "server": "daf816ed.cff788",
+        "version": 7,
+        "debugenabled": false,
+        "action": "tts.speak",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "tts.piper_2"
+        ],
+        "labelId": [],
+        "data": "{\t  \"media_player_entity_id\": \"media_player.browser_mod_d87c9a3f_d6beffe5_bildschirm\",\t  \"message\": msg.payload.message\t\t}",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "tts",
+        "service": "speak",
+        "x": 1210,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "daily_response_mapper",
+        "type": "function",
+        "z": "subflow_jarvis_daily_info",
+        "name": "Response an App",
+        "func": "msg.payload = {\n    success: true,\n    intent: 'dailyInfo',\n    entity: 'jarvis.daily_info',\n    state: 'executed',\n    message: msg.payload.message\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1220,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "daf816ed.cff788",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": [],
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "statusSeparator": "",
+        "enableGlobalContextStore": false
+    },
+    {
+        "id": "jarvis_router_tab",
+        "type": "tab",
+        "label": "Jarvis - Router",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "http_in_jarvis_router",
+        "type": "http in",
+        "z": "jarvis_router_tab",
+        "name": "Jarvis Router Input",
+        "url": "/jarvis-router",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 140,
+        "wires": [
+            [
+                "8bd064d370ad7454"
+            ]
+        ]
+    },
+    {
+        "id": "router_payload_debug",
+        "type": "debug",
+        "z": "jarvis_router_tab",
+        "name": "Router Input Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1430,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "daily_info_subflow_instance",
+        "type": "subflow:subflow_jarvis_daily_info",
+        "z": "jarvis_router_tab",
+        "name": "Tagesinfo ausführen",
+        "x": 940,
+        "y": 80,
+        "wires": [
+            [
+                "router_payload_debug",
+                "7b9358c2fa7f1c4f"
+            ]
+        ]
+    },
+    {
+        "id": "light_demo_subflow_instance",
+        "type": "subflow:subflow_jarvis_light_demo",
+        "z": "jarvis_router_tab",
+        "name": "Licht Demo ausführen",
+        "x": 940,
+        "y": 140,
+        "wires": [
+            [
+                "http_response_jarvis_router",
+                "router_payload_debug"
+            ]
+        ]
+    },
+    {
+        "id": "unknown_response_mapper",
+        "type": "function",
+        "z": "jarvis_router_tab",
+        "name": "Unknown Response",
+        "func": "const text = msg.payload.rawText || \"unbekannt\";\n\nmsg.payload = {\n    success: false,\n    intent: \"unknown\",\n    entity: \"\",\n    state: \"ignored\",\n    message: `Für \"${text}\" wurde keine passende Capability gefunden.`\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 200,
+        "wires": [
+            [
+                "http_response_jarvis_router",
+                "router_payload_debug"
+            ]
+        ]
+    },
+    {
+        "id": "http_response_jarvis_router",
+        "type": "http response",
+        "z": "jarvis_router_tab",
+        "name": "Return to Flutter App",
+        "statusCode": "",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 1250,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "8bd064d370ad7454",
+        "type": "function",
+        "z": "jarvis_router_tab",
+        "name": "Capability Router",
+        "func": "const text = (msg.payload.rawText || '').toLowerCase();\n\nif (text.includes('licht')) {\n    msg.capability = 'light';\n}\nelse if (text.includes('tagesinfo')) {\n    msg.capability = 'daily_info';\n}\nelse {\n    msg.capability = 'unknown';\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 140,
+        "wires": [
+            [
+                "1081cd91b7adad20"
+            ]
+        ]
+    },
+    {
+        "id": "1081cd91b7adad20",
+        "type": "switch",
+        "z": "jarvis_router_tab",
+        "name": "Capability Switch",
+        "property": "capability",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "daily_info",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "light",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 670,
+        "y": 140,
+        "wires": [
+            [
+                "daily_info_subflow_instance"
+            ],
+            [
+                "light_demo_subflow_instance"
+            ],
+            [
+                "unknown_response_mapper"
+            ]
+        ]
+    },
+    {
+        "id": "84a94f031fe17f79",
+        "type": "server-state-changed",
+        "z": "jarvis_router_tab",
+        "name": "Wecker Auslösen",
+        "server": "daf816ed.cff788",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.oppo_smartphone_next_alarm"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 420,
+        "y": 80,
+        "wires": [
+            [
+                "4094edd4599c151a"
+            ]
+        ]
+    },
+    {
+        "id": "7b9358c2fa7f1c4f",
+        "type": "websocket out",
+        "z": "jarvis_router_tab",
+        "name": "Jarvis",
+        "server": "c4b01424fca840b0",
+        "client": "",
+        "x": 1230,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "4094edd4599c151a",
+        "type": "switch",
+        "z": "jarvis_router_tab",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "unavailable",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 630,
+        "y": 80,
+        "wires": [
+            [
+                "daily_info_subflow_instance",
+                "fe3bed5596a73527"
+            ]
+        ]
+    },
+    {
+        "id": "fe3bed5596a73527",
+        "type": "debug",
+        "z": "jarvis_router_tab",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "c4b01424fca840b0",
+        "type": "websocket-listener",
+        "path": "/ws/jarvis-router",
+        "wholemsg": "false"
+    },
+    {
+        "id": "6a943df994480469",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-home-assistant-websocket": "0.80.3"
+        }
+    }
+]
