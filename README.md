@@ -1,16 +1,23 @@
+from stockmind.shared.config.settings import Settings
+from stockmind.shared.logging.logger import (
+    configure_logging
+)
+
 import logging
 
 
-def configure_logging(
-    level: str = "INFO"
-) -> None:
+settings = Settings.load()
 
-    logging.basicConfig(
-        level=getattr(logging, level),
-        format=(
-            "%(asctime)s | "
-            "%(levelname)s | "
-            "%(name)s | "
-            "%(message)s"
-        )
-    )
+configure_logging(
+    settings.log_level
+)
+
+logger = logging.getLogger(
+    "startup"
+)
+
+logger.info(
+    "StockMind gestartet."
+)
+
+print(settings)
