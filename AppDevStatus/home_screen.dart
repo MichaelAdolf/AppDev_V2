@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
               '[JARVIS] REMOTE Audio: $audioUrl',
             );
           
-          await AudioService.playRemoteUrl(
+          AudioService.playRemoteUrl(
             audioUrl,
             onComplete: () async {
               _isSpeaking = false;
@@ -120,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             }
           );
         }
-      }
 
       setState(() {});
     }

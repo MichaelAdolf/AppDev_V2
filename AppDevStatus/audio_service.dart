@@ -1,7 +1,10 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart';
+
 class AudioService {
   static final FlutterTts _tts = FlutterTts();
+  static final AudioPlayer _player = AudioPlayer();
   
   static bool _initialized = false;
   static bool _isSpeaking = false;
@@ -47,4 +50,42 @@ class AudioService {
   }
   
   static bool get isSpeaking => _isSpeaking;
+
+
+  static Future playRemoteUrl( 
+    String url, { 
+    VoidCallback? onComplete, 
+  }) async {
+
+    try {
+
+      await _player.stop();
+
+      await _player.setUrl(url);
+
+      await _player.play();
+
+      _player.playerStateStream.listen(
+        (state) {
+
+          if (
+            state.processingState ==
+                ProcessingState.completed
+          ) {
+
+            onComplete?.call();
+          }
+        },
+      );
+
+    } catch (e) {
+
+      debugPrint(
+        '[AUDIO] Remote Fehler: $e',
+      );
+
+      rethrow;
+
+    }
+  }
 }
