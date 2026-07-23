@@ -64,6 +64,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
       _isSpeaking = true;
 
+      debugPrint( '[JARVIS] MODE=$_audioMode', );
+
+      debugPrint( '[JARVIS] RESPONSE=${controller.lastResponse}', );
+
+      debugPrint( '[JARVIS] AUDIOURL=${controller.lastResponse?.audioUrl}', );
+
       if (_audioMode == AudioOutputMode.local) {
 
         AudioService.speak(
@@ -127,8 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
         }
       }
     }
-      setState(() {});
-
+    setState(() {});
   };
     
     controller.addListener(_controllerListener);
