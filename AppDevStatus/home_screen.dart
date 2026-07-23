@@ -18,6 +18,8 @@ import '../widgets/ambient_connections.dart';
 import '../../../services/jarvis_wakeword_bus.dart';
 import '../../../services/jarvis_wakeword_control.dart';
 import 'package:flutter/widgets.dart';
+import '../../../core/audio_output_mode.dart';
+
 
 class HomeScreen extends StatefulWidget {
   final JarvisController controller;
@@ -36,7 +38,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
   bool _isSpeaking = false;
   bool _wakewordEnabled = true;
-  
+  AudioOutputMode _audioMode = AudioOutputMode.local;
+
   late final JarvisController controller;
   late final VoidCallback _controllerListener;
   
@@ -59,18 +62,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
           controller.responseText.isNotEmpty) {
 
         _isSpeaking = true;
+        
+        if (
+          _audioMode == 
+          AudioOutputMode.local
+        ) {
+          
+          AudioService.speak(
+            controller.responseText,
+            onComplete: () async {
+              _isSpeaking = false;
+              controller.onSpeechFinished();
 
-        AudioService.speak(
-          controller.responseText,
-          onComplete: () async {
-            _isSpeaking = false;
-            controller.onSpeechFinished();
-
-            if (_wakewordEnabled) {
-              await JarvisWakewordControl.start();
-            }
-          },
-        );
+              if (_wakewordEnabled) {
+                await JarvisWakewordControl.start();
+              }
+            },
+          );
+        } else {
+          //Phase 4
+          //Remote Audio URL
+        }
       }
 
       setState(() {});
@@ -262,6 +274,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     } 
   }
 
+  void _toggleAudioMode() {
+
+    setState(() {
+
+      _audioMode =
+        _audioMode ==
+          AudioOutputMode.local
+        ? AudioOutputMode.remote
+        : AudioOutputMode.local;
+    });
+
+    debugPrint(
+      '[JARVIS] Audio Mode: $_audioMode',
+    );
+  }
+
   Color _voiceHudColor() {
     switch (controller.state) {
       case JarvisState.idle:
@@ -329,6 +357,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
               lines: [
                 'LANG : de-DE',
                 'STATE : ${controller.state.name.toUpperCase()}',
+                'AUDIO : ${_audioMode.name.toUpperCase()}',
                 controller.state == JarvisState.listening
                     ? 'INPUT : ACTIVE'
                     : 'INPUT : READY',
@@ -396,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
           ),
           Positioned(
             right: 20,
-            top: 180,
+            top: 200,
             child: GestureDetector(
               onTap: _toggleWakeword,
               child: AnimatedContainer(
@@ -441,6 +470,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             bottom: 24,
             child: ConversationTimeline(
               entries: controller.history,
+            ),
+          ),
+          Positioned(
+            left: 20,
+            top: 180,
+            child: GestureDetector(
+              onTap: _toggleAudioMode,
+              child: AnimatedContainer(
+                duration: const Duration(
+                  milliseconds: 250,
+                ),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _audioMode == AudioOutputMode.remote
+                    ? const Color(0xFF002D72)
+                    : Colors.black,
+                  border: Border.all(
+                    color: Colors.cyanAccent,
+                    width: 2,
+                    ),
+                  boxShadow: _audioMode == AudioOutputMode.remote
+                    ? [
+                      BoxShadow(
+                        color: Colors.blueAccent
+                        .withOpacity(0.7),
+                        blurRadius: 20,
+                        spreadRadius: 3,
+                        ),
+                    ]
+                    :[],
+                ),
+                child: Icon(
+                  Icons.volume_up,
+                  color: _audioMode == AudioOutputMode.remote
+                    ? Colors.cyanAccent
+                    : Colors.grey,
+                  size: 30,
+                ),
+              ),
             ),
           ),
         ],
