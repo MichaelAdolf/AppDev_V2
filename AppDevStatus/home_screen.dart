@@ -80,8 +80,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             },
           );
         } else {
-          //Phase 4
-          //Remote Audio URL
+          debugPrint(
+            '[JARVIS] Keine audioURL vorhanden --> Fallback auf lokale Stimme',
+          );
+          
+          AudioService.speak(
+            controller.responseText,
+            onComplete: () async {
+              _isSpeaking = false;
+              controller.onSpeechFinished();
+              if (_wakewordEnabled) {
+                await JarvisWakewordControl.start();
+              }
+            },
+          );
         }
       }
 
