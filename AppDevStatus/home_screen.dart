@@ -80,10 +80,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             },
           );
         } else {
-          debugPrint(
-            '[JARVIS] Keine audioURL vorhanden --> Fallback auf lokale Stimme',
-          );
+          final audioUrl = 
+            controller
+              .lastResponse
+              ?.audioUrl;
+
+          if (
+            audioUrl != null &&
+            audioUrl.isNotEmpty
+          ) {
+            debugPrint(
+              '[JARVIS] REMOTE Audio: $audioUrl',
+            );
           
+          await AudioService.playRemoteUrl(
+            audioUrl,
+            onComplete: () async {
+              _isSpeaking = false;
+
+              controller.onSpeechFinished();
+
+              if(_wakewordEnabled) {
+                await JarvisWakewordControl.start();
+              }
+            },
+          );
+        } else {
+          debugPrint(
+            '[JARVIS] Keine audioUrl vorhanden --> fallback auf lokale Stimme'
+          );
           AudioService.speak(
             controller.responseText,
             onComplete: () async {
@@ -92,13 +117,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
               if (_wakewordEnabled) {
                 await JarvisWakewordControl.start();
               }
-            },
+            }
           );
         }
       }
 
       setState(() {});
-    };
+    }
 
     controller.addListener(_controllerListener);
     controller.initialize();
