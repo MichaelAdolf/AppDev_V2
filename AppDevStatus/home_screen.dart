@@ -127,11 +127,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
         }
       }
     }
+      setState(() {});
 
-    setState(() {});
- 
+  };
     
-
     controller.addListener(_controllerListener);
     controller.initialize();
     _voice.initialize();
@@ -165,8 +164,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
         await _startVoiceInput();
       },
     );
-
-  };
+  }
 
   @override
   void dispose() {
