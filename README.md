@@ -1,27 +1,35 @@
-from datetime import datetime
+static Future<void> playRemoteUrl(
+  String url, {
+  VoidCallback? onComplete,
+}) async {
 
-from stockmind.domain.entities.stock import Stock
+  try {
 
-from stockmind.domain.enums.signal_type import (
-    SignalType
-)
+    await _player.stop();
 
-from stockmind.domain.value_objects.signal_decision import (
-    SignalDecision
-)
+    await _player.setUrl(url);
 
-stock = Stock(
-    symbol="NVDA",
-    name="NVIDIA"
-)
+    await _player.play();
 
-signal = SignalDecision(
-    symbol="NVDA",
-    signal=SignalType.BUY,
-    score=84.0,
-    confidence=0.88,
-    created_at=datetime.now()
-)
+    _player.playerStateStream.listen(
+      (state) {
 
-print(stock)
-print(signal)
+        if (
+          state.processingState ==
+              ProcessingState.completed
+        ) {
+
+          onComplete?.call();
+        }
+      },
+    );
+
+  } catch (e) {
+
+    debugPrint(
+      '[AUDIO] Remote Fehler: $e',
+    );
+
+    rethrow;
+  }
+}
