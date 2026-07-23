@@ -57,72 +57,80 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
       if (!mounted) return;
 
       //Audio hier triggern, NICHT im Controller
-      if (controller.state == JarvisState.speaking && 
-          !_isSpeaking && 
-          controller.responseText.isNotEmpty) {
+      if (
+        controller.state == JarvisState.speaking &&
+        !_isSpeaking &&
+        controller.responseText.isNotEmpty) {
 
-        _isSpeaking = true;
-        
+      _isSpeaking = true;
+
+      if (_audioMode == AudioOutputMode.local) {
+
+        AudioService.speak(
+          controller.responseText,
+          onComplete: () async {
+            _isSpeaking = false;
+            controller.onSpeechFinished();
+
+            if (_wakewordEnabled) {
+              await JarvisWakewordControl.start();
+            }
+          },
+        );
+
+      } else {
+
+        final audioUrl =
+            controller.lastResponse?.audioUrl;
+
         if (
-          _audioMode == 
-          AudioOutputMode.local
-        ) {
-          
-          AudioService.speak(
-            controller.responseText,
-            onComplete: () async {
-              _isSpeaking = false;
-              controller.onSpeechFinished();
-
-              if (_wakewordEnabled) {
-                await JarvisWakewordControl.start();
-              }
-            },
-          );
-        } else {
-          final audioUrl = 
-            controller
-              .lastResponse
-              ?.audioUrl;
-
-          if (
             audioUrl != null &&
-            audioUrl.isNotEmpty
-          ) {
-            debugPrint(
-              '[JARVIS] REMOTE Audio: $audioUrl',
-            );
-          
+            audioUrl.isNotEmpty) {
+
+          debugPrint(
+            '[JARVIS] REMOTE Audio: $audioUrl',
+          );
+
           AudioService.playRemoteUrl(
             audioUrl,
             onComplete: () async {
+
               _isSpeaking = false;
 
               controller.onSpeechFinished();
 
-              if(_wakewordEnabled) {
+              if (_wakewordEnabled) {
                 await JarvisWakewordControl.start();
               }
             },
           );
+
         } else {
+
           debugPrint(
-            '[JARVIS] Keine audioUrl vorhanden --> fallback auf lokale Stimme'
+            '[JARVIS] Keine audioUrl vorhanden -> Fallback',
           );
+
           AudioService.speak(
             controller.responseText,
             onComplete: () async {
+
               _isSpeaking = false;
+
               controller.onSpeechFinished();
+
               if (_wakewordEnabled) {
                 await JarvisWakewordControl.start();
               }
-            }
+            },
           );
         }
-
-      setState(() {});
+      }
     }
+
+    setState(() {});
+ 
+    
 
     controller.addListener(_controllerListener);
     controller.initialize();
@@ -158,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
       },
     );
 
-  }
+  };
 
   @override
   void dispose() {
