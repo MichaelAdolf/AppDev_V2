@@ -1,25 +1,16 @@
-from datetime import datetime
-from uuid import uuid4
-
-from stockmind.domain.entities.analysis_run import (
-    AnalysisRun
-)
-
-from stockmind.domain.enums.run_status import (
-    RunStatus
-)
+from dataclasses import dataclass
+from datetime import date
 
 
-class CreateAnalysisRunUseCase:
+@dataclass(frozen=True)
+class MarketDataPoint:
+    symbol: str
 
-    def execute(
-        self,
-        watchlist_name: str
-    ) -> AnalysisRun:
+    trading_date: date
 
-        return AnalysisRun(
-            run_id=str(uuid4()),
-            started_at=datetime.now(),
-            status=RunStatus.PENDING,
-            watchlist_name=watchlist_name
-        )
+    open_price: float
+    high_price: float
+    low_price: float
+    close_price: float
+
+    volume: int
