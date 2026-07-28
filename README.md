@@ -1,18 +1,32 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from stockmind.shared.config.settings import Settings
-
-
-settings = Settings.load()
-
-engine = create_engine(
-    settings.database_url,
-    echo=False
+from sqlalchemy import (
+    String,
+    DateTime
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column
 )
+
+from stockmind.infrastructure.database.base import (
+    Base
+)
+
+
+class AnalysisRunModel(Base):
+    __tablename__ = "analysis_runs"
+
+    run_id: Mapped[str] = mapped_column(
+        String,
+        primary_key=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String
+    )
+
+    watchlist_name: Mapped[str] = mapped_column(
+        String
+    )
+
+    started_at: Mapped[DateTime]
