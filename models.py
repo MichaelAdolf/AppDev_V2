@@ -1,31 +1,25 @@
-print("MODELS LOADED")
-
 from datetime import datetime
+from uuid import uuid4
 
-from sqlalchemy import ( String, DateTime )
+from stockmind.domain.entities.analysis_run import (
+    AnalysisRun
+)
 
-from sqlalchemy.orm import ( Mapped, mapped_column )
+from stockmind.domain.enums.run_status import (
+    RunStatus
+)
 
-from stockmind.infrastructure.database.base import Base
 
-class AnalysisRunModel(Base):
-    tablename = "analysis_runs"
+class CreateAnalysisRunUseCase:
 
-    run_id: Mapped[str] = mapped_column(
-        String,
-        primary_key=True
-    )
+    def execute(
+        self,
+        watchlist_name: str
+    ) -> AnalysisRun:
 
-    status: Mapped[str] = mapped_column(
-        String
-    )
-
-    watchlist_name: Mapped[str] = mapped_column(
-        String
-    )
-
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime
-    )
-print(AnalysisRunModel.__tablename__)
-
+        return AnalysisRun(
+            run_id=str(uuid4()),
+            started_at=datetime.now(),
+            status=RunStatus.PENDING,
+            watchlist_name=watchlist_name
+        )
