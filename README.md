@@ -1,10 +1,11 @@
 (.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/setup_database.py
+MODELS LOADED
 Traceback (most recent call last):
   File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\setup_database.py", line 9, in <module>
     from stockmind.infrastructure.database.models import (
         AnalysisRunModel
     )
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\infrastructure\database\models.py", line 9, in <module>
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\infrastructure\database\models.py", line 11, in <module>
     class AnalysisRunModel(Base):
     ...<17 lines>...
         )
