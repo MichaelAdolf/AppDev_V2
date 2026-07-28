@@ -1,31 +1,33 @@
-class WatchlistRepository:
+# infrastructure/market_data/mock_provider.py
 
-    CONFIG_PATH = (
-        Path("config")
-        / "watchlists"
-    )
+from datetime import date
 
-    def load(
+from stockmind.domain.entities.market_data import (
+    MarketDataPoint
+)
+
+from stockmind.infrastructure.market_data.market_data_provider import (
+    MarketDataProvider
+)
+
+
+class MockProvider(
+    MarketDataProvider
+):
+
+    def fetch_history(
         self,
-        name: str
-    ) -> Watchlist:
+        symbol: str
+    ):
 
-        file_path = (
-            self.CONFIG_PATH
-            / f"{name}.yaml"
-        )
-
-        with open(
-            file_path,
-            "r",
-            encoding="utf-8"
-        ) as file:
-
-            data = yaml.safe_load(
-                file
+        return [
+            MarketDataPoint(
+                symbol=symbol,
+                trading_date=date.today(),
+                open_price=100,
+                high_price=105,
+                low_price=95,
+                close_price=102,
+                volume=1000000
             )
-
-        return Watchlist(
-            name=data["name"],
-            symbols=data["symbols"]
-        )
+        ]
