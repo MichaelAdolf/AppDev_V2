@@ -1,16 +1,31 @@
-from dataclasses import dataclass
-from datetime import date
+class WatchlistRepository:
 
+    CONFIG_PATH = (
+        Path("config")
+        / "watchlists"
+    )
 
-@dataclass(frozen=True)
-class MarketDataPoint:
-    symbol: str
+    def load(
+        self,
+        name: str
+    ) -> Watchlist:
 
-    trading_date: date
+        file_path = (
+            self.CONFIG_PATH
+            / f"{name}.yaml"
+        )
 
-    open_price: float
-    high_price: float
-    low_price: float
-    close_price: float
+        with open(
+            file_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
 
-    volume: int
+            data = yaml.safe_load(
+                file
+            )
+
+        return Watchlist(
+            name=data["name"],
+            symbols=data["symbols"]
+        )
