@@ -1,43 +1,46 @@
-from datetime import date
-
-import yfinance as yf
+from stockmind.application.data_quality.data_quality_report import (
+    DataQualityReport
+)
 
 from stockmind.domain.entities.market_data import (
     MarketDataPoint
 )
 
-from stockmind.infrastructure.market_data.market_data_provider import (
-    MarketDataProvider
-)
 
+class MarketDataValidator:
 
-class YFinanceProvider(
-    MarketDataProvider
-):
-
-    def fetch_history(
+    def validate(
         self,
-        symbol: str
-    ) -> listticker = yf.Ticker(symbol)
+        data: list[MarketDataPoint]
+    ) -> DataQualityReport:
 
-        history = ticker.history(
-            period="1y"
-        )
+        errors = []
 
-        result = []
+        warnings = []
 
-        for index, row in history.iterrows():
+        if not data:
 
-            result.append(
-                MarketDataPoint(
-                    symbol=symbol,
-                    trading_date=index.date(),
-                    open_price=float(row["Open"]),
-                    high_price=float(row["High"]),
-                    low_price=float(row["Low"]),
-                    close_price=float(row["Close"]),
-                    volume=int(row["Volume"])
-                )
+            errors.append(
+                "No market data available."
             )
 
-        return result
+        for point in data:
+
+            if point.close_price <= 0:
+
+                errors.append(
+                    f"{point.symbol}: Invalid close price."
+                )
+
+            if point.volume < 0:
+
+                errors.append(
+                    f"{point.symbol}: Invalid volume."
+                )
+
+        return DataQualityReport(
+            valid=len(errors) == 0,
+            errors=errors,
+            warnings=warnings
+        )
+``
