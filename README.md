@@ -1,23 +1,33 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
+from stockmind.domain.indicators.indicator_result import (
+    IndicatorResult
 )
 
-ticker = yf.Ticker(
-    "NVDA"
-)
 
-df = ticker.history(
-    period="1y"
-)
+class IndicatorEngine:
 
-indicator = SMAIndicator()
+    def __init__(
+        self,
+        indicators
+    ):
+        self._indicators = indicators
 
-value = indicator.calculate(
-    df
-)
+    def calculate(
+        self,
+        symbol: str,
+        data
+    ) -> IndicatorResult:
 
-print(
-    f"SMA20: {value}"
-)
+        values = {}
+
+        for indicator in self._indicators:
+
+            values[
+                indicator.name
+            ] = indicator.calculate(
+                data
+            )
+
+        return IndicatorResult(
+            symbol=symbol,
+            values=values
+        )
