@@ -1,86 +1,38 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
+from stockmind.domain.features.market_feature_snapshot import (
+    MarketFeatureSnapshot
 )
 
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
+from stockmind.domain.rules.base_rule import (
+    BaseRule
 )
 
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
-from stockmind.domain.rules.rsi_oversold_rule import (
-    RSIOversoldRule
+from stockmind.domain.rules.rule_result import (
+    RuleResult
 )
 
 
-def main():
+class MACDPositiveRule(
+    BaseRule
+):
 
-    ticker = yf.Ticker("NVDA")
+    @property
+    def name(self) -> str:
+        return "macd_positive"
 
-    df = ticker.history(
-        period="1y"
-    )
+    def evaluate(
+        self,
+        features: MarketFeatureSnapshot
+    ) -> RuleResult:
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator()
-        ]
-    )
+        triggered = features.macd_positive
 
-    indicator_result = (
-        indicator_engine.calculate(
-            symbol="NVDA",
-            data=df
+        return RuleResult(
+            rule_name=self.name,
+            triggered=triggered,
+            score=20 if triggered else 0,
+            reason=(
+                "MACD ist positiv"
+                if triggered
+                else ""
+            )
         )
-    )
-
-    features = FeatureEngine().build(
-        indicator_result
-    )
-
-    rule_engine = RuleEngine(
-        rules=[
-            RSIOversoldRule()
-        ]
-    )
-
-    results = rule_engine.evaluate(
-        features
-    )
-
-    print("\n=== RULE RESULTS ===")
-
-    for result in results:
-        print(result)
-
-
-if __name__ == "__main__":
-    main()
