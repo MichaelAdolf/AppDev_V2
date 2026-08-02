@@ -11,27 +11,27 @@ from stockmind.domain.rules.rule_result import (
 )
 
 
-class LowerBollingerRule(
+class TrendRule(
     BaseRule
 ):
 
     @property
     def name(self) -> str:
-        return "lower_bollinger"
+        return "trend"
 
     def evaluate(
         self,
         features: MarketFeatureSnapshot
     ) -> RuleResult:
 
-        triggered = features.near_lower_bollinger
+        triggered = features.ema_above_sma
 
         return RuleResult(
             rule_name=self.name,
             triggered=triggered,
-            score=25 if triggered else 0,
+            score=20 if triggered else 0,
             reason=(
-                "Nahe unterem Bollinger-Band"
+                "EMA liegt über SMA"
                 if triggered
                 else ""
             )
