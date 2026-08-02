@@ -1,47 +1,9 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
-)
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
-)
-
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
 from stockmind.domain.rules.rule_set import (
     RuleSet
 )
 
 from stockmind.domain.rules.rsi_oversold_rule import (
     RSIOversoldRule
-)
-
-from stockmind.domain.rules.macd_positive_rule import (
-    MACDPositiveRule
 )
 
 from stockmind.domain.rules.lower_bollinger_rule import (
@@ -52,132 +14,63 @@ from stockmind.domain.rules.trend_rule import (
     TrendRule
 )
 
-
-def print_rule_results(
-    title: str,
-    results
-):
-
-    print(f"\n=== {title} ===")
-
-    total_score = 0
-
-    for result in results:
-
-        print(result)
-
-        total_score += result.score
-
-    print(
-        f"\nTotal Rule Score: {total_score}"
-    )
+from stockmind.domain.rules.macd_positive_rule import (
+    MACDPositiveRule
+)
 
 
-def main():
+class RuleSetRepository:
+    """
+    Zentrale Quelle für alle aktuell verfügbaren RuleSets.
 
-    # -------------------------------------------------
-    # Marktdaten laden
-    # -------------------------------------------------
+    Aktuell sind die RuleSets noch fest in Python definiert.
+    Später können sie aus YAML oder JSON geladen werden.
+    """
 
-    ticker = yf.Ticker("NVDA")
+    def get_by_name(
+        self,
+        name: str
+    ) -> RuleSet:
 
-    df = ticker.history(
-        period="1y"
-    )
+        if name == "mean_reversion":
 
-    # -------------------------------------------------
-    # Indicator Engine
-    # -------------------------------------------------
+            return self._get_mean_reversion_rule_set()
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-        ]
-    )
+        if name == "trend_following":
 
-    indicator_result = (
-        indicator_engine.calculate(
-            symbol="NVDA",
-            data=df
+            return self._get_trend_following_rule_set()
+
+        raise ValueError(
+            f"Unknown rule set: {name}"
         )
-    )
 
-    print("\n=== Indicator Result ===")
-    print(indicator_result)
-
-    # -------------------------------------------------
-    # Feature Engine
-    # -------------------------------------------------
-
-    feature_engine = FeatureEngine()
-
-    features = feature_engine.build(
-        indicator_result
-    )
-
-    print("\n=== Feature Snapshot ===")
-    print(features)
-
-    # -------------------------------------------------
-    # Mean Reversion Rule Set
-    # -------------------------------------------------
-
-    mean_reversion_rules = RuleSet(
-        name="mean_reversion",
-
-        rules=[
-            RSIOversoldRule(),
-            LowerBollingerRule(),
+    def get_all(
+        self
+    ) -> listreturn [
+            self._get_mean_reversion_rule_set(),
+            self._get_trend_following_rule_set(),
         ]
-    )
 
-    mean_reversion_engine = RuleEngine(
-        rule_set=mean_reversion_rules
-    )
+    def _get_mean_reversion_rule_set(
+        self
+    ) -> RuleSet:
 
-    mean_reversion_results = (
-        mean_reversion_engine.evaluate(
-            features
+        return RuleSet(
+            name="mean_reversion",
+            rules=[
+                RSIOversoldRule(),
+                LowerBollingerRule(),
+            ]
         )
-    )
 
-    print_rule_results(
-        "MEAN REVERSION RULES",
-        mean_reversion_results
-    )
+    def _get_trend_following_rule_set(
+        self
+    ) -> RuleSet:
 
-    # -------------------------------------------------
-    # Trend Following Rule Set
-    # -------------------------------------------------
-
-    trend_following_rules = RuleSet(
-        name="trend_following",
-
-        rules=[
-            TrendRule(),
-            MACDPositiveRule(),
-        ]
-    )
-
-    trend_following_engine = RuleEngine(
-        rule_set=trend_following_rules
-    )
-
-    trend_following_results = (
-        trend_following_engine.evaluate(
-            features
+        return RuleSet(
+            name="trend_following",
+            rules=[
+                TrendRule(),
+                MACDPositiveRule(),
+            ]
         )
-    )
-
-    print_rule_results(
-        "TREND FOLLOWING RULES",
-        trend_following_results
-    )
-
-
-if __name__ == "__main__":
-    main()
