@@ -1,26 +1,40 @@
-import pandas as pd
+import yfinance as yf
 
-from stockmind.domain.indicators.base_indicator import (
-    BaseIndicator
+from stockmind.domain.indicators.indicator_engine import (
+    IndicatorEngine
 )
 
+from stockmind.domain.indicators.sma_indicator import (
+    SMAIndicator
+)
 
-class EMAIndicator(
-    BaseIndicator
-):
+from stockmind.domain.indicators.ema_indicator import (
+    EMAIndicator
+)
 
-    @property
-    def name(self) -> str:
-        return "ema_20"
+from stockmind.domain.indicators.rsi_indicator import (
+    RSIIndicator
+)
 
-    def calculate(
-        self,
-        data: pd.DataFrame
-    ) -> float:
+ticker = yf.Ticker(
+    "NVDA"
+)
 
-        return float(
-            data["Close"]
-            .ewm(span=20)
-            .mean()
-            .iloc[-1]
-        )
+df = ticker.history(
+    period="1y"
+)
+
+engine = IndicatorEngine(
+    indicators=[
+        SMAIndicator(),
+        EMAIndicator(),
+        RSIIndicator(),
+    ]
+)
+
+result = engine.calculate(
+    symbol="NVDA",
+    data=df
+)
+
+print(result)
