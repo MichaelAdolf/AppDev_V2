@@ -1,45 +1,11 @@
-import pandas as pd
-
-from stockmind.domain.indicators.base_indicator import (
-    BaseIndicator
-)
-
-
-class BollingerIndicator(
-    BaseIndicator
-):
-
-    @property
-    def name(self) -> str:
-        return "bollinger_position"
-
-    def calculate(
-        self,
-        data: pd.DataFrame
-    ) -> float:
-
-        sma = (
-            data["Close"]
-            .rolling(20)
-            .mean()
-        )
-
-        std = (
-            data["Close"]
-            .rolling(20)
-            .std()
-        )
-
-        upper = sma + (std * 2)
-
-        lower = sma - (std * 2)
-
-        close = data["Close"].iloc[-1]
-
-        position = (
-            (close - lower.iloc[-1])
-            /
-            (upper.iloc[-1] - lower.iloc[-1])
-        )
-
-        return float(position)
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_feature_engine.py
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_feature_engine.py", line 35, in <module>
+    features = feature_engine.build( indicator_result )
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\domain\features\feature_engine.py", line 22, in build
+    return MarketFeatureSnapshot(
+        symbol=result.symbol,
+    ...<19 lines>...
+        near_lower_bollinger=bollinger_position < 0.25
+    )
+TypeError: MarketFeatureSnapshot.__init__() got an unexpected keyword argument 'near_lower_bollinger'. Did you mean 'near_low_bollinger'?
