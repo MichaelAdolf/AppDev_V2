@@ -1,40 +1,40 @@
-from pathlib import Path
+from stockmind.domain.entities.analysis_run import (
+    AnalysisRun
+)
 
-import yaml
+from stockmind.infrastructure.database.database import (
+    SessionLocal
+)
 
-from stockmind.domain.entities.watchlist import (
-    Watchlist
+from stockmind.infrastructure.database.models import (
+    AnalysisRunModel
 )
 
 
-class WatchlistRepository:
+class AnalysisRunRepository:
 
-    CONFIG_PATH = (
-        Path("config")
-        / "watchlists"
-    )
-
-    def load(
+    def add(
         self,
-        name: str
-    ) -> Watchlist:
+        run: AnalysisRun
+    ) -> None:
 
-        file_path = (
-            self.CONFIG_PATH
-            / f"{name}.yaml"
-        )
+        session = SessionLocal()
 
-        with open(
-            file_path,
-            "r",
-            encoding="utf-8"
-        ) as file:
+        try:
 
-            data = yaml.safe_load(
-                file
+            db_run = AnalysisRunModel(
+                run_id=run.run_id,
+                status=run.status.value,
+                watchlist_name=run.watchlist_name,
+                started_at=run.started_at
             )
 
-        return Watchlist(
-            name=data["name"],
-            symbols=data["symbols"]
-        )
+            session.add(
+                db_run
+            )
+
+            session.commit()
+
+        finally:
+
+            session.close()
