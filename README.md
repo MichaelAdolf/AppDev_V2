@@ -1,51 +1,90 @@
-from stockmind.domain.features.market_feature_snapshot import (
-    MarketFeatureSnapshot
+import yfinance as yf
+
+from stockmind.domain.indicators.indicator_engine import (
+    IndicatorEngine
 )
 
-from stockmind.domain.strategies.base_strategy import (
-    BaseStrategy
+from stockmind.domain.indicators.sma_indicator import (
+    SMAIndicator
 )
 
-from stockmind.domain.strategies.strategy_result import (
-    StrategyResult
+from stockmind.domain.indicators.ema_indicator import (
+    EMAIndicator
+)
+
+from stockmind.domain.indicators.rsi_indicator import (
+    RSIIndicator
+)
+
+from stockmind.domain.features.feature_engine import (
+    FeatureEngine
+)
+
+from stockmind.domain.strategies.strategy_engine import (
+    StrategyEngine
+)
+
+from stockmind.domain.strategies.mean_reversion_strategy import (
+    MeanReversionStrategy
 )
 
 
-class MeanReversionStrategy(
-    BaseStrategy
-):
+def main():
 
-    @property
-    def name(self) -> str:
-        return "mean_reversion"
+    # Historische Marktdaten laden
+    ticker = yf.Ticker("NVDA")
 
-    def evaluate(
-        self,
-        features: MarketFeatureSnapshot
-    ) -> StrategyResult:
+    df = ticker.history(
+        period="1y"
+    )
 
-        score = 0.0
+    # Indicator Engine
+    indicator_engine = IndicatorEngine(
+        indicators=[
+            SMAIndicator(),
+            EMAIndicator(),
+            RSIIndicator(),
+        ]
+    )
 
-        reasons = []
-
-        if features.is_oversold:
-
-            score += 40
-
-            reasons.append(
-                "RSI überverkauft"
-            )
-
-        if features.ema_above_sma:
-
-            score += 20
-
-            reasons.append(
-                "EMA über SMA"
-            )
-
-        return StrategyResult(
-            strategy_name=self.name,
-            score=score,
-            reasons=reasons
+    indicator_result = (
+        indicator_engine.calculate(
+            symbol="NVDA",
+            data=df
         )
+    )
+
+    print("\n=== Indicator Result ===")
+    print(indicator_result)
+
+    # Feature Engine
+    feature_engine = FeatureEngine()
+
+    features = feature_engine.build(
+        indicator_result
+    )
+
+    print("\n=== Feature Snapshot ===")
+    print(features)
+
+    # Strategy Engine
+    strategy_engine = StrategyEngine(
+        strategies=[
+            MeanReversionStrategy()
+        ]
+    )
+
+    strategy_results = (
+        strategy_engine.evaluate(
+            features
+        )
+    )
+
+    print("\n=== Strategy Results ===")
+
+    for result in strategy_results:
+        print(result)
+
+
+if __name__ == "__main__":
+    main()
