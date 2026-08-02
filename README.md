@@ -32,6 +32,10 @@ from stockmind.domain.scoring.scoring_engine import (
     ScoringEngine
 )
 
+from stockmind.domain.signals.signal_engine import (
+    SignalEngine
+)
+
 
 def main():
 
@@ -82,8 +86,17 @@ def main():
         )
     )
 
-    print("\n=== Score Result ===")
-    print(score_result)
+    signal_engine = SignalEngine()
+
+    signal = (
+        signal_engine.create_signal(
+            symbol="NVDA",
+            score_result=score_result
+        )
+    )
+
+    print("\n=== SIGNAL ===")
+    print(signal)
 
 
 if __name__ == "__main__":
