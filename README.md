@@ -1,51 +1,33 @@
-from stockmind.domain.features.market_feature_snapshot import (
-    MarketFeatureSnapshot
-)
+import pandas as pd
 
-from stockmind.domain.strategies.base_strategy import (
-    BaseStrategy
-)
-
-from stockmind.domain.strategies.strategy_result import (
-    StrategyResult
+from stockmind.domain.indicators.base_indicator import (
+    BaseIndicator
 )
 
 
-class TrendFollowingStrategy(
-    BaseStrategy
+class MACDIndicator(
+    BaseIndicator
 ):
 
     @property
     def name(self) -> str:
-        return "trend_following"
+        return "macd"
 
-    def evaluate(
+    def calculate(
         self,
-        features: MarketFeatureSnapshot
-    ) -> StrategyResult:
+        data: pd.DataFrame
+    ) -> float:
 
-        score = 0.0
+        ema12 = data["Close"].ewm(
+            span=12
+        ).mean()
 
-        reasons = []
+        ema26 = data["Close"].ewm(
+            span=26
+        ).mean()
 
-        if features.ema_above_sma:
+        macd = ema12 - ema26
 
-            score += 50
-
-            reasons.append(
-                "Aufwärtstrend erkannt"
-            )
-
-        if not features.is_overbought:
-
-            score += 20
-
-            reasons.append(
-                "Nicht überkauft"
-            )
-
-        return StrategyResult(
-            strategy_name=self.name,
-            score=score,
-            reasons=reasons
+        return float(
+            macd.iloc[-1]
         )
