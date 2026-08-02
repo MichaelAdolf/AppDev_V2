@@ -1,26 +1,23 @@
-import pandas as pd
+import yfinance as yf
 
-from stockmind.domain.indicators.base_indicator import (
-    BaseIndicator
+from stockmind.domain.indicators.sma_indicator import (
+    SMAIndicator
 )
 
+ticker = yf.Ticker(
+    "NVDA"
+)
 
-class SMAIndicator(
-    BaseIndicator
-):
+df = ticker.history(
+    period="1y"
+)
 
-    @property
-    def name(self) -> str:
-        return "sma_20"
+indicator = SMAIndicator()
 
-    def calculate(
-        self,
-        data: pd.DataFrame
-    ) -> float:
+value = indicator.calculate(
+    df
+)
 
-        return float(
-            data["Close"]
-            .rolling(20)
-            .mean()
-            .iloc[-1]
-        )
+print(
+    f"SMA20: {value}"
+)
