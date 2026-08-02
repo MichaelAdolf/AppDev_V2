@@ -1,37 +1,42 @@
-from stockmind.domain.entities.analysis_run import (
-    AnalysisRun
-)
-
 from stockmind.infrastructure.database.database import (
     SessionLocal
 )
 
 from stockmind.infrastructure.database.models import (
-    AnalysisRunModel
+    MarketPriceModel
+)
+
+from stockmind.domain.entities.market_data import (
+    MarketDataPoint
 )
 
 
-class AnalysisRunRepository:
+class MarketDataRepository:
 
-    def add(
+    def save(
         self,
-        run: AnalysisRun
+        data: list[MarketDataPoint]
     ) -> None:
 
         session = SessionLocal()
 
         try:
 
-            db_run = AnalysisRunModel(
-                run_id=run.run_id,
-                status=run.status.value,
-                watchlist_name=run.watchlist_name,
-                started_at=run.started_at
-            )
+            for item in data:
 
-            session.add(
-                db_run
-            )
+                row = MarketPriceModel(
+                    symbol=item.symbol,
+                    trading_date=item.trading_date,
+                    open_price=item.open_price,
+                    high_price=item.high_price,
+                    low_price=item.low_price,
+                    close_price=item.close_price,
+                    volume=item.volume
+                )
+
+                session.add(
+                    row
+                )
 
             session.commit()
 
