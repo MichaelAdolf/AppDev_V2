@@ -1,103 +1,51 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
+from stockmind.domain.features.market_feature_snapshot import (
+    MarketFeatureSnapshot
 )
 
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
+from stockmind.domain.strategies.base_strategy import (
+    BaseStrategy
 )
 
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.strategies.strategy_engine import (
-    StrategyEngine
-)
-
-from stockmind.domain.strategies.mean_reversion_strategy import (
-    MeanReversionStrategy
-)
-
-from stockmind.domain.scoring.scoring_engine import (
-    ScoringEngine
-)
-
-from stockmind.domain.signals.signal_engine import (
-    SignalEngine
+from stockmind.domain.strategies.strategy_result import (
+    StrategyResult
 )
 
 
-def main():
+class TrendFollowingStrategy(
+    BaseStrategy
+):
 
-    ticker = yf.Ticker("NVDA")
+    @property
+    def name(self) -> str:
+        return "trend_following"
 
-    df = ticker.history(
-        period="1y"
-    )
+    def evaluate(
+        self,
+        features: MarketFeatureSnapshot
+    ) -> StrategyResult:
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-        ]
-    )
+        score = 0.0
 
-    indicator_result = (
-        indicator_engine.calculate(
-            symbol="NVDA",
-            data=df
+        reasons = []
+
+        if features.ema_above_sma:
+
+            score += 50
+
+            reasons.append(
+                "Aufwärtstrend erkannt"
+            )
+
+        if not features.is_overbought:
+
+            score += 20
+
+            reasons.append(
+                "Nicht überkauft"
+            )
+
+        return StrategyResult(
+            strategy_name=self.name,
+            score=score,
+            reasons=reasons
         )
-    )
-
-    feature_engine = FeatureEngine()
-
-    features = feature_engine.build(
-        indicator_result
-    )
-
-    strategy_engine = StrategyEngine(
-        strategies=[
-            MeanReversionStrategy()
-        ]
-    )
-
-    strategy_results = (
-        strategy_engine.evaluate(
-            features
-        )
-    )
-
-    scoring_engine = ScoringEngine()
-
-    score_result = (
-        scoring_engine.calculate(
-            strategy_results
-        )
-    )
-
-    signal_engine = SignalEngine()
-
-    signal = (
-        signal_engine.create_signal(
-            symbol="NVDA",
-            score_result=score_result
-        )
-    )
-
-    print("\n=== SIGNAL ===")
-    print(signal)
-
-
-if __name__ == "__main__":
-    main()
