@@ -1,55 +1,40 @@
-import yfinance as yf
+from pathlib import Path
 
-from stockmind.domain.entities.market_data import (
-    MarketDataPoint
+import yaml
+
+from stockmind.domain.entities.watchlist import (
+    Watchlist
 )
 
-from stockmind.infrastructure.market_data.market_data_provider import (
-    MarketDataProvider
-)
 
+class WatchlistRepository:
 
-class YFinanceProvider(
-    MarketDataProvider
-):
+    CONFIG_PATH = (
+        Path("config")
+        / "watchlists"
+    )
 
-    def fetch_history(
+    def load(
         self,
-        symbol: str
-    ) -> list:
+        name: str
+    ) -> Watchlist:
 
-        ticker = yf.Ticker(
-            symbol
+        file_path = (
+            self.CONFIG_PATH
+            / f"{name}.yaml"
         )
 
-        history = ticker.history(
-            period="1y"
-        )
+        with open(
+            file_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
 
-        result = []
-
-        for index, row in history.iterrows():
-
-            result.append(
-                MarketDataPoint(
-                    symbol=symbol,
-                    trading_date=index.date(),
-                    open_price=float(
-                        row["Open"]
-                    ),
-                    high_price=float(
-                        row["High"]
-                    ),
-                    low_price=float(
-                        row["Low"]
-                    ),
-                    close_price=float(
-                        row["Close"]
-                    ),
-                    volume=int(
-                        row["Volume"]
-                    )
-                )
+            data = yaml.safe_load(
+                file
             )
 
-        return result
+        return Watchlist(
+            name=data["name"],
+            symbols=data["symbols"]
+        )
