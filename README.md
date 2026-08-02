@@ -1,4 +1,4 @@
-from datetime import date
+import yfinance as yf
 
 from stockmind.domain.entities.market_data import (
     MarketDataPoint
@@ -9,23 +9,47 @@ from stockmind.infrastructure.market_data.market_data_provider import (
 )
 
 
-class MockProvider(
+class YFinanceProvider(
     MarketDataProvider
 ):
 
     def fetch_history(
         self,
         symbol: str
-    ):
+    ) -> list:
 
-        return [
-            MarketDataPoint(
-                symbol=symbol,
-                trading_date=date.today(),
-                open_price=100,
-                high_price=105,
-                low_price=95,
-                close_price=102,
-                volume=1000000
+        ticker = yf.Ticker(
+            symbol
+        )
+
+        history = ticker.history(
+            period="1y"
+        )
+
+        result = []
+
+        for index, row in history.iterrows():
+
+            result.append(
+                MarketDataPoint(
+                    symbol=symbol,
+                    trading_date=index.date(),
+                    open_price=float(
+                        row["Open"]
+                    ),
+                    high_price=float(
+                        row["High"]
+                    ),
+                    low_price=float(
+                        row["Low"]
+                    ),
+                    close_price=float(
+                        row["Close"]
+                    ),
+                    volume=int(
+                        row["Volume"]
+                    )
+                )
             )
-        ]
+
+        return result
