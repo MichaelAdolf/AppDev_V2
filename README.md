@@ -1,36 +1,30 @@
-class MarketPriceModel(Base):
-    __tablename__ = "market_prices"
+class MarketDataRepository:
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-        autoincrement=True
-    )
+    def save(
+        self,
+        data: list[MarketDataPoint]
+    ) -> None:
 
-    symbol: Mapped[str] = mapped_column(
-        String,
-        index=True
-    )
+        session = SessionLocal()
 
-    trading_date: Mapped[date] = mapped_column(
-        Date
-    )
+        try:
 
-    open_price: Mapped[float] = mapped_column(
-        Float
-    )
+            for item in data:
 
-    high_price: Mapped[float] = mapped_column(
-        Float
-    )
+                row = MarketPriceModel(
+                    symbol=item.symbol,
+                    trading_date=item.trading_date,
+                    open_price=item.open_price,
+                    high_price=item.high_price,
+                    low_price=item.low_price,
+                    close_price=item.close_price,
+                    volume=item.volume
+                )
 
-    low_price: Mapped[float] = mapped_column(
-        Float
-    )
+                session.add(row)
 
-    close_price: Mapped[float] = mapped_column(
-        Float
-    )
+            session.commit()
 
-    volume: Mapped[int] = mapped_column(
-        Integer
-    )
+        finally:
+
+            session.close()
