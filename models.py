@@ -1,14 +1,70 @@
-# scripts/test_marketdata.py
+print("MODELS LOADED")
 
-from stockmind.infrastructure.market_data.mock_provider import (
-    MockProvider
-)
+from datetime import (datetime, date)
+from sqlalchemy import ( String, DateTime )
+from sqlalchemy.orm import ( Mapped, mapped_column )
+from stockmind.infrastructure.database.base import Base
 
-provider = MockProvider()
+from sqlalchemy import Integer
+from sqlalchemy import Float
+from sqlalchemy import Date
 
-data = provider.fetch_history(
-    "NVDA"
-)
+class AnalysisRunModel(Base):
+    __tablename__ = "analysis_runs"
 
-for item in data:
-    print(item)
+    run_id: Mapped[str] = mapped_column(
+        String,
+        primary_key=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String
+    )
+
+    watchlist_name: Mapped[str] = mapped_column(
+        String
+    )
+
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime
+    )
+print(AnalysisRunModel.__tablename__)
+
+class MarketPriceModel(Base): 
+    __tablename__ = "market_prices"
+
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=True
+    )
+
+    symbol: Mapped[str] = mapped_column(
+        String,
+        index=True
+    )
+
+    trading_date: Mapped[date] = mapped_column(
+        Date
+    )
+
+    open_price: Mapped[float] = mapped_column(
+        Float
+    )
+
+    high_price: Mapped[float] = mapped_column(
+        Float
+    )
+
+    low_price: Mapped[float] = mapped_column(
+        Float
+    )
+
+    close_price: Mapped[float] = mapped_column(
+        Float
+    )
+
+    volume: Mapped[int] = mapped_column(
+        Integer
+    )
+
+
