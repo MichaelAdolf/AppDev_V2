@@ -1,5 +1,43 @@
-PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> & d:/Users/Michael/Dokumente/16_AppDev/stockmind-platform/.venv/Scripts/Activate.ps1
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_market_repository.py
-MODELS LOADED
-analysis_runs
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> 
+from datetime import date
+
+import yfinance as yf
+
+from stockmind.domain.entities.market_data import (
+    MarketDataPoint
+)
+
+from stockmind.infrastructure.market_data.market_data_provider import (
+    MarketDataProvider
+)
+
+
+class YFinanceProvider(
+    MarketDataProvider
+):
+
+    def fetch_history(
+        self,
+        symbol: str
+    ) -> listticker = yf.Ticker(symbol)
+
+        history = ticker.history(
+            period="1y"
+        )
+
+        result = []
+
+        for index, row in history.iterrows():
+
+            result.append(
+                MarketDataPoint(
+                    symbol=symbol,
+                    trading_date=index.date(),
+                    open_price=float(row["Open"]),
+                    high_price=float(row["High"]),
+                    low_price=float(row["Low"]),
+                    close_price=float(row["Close"]),
+                    volume=int(row["Volume"])
+                )
+            )
+
+        return result
