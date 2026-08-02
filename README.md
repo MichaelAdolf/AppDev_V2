@@ -1,50 +1,51 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
+from stockmind.domain.features.market_feature_snapshot import (
+    MarketFeatureSnapshot
 )
 
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
+from stockmind.domain.strategies.base_strategy import (
+    BaseStrategy
 )
 
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
+from stockmind.domain.strategies.strategy_result import (
+    StrategyResult
 )
 
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
 
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
+class MeanReversionStrategy(
+    BaseStrategy
+):
 
-ticker = yf.Ticker("NVDA")
+    @property
+    def name(self) -> str:
+        return "mean_reversion"
 
-df = ticker.history(
-    period="1y"
-)
+    def evaluate(
+        self,
+        features: MarketFeatureSnapshot
+    ) -> StrategyResult:
 
-indicator_engine = IndicatorEngine(
-    indicators=[
-        SMAIndicator(),
-        EMAIndicator(),
-        RSIIndicator(),
-    ]
-)
+        score = 0.0
 
-indicator_result = (
-    indicator_engine.calculate(
-        symbol="NVDA",
-        data=df
-    )
-)
+        reasons = []
 
-feature_engine = FeatureEngine()
+        if features.is_oversold:
 
-features = feature_engine.build(
-    indicator_result
-)
+            score += 40
 
-print(features)
+            reasons.append(
+                "RSI überverkauft"
+            )
+
+        if features.ema_above_sma:
+
+            score += 20
+
+            reasons.append(
+                "EMA über SMA"
+            )
+
+        return StrategyResult(
+            strategy_name=self.name,
+            score=score,
+            reasons=reasons
+        )
