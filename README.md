@@ -11,27 +11,27 @@ from stockmind.domain.rules.rule_result import (
 )
 
 
-class MACDPositiveRule(
+class LowerBollingerRule(
     BaseRule
 ):
 
     @property
     def name(self) -> str:
-        return "macd_positive"
+        return "lower_bollinger"
 
     def evaluate(
         self,
         features: MarketFeatureSnapshot
     ) -> RuleResult:
 
-        triggered = features.macd_positive
+        triggered = features.near_lower_bollinger
 
         return RuleResult(
             rule_name=self.name,
             triggered=triggered,
-            score=20 if triggered else 0,
+            score=25 if triggered else 0,
             reason=(
-                "MACD ist positiv"
+                "Nahe unterem Bollinger-Band"
                 if triggered
                 else ""
             )
