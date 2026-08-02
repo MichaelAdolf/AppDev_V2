@@ -1,40 +1,37 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
+from stockmind.domain.indicators.indicator_result import (
+    IndicatorResult
 )
 
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
+from stockmind.domain.value_objects.market_feature_snapshot import (
+    MarketFeatureSnapshot
 )
 
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
 
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
+class FeatureEngine:
 
-ticker = yf.Ticker(
-    "NVDA"
-)
+    def build(
+        self,
+        result: IndicatorResult
+    ) -> MarketFeatureSnapshot:
 
-df = ticker.history(
-    period="1y"
-)
+        rsi = result.values["rsi_14"]
 
-engine = IndicatorEngine(
-    indicators=[
-        SMAIndicator(),
-        EMAIndicator(),
-        RSIIndicator(),
-    ]
-)
+        sma = result.values["sma_20"]
 
-result = engine.calculate(
-    symbol="NVDA",
-    data=df
-)
+        ema = result.values["ema_20"]
 
-print(result)
+        return MarketFeatureSnapshot(
+            symbol=result.symbol,
+
+            rsi=rsi,
+
+            sma_20=sma,
+
+            ema_20=ema,
+
+            is_oversold=rsi < 30,
+
+            is_overbought=rsi > 70,
+
+            ema_above_sma=ema > sma
+        )
