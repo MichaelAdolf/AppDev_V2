@@ -1,19 +1,26 @@
-from abc import ABC
-from abc import abstractmethod
-
 import pandas as pd
 
+from stockmind.domain.indicators.base_indicator import (
+    BaseIndicator
+)
 
-class BaseIndicator(ABC):
+
+class SMAIndicator(
+    BaseIndicator
+):
 
     @property
-    @abstractmethod
     def name(self) -> str:
-        pass
+        return "sma_20"
 
-    @abstractmethod
     def calculate(
         self,
         data: pd.DataFrame
-    ):
-        pass
+    ) -> float:
+
+        return float(
+            data["Close"]
+            .rolling(20)
+            .mean()
+            .iloc[-1]
+        )
