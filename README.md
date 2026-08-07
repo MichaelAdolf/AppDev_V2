@@ -1,162 +1,81 @@
-import yfinance as yf
+import pandas as pd
 
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
-)
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
-)
-
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
-from stockmind.infrastructure.rules.rule_set_repository import (
-    RuleSetRepository
-)
-
-from stockmind.domain.quality.quality_engine import (
-    QualityEngine
-)
-
-from stockmind.domain.confidence.confidence_engine import (
-    ConfidenceEngine
-)
-
-from stockmind.domain.risk.risk_engine import (
-    RiskEngine
-)
-
-from stockmind.domain.signals.signal_engine import (
-    SignalEngine
+from stockmind.domain.indicators.base_indicator import (
+    BaseIndicator
 )
 
 
-def main():
+class ADXIndicator(
+    BaseIndicator
+):
 
-    ticker = yf.Ticker("NVDA")
+    @property
+    def name(self) -> str:
+        return "adx_14"
 
-    df = ticker.history(
-        period="1y"
-    )
+    def calculate(
+        self,
+        data: pd.DataFrame
+    ) -> float:
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-        ]
-    )
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
-    indicator_result = indicator_engine.calculate(
-        symbol="NVDA",
-        data=df
-    )
+        plus_dm = high.diff()
+        minus_dm = low.diff() * -1
 
-    features = FeatureEngine().build(
-        indicator_result
-    )
-
-    rule_set_repository = (
-        RuleSetRepository()
-    )
-
-    quality_engine = (
-        QualityEngine()
-    )
-
-    confidence_engine = (
-        ConfidenceEngine()
-    )
-
-    risk_engine = (
-        RiskEngine()
-    )
-
-    signal_engine = (
-        SignalEngine()
-    )
-
-    for rule_set in (
-        rule_set_repository.get_all()
-    ):
-
-        print(
-            f"\n=== {rule_set.name.upper()} ==="
+        plus_dm = plus_dm.where(
+            (plus_dm > minus_dm) & (plus_dm > 0),
+            0.0
         )
 
-        rule_engine = RuleEngine(
-            rule_set=rule_set
+        minus_dm = minus_dm.where(
+            (minus_dm > plus_dm) & (minus_dm > 0),
+            0.0
         )
 
-        rule_results = (
-            rule_engine.evaluate(
-                features
-            )
+        previous_close = close.shift(1)
+
+        true_range = pd.concat(
+            [
+                high - low,
+                (high - previous_close).abs(),
+                (low - previous_close).abs(),
+            ],
+            axis=1
+        ).max(axis=1)
+
+        atr = true_range.rolling(
+            window=14
+        ).mean()
+
+        plus_di = 100 * (
+            plus_dm.rolling(
+                window=14
+            ).mean()
+            / atr
         )
 
-        quality_result = (
-            quality_engine.calculate(
-                rule_results
-            )
+        minus_di = 100 * (
+            minus_dm.rolling(
+                window=14
+            ).mean()
+            / atr
         )
 
-        confidence_result = (
-            confidence_engine.calculate(
-                rule_results
-            )
+        dx = 100 * (
+            (plus_di - minus_di).abs()
+            / (plus_di + minus_di)
         )
 
-        risk_result = (
-            risk_engine.calculate(
-                features
-            )
-        )
+        adx = dx.rolling(
+            window=14
+        ).mean()
 
-        signal = (
-            signal_engine.create_signal(
-                symbol="NVDA",
-                quality_result=quality_result,
-                confidence_result=confidence_result,
-                risk_result=risk_result
-            )
-        )
+        value = adx.iloc[-1]
 
-        print("\nQuality:")
-        print(quality_result)
+        if pd.isna(value):
+            return 0.0
 
-        print("\nConfidence:")
-        print(confidence_result)
-
-        print("\nRisk:")
-        print(risk_result)
-
-        print("\nSignal:")
-        print(signal)
-
-
-if __name__ == "__main__":
-    main()
+        return float(value)
