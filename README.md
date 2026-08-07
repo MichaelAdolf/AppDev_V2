@@ -1,37 +1,17 @@
-from stockmind.domain.profiles.trading_profile import (
-    TradingProfile
+from stockmind.infrastructure.profiles.profile_repository import (
+    ProfileRepository
 )
 
 
-class ProfileRepository:
+def main():
 
-    def get_by_name(
-        self,
-        name: str
-    ) -> TradingProfile:
+    repository = ProfileRepository()
 
-        normalized_name = name.lower()
+    for profile in repository.get_all():
 
-        if normalized_name == "conservative":
+        print("\n=== PROFILE ===")
+        print(profile)
 
-            return TradingProfile.conservative()
 
-        if normalized_name == "balanced":
-
-            return TradingProfile.balanced()
-
-        if normalized_name == "aggressive":
-
-            return TradingProfile.aggressive()
-
-        raise ValueError(
-            f"Unknown trading profile: {name}"
-        )
-
-    def get_all(
-        self
-    ) -> listreturn [
-            TradingProfile.conservative(),
-            TradingProfile.balanced(),
-            TradingProfile.aggressive(),
-        ]
+if __name__ == "__main__":
+    main()
