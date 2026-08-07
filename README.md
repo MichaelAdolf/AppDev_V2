@@ -1,50 +1,62 @@
-from stockmind.domain.indicators.indicator_result import ( IndicatorResult )
+from dataclasses import dataclass
 
-from stockmind.domain.features.market_feature_snapshot import ( MarketFeatureSnapshot )
 
-class FeatureEngine:
+@dataclass(frozen=True)
+class TradingProfile:
 
-    def build(
-        self,
-        result: IndicatorResult
-    ) -> MarketFeatureSnapshot:
+    name: str
 
-        rsi = result.values["rsi_14"]
+    rsi_oversold_threshold: float
 
-        sma = result.values["sma_20"]
+    rsi_overbought_threshold: float
 
-        ema = result.values["ema_20"]
+    bollinger_lower_threshold: float
 
-        macd = result.values["macd"]
+    adx_trend_strength_threshold: float
 
-        bollinger_position = result.values["bollinger_position"]
+    description: str = ""
 
-        adx = result.values.get("adx_14")
+    @staticmethod
+    def conservative() -> "TradingProfile":
 
-        return MarketFeatureSnapshot(
-            symbol=result.symbol,
+        return TradingProfile(
+            name="conservative",
+            rsi_oversold_threshold=25,
+            rsi_overbought_threshold=70,
+            bollinger_lower_threshold=0.15,
+            adx_trend_strength_threshold=25,
+            description=(
+                "Strengeres Profil mit weniger Signalen "
+                "und höherer technischer Qualität."
+            )
+        )
 
-            rsi=rsi,
+    @staticmethod
+    def balanced() -> "TradingProfile":
 
-            sma_20=sma,
+        return TradingProfile(
+            name="balanced",
+            rsi_oversold_threshold=30,
+            rsi_overbought_threshold=70,
+            bollinger_lower_threshold=0.25,
+            adx_trend_strength_threshold=20,
+            description=(
+                "Ausgewogenes Profil zwischen Signalqualität "
+                "und Signalanzahl."
+            )
+        )
 
-            ema_20=ema,
+    @staticmethod
+    def aggressive() -> "TradingProfile":
 
-            macd=macd,
-
-            bollinger_position=bollinger_position,
-
-            is_oversold=rsi < 30,
-
-            is_overbought=rsi > 70,
-
-            ema_above_sma=ema > sma,
-            
-            macd_positive=macd > 0,
-
-            near_lower_bollinger=bollinger_position < 0.25,
-
-            adx_14=adx,
-
-            adx_trend_strength=adx is not None and adx > 20
+        return TradingProfile(
+            name="aggressive",
+            rsi_oversold_threshold=35,
+            rsi_overbought_threshold=75,
+            bollinger_lower_threshold=0.35,
+            adx_trend_strength_threshold=15,
+            description=(
+                "Früheres Profil mit mehr Signalen "
+                "und höherer Fehlertoleranz."
+            )
         )
