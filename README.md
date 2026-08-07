@@ -1,28 +1,50 @@
-import yfinance as yf
+from stockmind.domain.indicators.indicator_result import ( IndicatorResult )
 
-from stockmind.domain.indicators.adx_indicator import (
-    ADXIndicator
-)
+from stockmind.domain.features.market_feature_snapshot import ( MarketFeatureSnapshot )
 
+class FeatureEngine:
 
-def main():
+    def build(
+        self,
+        result: IndicatorResult
+    ) -> MarketFeatureSnapshot:
 
-    ticker = yf.Ticker("NVDA")
+        rsi = result.values["rsi_14"]
 
-    df = ticker.history(
-        period="1y"
-    )
+        sma = result.values["sma_20"]
 
-    indicator = ADXIndicator()
+        ema = result.values["ema_20"]
 
-    value = indicator.calculate(
-        df
-    )
+        macd = result.values["macd"]
 
-    print(
-        f"ADX14: {value}"
-    )
+        bollinger_position = result.values["bollinger_position"]
 
+        adx = result.values.get("adx_14")
 
-if __name__ == "__main__":
-    main()
+        return MarketFeatureSnapshot(
+            symbol=result.symbol,
+
+            rsi=rsi,
+
+            sma_20=sma,
+
+            ema_20=ema,
+
+            macd=macd,
+
+            bollinger_position=bollinger_position,
+
+            is_oversold=rsi < 30,
+
+            is_overbought=rsi > 70,
+
+            ema_above_sma=ema > sma,
+            
+            macd_positive=macd > 0,
+
+            near_lower_bollinger=bollinger_position < 0.25,
+
+            adx_14=adx,
+
+            adx_trend_strength=adx is not None and adx > 20
+        )
