@@ -28,8 +28,28 @@ from stockmind.domain.features.feature_engine import (
     FeatureEngine
 )
 
+from stockmind.domain.rules.rule_engine import (
+    RuleEngine
+)
+
+from stockmind.infrastructure.rules.rule_set_repository import (
+    RuleSetRepository
+)
+
+from stockmind.domain.quality.quality_engine import (
+    QualityEngine
+)
+
+from stockmind.domain.confidence.confidence_engine import (
+    ConfidenceEngine
+)
+
 from stockmind.domain.risk.risk_engine import (
     RiskEngine
+)
+
+from stockmind.domain.signals.signal_engine import (
+    SignalEngine
 )
 
 
@@ -60,14 +80,82 @@ def main():
         indicator_result
     )
 
-    risk_engine = RiskEngine()
-
-    risk_result = risk_engine.calculate(
-        features
+    rule_set_repository = (
+        RuleSetRepository()
     )
 
-    print("\n=== RISK RESULT ===")
-    print(risk_result)
+    quality_engine = (
+        QualityEngine()
+    )
+
+    confidence_engine = (
+        ConfidenceEngine()
+    )
+
+    risk_engine = (
+        RiskEngine()
+    )
+
+    signal_engine = (
+        SignalEngine()
+    )
+
+    for rule_set in (
+        rule_set_repository.get_all()
+    ):
+
+        print(
+            f"\n=== {rule_set.name.upper()} ==="
+        )
+
+        rule_engine = RuleEngine(
+            rule_set=rule_set
+        )
+
+        rule_results = (
+            rule_engine.evaluate(
+                features
+            )
+        )
+
+        quality_result = (
+            quality_engine.calculate(
+                rule_results
+            )
+        )
+
+        confidence_result = (
+            confidence_engine.calculate(
+                rule_results
+            )
+        )
+
+        risk_result = (
+            risk_engine.calculate(
+                features
+            )
+        )
+
+        signal = (
+            signal_engine.create_signal(
+                symbol="NVDA",
+                quality_result=quality_result,
+                confidence_result=confidence_result,
+                risk_result=risk_result
+            )
+        )
+
+        print("\nQuality:")
+        print(quality_result)
+
+        print("\nConfidence:")
+        print(confidence_result)
+
+        print("\nRisk:")
+        print(risk_result)
+
+        print("\nSignal:")
+        print(signal)
 
 
 if __name__ == "__main__":
