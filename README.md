@@ -1,57 +1,74 @@
-from stockmind.domain.risk.risk_result import (
-    RiskResult
+import yfinance as yf
+
+from stockmind.domain.indicators.indicator_engine import (
+    IndicatorEngine
+)
+
+from stockmind.domain.indicators.sma_indicator import (
+    SMAIndicator
+)
+
+from stockmind.domain.indicators.ema_indicator import (
+    EMAIndicator
+)
+
+from stockmind.domain.indicators.rsi_indicator import (
+    RSIIndicator
+)
+
+from stockmind.domain.indicators.macd_indicator import (
+    MACDIndicator
+)
+
+from stockmind.domain.indicators.bollinger_indicator import (
+    BollingerIndicator
+)
+
+from stockmind.domain.features.feature_engine import (
+    FeatureEngine
+)
+
+from stockmind.domain.risk.risk_engine import (
+    RiskEngine
 )
 
 
-class RiskEngine:
+def main():
 
-    def calculate(
-        self,
+    ticker = yf.Ticker("NVDA")
+
+    df = ticker.history(
+        period="1y"
+    )
+
+    indicator_engine = IndicatorEngine(
+        indicators=[
+            SMAIndicator(),
+            EMAIndicator(),
+            RSIIndicator(),
+            MACDIndicator(),
+            BollingerIndicator(),
+        ]
+    )
+
+    indicator_result = indicator_engine.calculate(
+        symbol="NVDA",
+        data=df
+    )
+
+    features = FeatureEngine().build(
+        indicator_result
+    )
+
+    risk_engine = RiskEngine()
+
+    risk_result = risk_engine.calculate(
         features
-    ) -> RiskResult:
+    )
 
-        risk_score = 0
+    print("\n=== RISK RESULT ===")
+    print(risk_result)
 
-        reasons = []
 
-        if features.is_overbought:
-
-            risk_score += 50
-
-            reasons.append(
-                "Markt wirkt überkauft"
-            )
-
-        if not features.ema_above_sma:
-
-            risk_score += 30
-
-            reasons.append(
-                "Schwacher Trend"
-            )
-
-        if features.near_lower_bollinger:
-
-            risk_score += 20
-
-            reasons.append(
-                "Nahe unterem Bollinger-Band"
-            )
-
-        if risk_score >= 70:
-
-            level = "HIGH"
-
-        elif risk_score >= 40:
-
-            level = "MEDIUM"
-
-        else:
-
-            level = "LOW"
-
-        return RiskResult(
-            level=level,
-            score=risk_score,
-            reasons=reasons
-        )
+if __name__ == "__main__":
+    main()
