@@ -1,101 +1,47 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
-)
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
-)
-
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
-from stockmind.domain.quality.quality_engine import (
-    QualityEngine
-)
-
-from stockmind.infrastructure.rules.rule_set_repository import (
-    RuleSetRepository
+from stockmind.domain.confidence.confidence_result import (
+    ConfidenceResult
 )
 
 
-def main():
+class ConfidenceEngine:
 
-    ticker = yf.Ticker("NVDA")
+    def calculate(
+        self,
+        rule_results
+    ) -> ConfidenceResult:
 
-    df = ticker.history(
-        period="1y"
-    )
+        achieved_score = 0.0
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-        ]
-    )
+        max_possible_score = 0.0
 
-    indicator_result = indicator_engine.calculate(
-        symbol="NVDA",
-        data=df
-    )
+        for result in rule_results:
 
-    features = FeatureEngine().build(
-        indicator_result
-    )
+            achieved_score += result.score
 
-    rule_set_repository = RuleSetRepository()
+            # Maximalscore der Regel:
+            if result.rule_name == "rsi_oversold":
+                max_possible_score += 15
 
-    quality_engine = QualityEngine()
+            elif result.rule_name == "macd_positive":
+                max_possible_score += 20
 
-    for rule_set in rule_set_repository.get_all():
+            elif result.rule_name == "trend":
+                max_possible_score += 20
 
-        print(
-            f"\n=== {rule_set.name.upper()} ==="
-        )
+            elif result.rule_name == "lower_bollinger":
+                max_possible_score += 25
 
-        rule_engine = RuleEngine(
-            rule_set=rule_set
-        )
+        confidence = 0.0
 
-        rule_results = rule_engine.evaluate(
-            features
-        )
+        if max_possible_score > 0:
 
-        quality_result = (
-            quality_engine.calculate(
-                rule_results
+            confidence = (
+                achieved_score
+                / max_possible_score
             )
+
+        return ConfidenceResult(
+            confidence=confidence,
+            achieved_score=achieved_score,
+            max_possible_score=max_possible_score
         )
-
-        print(
-            quality_result
-        )
-
-
-if __name__ == "__main__":
-    main()
