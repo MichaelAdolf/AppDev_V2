@@ -1,101 +1,57 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
-)
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
-)
-
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
-from stockmind.domain.confidence.confidence_engine import (
-    ConfidenceEngine
-)
-
-from stockmind.infrastructure.rules.rule_set_repository import (
-    RuleSetRepository
+from stockmind.domain.risk.risk_result import (
+    RiskResult
 )
 
 
-def main():
+class RiskEngine:
 
-    ticker = yf.Ticker("NVDA")
+    def calculate(
+        self,
+        features
+    ) -> RiskResult:
 
-    df = ticker.history(
-        period="1y"
-    )
+        risk_score = 0
 
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-        ]
-    )
+        reasons = []
 
-    indicator_result = indicator_engine.calculate(
-        symbol="NVDA",
-        data=df
-    )
+        if features.is_overbought:
 
-    features = FeatureEngine().build(
-        indicator_result
-    )
+            risk_score += 50
 
-    rule_set_repository = RuleSetRepository()
-
-    confidence_engine = ConfidenceEngine()
-
-    for rule_set in rule_set_repository.get_all():
-
-        print(
-            f"\n=== {rule_set.name.upper()} ==="
-        )
-
-        rule_engine = RuleEngine(
-            rule_set=rule_set
-        )
-
-        rule_results = rule_engine.evaluate(
-            features
-        )
-
-        confidence_result = (
-            confidence_engine.calculate(
-                rule_results
+            reasons.append(
+                "Markt wirkt überkauft"
             )
+
+        if not features.ema_above_sma:
+
+            risk_score += 30
+
+            reasons.append(
+                "Schwacher Trend"
+            )
+
+        if features.near_lower_bollinger:
+
+            risk_score += 20
+
+            reasons.append(
+                "Nahe unterem Bollinger-Band"
+            )
+
+        if risk_score >= 70:
+
+            level = "HIGH"
+
+        elif risk_score >= 40:
+
+            level = "MEDIUM"
+
+        else:
+
+            level = "LOW"
+
+        return RiskResult(
+            level=level,
+            score=risk_score,
+            reasons=reasons
         )
-
-        print(
-            confidence_result
-        )
-
-
-if __name__ == "__main__":
-    main()
