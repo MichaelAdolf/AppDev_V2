@@ -1,80 +1,47 @@
-from datetime import (
-    datetime,
-    date
-)
-
-from sqlalchemy import (
-    String,
-    DateTime,
-    Integer,
-    Float,
-    Date,
-)
-
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column
-)
-
-from stockmind.infrastructure.database.base import (
-    Base
+from stockmind.domain.quality.quality_result import (
+    QualityResult
 )
 
 
-class AnalysisRunModel(Base):
-    __tablename__ = "analysis_runs"
+class QualityEngine:
 
-    run_id: Mapped[str] = mapped_column(
-        String,
-        primary_key=True
-    )
+    def calculate(
+        self,
+        rule_results
+    ) -> QualityResult:
 
-    status: Mapped[str] = mapped_column(
-        String
-    )
+        total_score = 0.0
 
-    watchlist_name: Mapped[str] = mapped_column(
-        String
-    )
+        reasons = []
 
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime
-    )
+        for result in rule_results:
 
+            total_score += result.score
 
-class MarketPriceModel(Base):
-    __tablename__ = "market_prices"
+            if result.reason:
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-        autoincrement=True
-    )
+                reasons.append(
+                    result.reason
+                )
 
-    symbol: Mapped[str] = mapped_column(
-        String,
-        index=True
-    )
+        if total_score >= 75:
 
-    trading_date: Mapped[date] = mapped_column(
-        Date
-    )
+            quality = "VERY_HIGH"
 
-    open_price: Mapped[float] = mapped_column(
-        Float
-    )
+        elif total_score >= 50:
 
-    high_price: Mapped[float] = mapped_column(
-        Float
-    )
+            quality = "HIGH"
 
-    low_price: Mapped[float] = mapped_column(
-        Float
-    )
+        elif total_score >= 25:
 
-    close_price: Mapped[float] = mapped_column(
-        Float
-    )
+            quality = "MEDIUM"
 
-    volume: Mapped[int] = mapped_column(
-        Integer
-    )
+        else:
+
+            quality = "LOW"
+
+        return QualityResult(
+            quality=quality,
+            score=total_score,
+            reasons=reasons
+        )
