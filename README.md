@@ -1,38 +1,28 @@
-from stockmind.domain.value_objects.market_feature_snapshot import (
-    MarketFeatureSnapshot
-)
+import yfinance as yf
 
-from stockmind.domain.rules.base_rule import (
-    BaseRule
-)
-
-from stockmind.domain.rules.rule_result import (
-    RuleResult
+from stockmind.domain.indicators.adx_indicator import (
+    ADXIndicator
 )
 
 
-class ADXStrengthRule(
-    BaseRule
-):
+def main():
 
-    @property
-    def name(self) -> str:
-        return "adx_strength"
+    ticker = yf.Ticker("NVDA")
 
-    def evaluate(
-        self,
-        features: MarketFeatureSnapshot
-    ) -> RuleResult:
+    df = ticker.history(
+        period="1y"
+    )
 
-        triggered = features.adx_trend_strength
+    indicator = ADXIndicator()
 
-        return RuleResult(
-            rule_name=self.name,
-            triggered=triggered,
-            score=15 if triggered else 0,
-            reason=(
-                "ADX zeigt ausreichende Bewegungsstärke"
-                if triggered
-                else ""
-            )
-        )
+    value = indicator.calculate(
+        df
+    )
+
+    print(
+        f"ADX14: {value}"
+    )
+
+
+if __name__ == "__main__":
+    main()
