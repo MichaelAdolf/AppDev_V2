@@ -1,157 +1,106 @@
-import yfinance as yf
-
-from stockmind.domain.indicators.indicator_engine import (
-    IndicatorEngine
-)
-
-from stockmind.domain.indicators.sma_indicator import (
-    SMAIndicator
-)
-
-from stockmind.domain.indicators.ema_indicator import (
-    EMAIndicator
-)
-
-from stockmind.domain.indicators.rsi_indicator import (
-    RSIIndicator
-)
-
-from stockmind.domain.indicators.macd_indicator import (
-    MACDIndicator
-)
-
-from stockmind.domain.indicators.bollinger_indicator import (
-    BollingerIndicator
-)
-
-from stockmind.domain.indicators.adx_indicator import (
-    ADXIndicator
-)
-
-from stockmind.domain.indicators.stochastic_indicator import (
-    StochasticIndicator
-)
-
-from stockmind.domain.features.feature_engine import (
-    FeatureEngine
-)
-
-from stockmind.domain.rules.rule_engine import (
-    RuleEngine
-)
-
-from stockmind.domain.core_setup.core_setup_engine import (
-    CoreSetupEngine
-)
-
-from stockmind.domain.quality.quality_engine import (
-    QualityEngine
-)
-
-from stockmind.infrastructure.rules.rule_set_repository import (
-    RuleSetRepository
-)
-
-from stockmind.infrastructure.profiles.profile_repository import (
-    ProfileRepository
+from stockmind.domain.features.market_feature_snapshot import (
+    MarketFeatureSnapshot
 )
 
 
-def main():
+class SimilarityEngine:
 
-    symbol = "NVDA"
+    def calculate(
+        self,
+        current: MarketFeatureSnapshot,
+        historical: MarketFeatureSnapshot
+    ) -> float:
 
-    ticker = yf.Ticker(
-        symbol
-    )
+        distances = []
 
-    data = ticker.history(
-        period="5y"
-    )
-
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-            ADXIndicator(),
-            StochasticIndicator(),
-        ]
-    )
-
-    indicator_result = indicator_engine.calculate(
-        symbol=symbol,
-        data=data
-    )
-
-    profile_repository = ProfileRepository()
-
-    rule_set = (
-        RuleSetRepository()
-        .get_by_name(
-            "entry_setup"
-        )
-    )
-
-    core_setup_engine = CoreSetupEngine()
-
-    quality_engine = QualityEngine()
-
-    for profile in profile_repository.get_all():
-
-        print(
-            "\n=============================="
-        )
-
-        print(
-            f"PROFILE: {profile.name.upper()}"
-        )
-
-        print(
-            "=============================="
-        )
-
-        features = FeatureEngine().build(
-            result=indicator_result,
-            profile=profile
-        )
-
-        print("\nFeatures:")
-        print(features)
-
-        rule_engine = RuleEngine(
-            rule_set=rule_set
-        )
-
-        rule_results = rule_engine.evaluate(
-            features
-        )
-
-        print("\nRule Results:")
-        for result in rule_results:
-            print(result)
-
-        core_setup_result = (
-            core_setup_engine.evaluate(
-                rule_results
+        # RSI: 0 bis 100
+        distances.append(
+            self._normalized_distance(
+                current.rsi,
+                historical.rsi,
+                scale=100
             )
         )
 
-        quality_result = (
-            quality_engine.calculate(
-                rule_results=rule_results,
-                core_setup_result=core_setup_result
+        # Bollinger Position: typischer Bereich 0 bis 1
+        distances.append(
+            self._normalized_distance(
+                current.bollinger_position,
+                historical.bollinger_position,
+                scale=1
             )
         )
 
-        print("\nCore Setup:")
-        print(core_setup_result)
+        # ADX: 0 bis 100
+        if (
+            current.adx_14 is not None
+            and historical.adx_14 is not None
+        ):
 
-        print("\nQuality:")
-        print(quality_result)
+            distances.append(
+                self._normalized_distance(
+                    current.adx_14,
+                    historical.adx_14,
+                    scale=100
+                )
+            )
 
+        # Stochastic: 0 bis 100
+        if (
+            current.stoch_k_14 is not None
+            and historical.stoch_k_14 is not None
+        ):
 
-if __name__ == "__main__":
-    main()
+            distances.append(
+                self._normalized_distance(
+                    current.stoch_k_14,
+                    historical.stoch_k_14,
+                    scale=100
+                )
+            )
+
+        if not distances:
+
+            return 0.0
+
+        average_distance = (
+            sum(distances)
+            / len(distances)
+        )
+
+        similarity = (
+            1.0
+            - average_distance
+        )
+
+        return max(
+            0.0,
+            min(
+                1.0,
+                similarity
+            )
+        )
+
+    def _normalized_distance(
+        self,
+        value_a: float,
+        value_b: float,
+        scale: float
+    ) -> float:
+
+        if scale <= 0:
+
+            return 1.0
+
+        distance = abs(
+            value_a
+            - value_b
+        ) / scale
+
+        return max(
+            0.0,
+            min(
+                1.0,
+                distance
+            )
+        )
