@@ -1,115 +1,157 @@
-from stockmind.domain.quality.quality_result import (
-    QualityResult
+import yfinance as yf
+
+from stockmind.domain.indicators.indicator_engine import (
+    IndicatorEngine
+)
+
+from stockmind.domain.indicators.sma_indicator import (
+    SMAIndicator
+)
+
+from stockmind.domain.indicators.ema_indicator import (
+    EMAIndicator
+)
+
+from stockmind.domain.indicators.rsi_indicator import (
+    RSIIndicator
+)
+
+from stockmind.domain.indicators.macd_indicator import (
+    MACDIndicator
+)
+
+from stockmind.domain.indicators.bollinger_indicator import (
+    BollingerIndicator
+)
+
+from stockmind.domain.indicators.adx_indicator import (
+    ADXIndicator
+)
+
+from stockmind.domain.indicators.stochastic_indicator import (
+    StochasticIndicator
+)
+
+from stockmind.domain.features.feature_engine import (
+    FeatureEngine
+)
+
+from stockmind.domain.rules.rule_engine import (
+    RuleEngine
+)
+
+from stockmind.domain.core_setup.core_setup_engine import (
+    CoreSetupEngine
+)
+
+from stockmind.domain.quality.quality_engine import (
+    QualityEngine
+)
+
+from stockmind.infrastructure.rules.rule_set_repository import (
+    RuleSetRepository
+)
+
+from stockmind.infrastructure.profiles.profile_repository import (
+    ProfileRepository
 )
 
 
-class QualityEngine:
+def main():
 
-    CONFIRMATION_RULES = [
-        "stochastic_oversold",
-        "macd_positive",
-        "trend",
-    ]
+    symbol = "NVDA"
 
-    def calculate(
-        self,
-        rule_results,
-        core_setup_result=None
-    ) -> QualityResult:
+    ticker = yf.Ticker(
+        symbol
+    )
 
-        total_score = 0.0
+    data = ticker.history(
+        period="5y"
+    )
 
-        reasons = []
+    indicator_engine = IndicatorEngine(
+        indicators=[
+            SMAIndicator(),
+            EMAIndicator(),
+            RSIIndicator(),
+            MACDIndicator(),
+            BollingerIndicator(),
+            ADXIndicator(),
+            StochasticIndicator(),
+        ]
+    )
 
-        for result in rule_results:
+    indicator_result = indicator_engine.calculate(
+        symbol=symbol,
+        data=data
+    )
 
-            total_score += result.score
+    profile_repository = ProfileRepository()
 
-            if result.reason:
+    rule_set = (
+        RuleSetRepository()
+        .get_by_name(
+            "entry_setup"
+        )
+    )
 
-                reasons.append(
-                    result.reason
-                )
+    core_setup_engine = CoreSetupEngine()
 
-        if core_setup_result is None:
+    quality_engine = QualityEngine()
 
-            return self._calculate_legacy_quality(
-                total_score=total_score,
-                reasons=reasons
-            )
+    for profile in profile_repository.get_all():
 
-        if not core_setup_result.setup_detected:
-
-            missing = ", ".join(
-                core_setup_result.missing_rules
-            )
-
-            return QualityResult(
-                quality="LOW",
-                score=total_score,
-                reasons=[
-                    *reasons,
-                    (
-                        "Core Setup nicht vollständig erfüllt: "
-                        f"{missing}"
-                    )
-                ]
-            )
-
-        confirmation_score = 0.0
-
-        for result in rule_results:
-
-            if result.rule_name in self.CONFIRMATION_RULES:
-
-                confirmation_score += result.score
-
-        if confirmation_score >= 40:
-
-            quality = "VERY_HIGH"
-
-        elif confirmation_score >= 20:
-
-            quality = "HIGH"
-
-        elif confirmation_score >= 10:
-
-            quality = "MEDIUM"
-
-        else:
-
-            quality = "MEDIUM"
-
-        return QualityResult(
-            quality=quality,
-            score=total_score,
-            reasons=reasons
+        print(
+            "\n=============================="
         )
 
-    def _calculate_legacy_quality(
-        self,
-        total_score: float,
-        reasons: list[str]
-    ) -> QualityResult:
-
-        if total_score >= 75:
-
-            quality = "VERY_HIGH"
-
-        elif total_score >= 50:
-
-            quality = "HIGH"
-
-        elif total_score >= 25:
-
-            quality = "MEDIUM"
-
-        else:
-
-            quality = "LOW"
-
-        return QualityResult(
-            quality=quality,
-            score=total_score,
-            reasons=reasons
+        print(
+            f"PROFILE: {profile.name.upper()}"
         )
+
+        print(
+            "=============================="
+        )
+
+        features = FeatureEngine().build(
+            result=indicator_result,
+            profile=profile
+        )
+
+        print("\nFeatures:")
+        print(features)
+
+        rule_engine = RuleEngine(
+            rule_set=rule_set
+        )
+
+        rule_results = rule_engine.evaluate(
+            features
+        )
+
+        print("\nRule Results:")
+        for result in rule_results:
+            print(result)
+
+        core_setup_result = (
+            core_setup_engine.evaluate(
+                rule_results
+            )
+        )
+
+        quality_result = (
+            quality_engine.calculate(
+                rule_results=rule_results,
+                core_setup_result=core_setup_result
+            )
+        )
+
+        print("\nCore Setup:")
+        print(core_setup_result)
+
+        print("\nQuality:")
+        print(quality_result)
+
+
+if __name__ == "__main__":
+    main()
