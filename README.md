@@ -1,57 +1,67 @@
-from stockmind.application.models.analysis_run_result import (
-    AnalysisRunResult
-)
-
-from stockmind.application.use_cases.analyze_stock_use_case import (
-    AnalyzeStockUseCase
+from stockmind.application.use_cases.run_analysis_use_case import (
+    RunAnalysisUseCase
 )
 
 
-class RunAnalysisUseCase:
+def main():
 
-    def execute(
-        self,
-        symbols: list[str],
-        profile_name: str
-    ) -> AnalysisRunResult:
+    symbols = [
+        "NVDA",
+        "AMD",
+        "MSFT",
+        "AAPL",
+        "GOOGL",
+    ]
 
-        results = []
+    result = (
+        RunAnalysisUseCase()
+        .execute(
+            symbols=symbols,
+            profile_name="balanced"
+        )
+    )
 
-        analyze_use_case = (
-            AnalyzeStockUseCase()
+    print(
+        "\n=== ANALYSIS RESULT ===\n"
+    )
+
+    for stock in result.stock_results:
+
+        print(
+            f"\n{stock.symbol}"
         )
 
-        for symbol in symbols:
-
-            try:
-
-                result = (
-                    analyze_use_case.execute(
-                        symbol=symbol,
-                        profile_name=profile_name
-                    )
-                )
-
-                results.append(
-                    result
-                )
-
-            except Exception as ex:
-
-                print(
-                    f"ERROR analysing "
-                    f"{symbol}: {ex}"
-                )
-
-        results.sort(
-            key=lambda item: (
-                item.confidence,
-                item.historical_success_rate
-            ),
-            reverse=True
+        print(
+            f"Quality: "
+            f"{stock.quality}"
         )
 
-        return AnalysisRunResult(
-            profile_name=profile_name,
-            stock_results=results
+        print(
+            f"Confidence: "
+            f"{stock.confidence:.2%}"
+        )
+
+        print(
+            f"Historical Success: "
+            f"{stock.historical_success_rate:.2%}"
+        )
+
+        print(
+            f"Risk: "
+            f"{stock.risk_level}"
+        )
+
+        print(
+            f"Signal: "
+            f"{stock.signal.signal.value}"
+        )
+
+        print(
+            f"Sample Quality: "
+            f"{stock.sample_quality}"
+        )
+
+        print(
+            f"Average Similarity: "
+            f"{stock.average_similarity}"
         )
