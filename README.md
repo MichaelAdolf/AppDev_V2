@@ -1,67 +1,22 @@
-import yfinance as yf
-
-from stockmind.domain.historical_success.historical_success_engine import (
-    HistoricalSuccessEngine
-)
-
-from stockmind.infrastructure.profiles.profile_repository import (
-    ProfileRepository
-)
-
-
-def main():
-
-    symbol = "NVDA"
-
-    ticker = yf.Ticker(
-        symbol
-    )
-
-    data = ticker.history(
-        period="5y"
-    )
-
-    engine = HistoricalSuccessEngine()
-
-    profile_repository = ProfileRepository()
-
-    for profile in profile_repository.get_all():
-
-        result = engine.analyze(
-            symbol=symbol,
-            data=data,
-            profile=profile,
-            rule_set_name="entry_setup",
-            target_pct=0.08,
-            lookahead_days=60,
-            min_quality="MEDIUM",
-            top_n_similar=50
-        )
-
-        print(
-            "\n=============================="
-        )
-
-        print(
-            f"PROFILE: {profile.name.upper()}"
-        )
-
-        print(
-            "=============================="
-        )
-
-        print(result)
-
-        print(
-            f"Success Rate: "
-            f"{result.success_rate:.2%}"
-        )
-
-        print(
-            f"Average Similarity: "
-            f"{result.average_similarity}"
-        )
-
-
-if __name__ == "__main__":
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_historical_success_engine.py     
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_historical_success_engine.py", line 55, in <module>
     main()
+    ~~~~^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_historical_success_engine.py", line 25, in main
+    result = engine.analyze(
+        symbol=symbol,
+    ...<5 lines>...
+        min_quality="MEDIUM"
+    )
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\domain\historical_success\historical_success_engine.py", line 161, in analyze
+    SimilarityCandidate(
+    ~~~~~~~~~~~~~~~~~~~^
+        trading_date=row.name.date()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        max_future_high=max_future_high
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: SimilarityCandidate.__init__() got an unexpected keyword argument 'trading_date'
