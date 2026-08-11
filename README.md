@@ -1,5 +1,9 @@
 import yfinance as yf
 
+from stockmind.application.models.stock_analysis_result import (
+    StockAnalysisResult
+)
+
 from stockmind.domain.indicators.indicator_engine import (
     IndicatorEngine
 )
@@ -73,126 +77,95 @@ from stockmind.infrastructure.rules.rule_set_repository import (
 )
 
 
-def main():
+class AnalyzeStockUseCase:
 
-    symbol = "NVDA"
+    def execute(
+        self,
+        symbol: str,
+        profile_name: str,
+        rule_set_name: str = "entry_setup"
+    ) -> StockAnalysisResult:
 
-    ticker = yf.Ticker(
-        symbol
-    )
-
-    data = ticker.history(
-        period="5y"
-    )
-
-    indicator_engine = IndicatorEngine(
-        indicators=[
-            SMAIndicator(),
-            EMAIndicator(),
-            RSIIndicator(),
-            MACDIndicator(),
-            BollingerIndicator(),
-            ADXIndicator(),
-            StochasticIndicator(),
-        ]
-    )
-
-    indicator_result = indicator_engine.calculate(
-        symbol=symbol,
-        data=data
-    )
-
-    feature_engine = FeatureEngine()
-
-    profile_repository = ProfileRepository()
-
-    rule_set_repository = RuleSetRepository()
-
-    rule_set = rule_set_repository.get_by_name(
-        "entry_setup"
-    )
-
-    core_setup_engine = CoreSetupEngine()
-
-    quality_engine = QualityEngine()
-
-    confidence_engine = ConfidenceEngine()
-
-    risk_engine = RiskEngine()
-
-    signal_engine = SignalEngine()
-
-    historical_success_engine = HistoricalSuccessEngine()
-
-    for profile in profile_repository.get_all():
-
-        print(
-            "\n\n=========================================="
+        profile = (
+            ProfileRepository()
+            .get_by_name(
+                profile_name
+            )
         )
 
-        print(
-            f"PROFILE: {profile.name.upper()}"
+        rule_set = (
+            RuleSetRepository()
+            .get_by_name(
+                rule_set_name
+            )
         )
 
-        print(
-            "=========================================="
+        ticker = yf.Ticker(
+            symbol
         )
 
-        features = feature_engine.build(
-            result=indicator_result,
-            profile=profile
+        data = ticker.history(
+            period="5y"
         )
 
-        rule_engine = RuleEngine(
-            rule_set=rule_set
+        indicator_engine = IndicatorEngine(
+            indicators=[
+                SMAIndicator(),
+                EMAIndicator(),
+                RSIIndicator(),
+                MACDIndicator(),
+                BollingerIndicator(),
+                ADXIndicator(),
+                StochasticIndicator(),
+            ]
         )
 
-        rule_results = rule_engine.evaluate(
-            features
+        indicator_result = (
+            indicator_engine.calculate(
+                symbol=symbol,
+                data=data
+            )
+        )
+
+        features = (
+            FeatureEngine()
+            .build(
+                result=indicator_result,
+                profile=profile
+            )
+        )
+
+        rule_results = (
+            RuleEngine(
+                rule_set=rule_set
+            )
+            .evaluate(
+                features
+            )
         )
 
         core_setup_result = (
-            core_setup_engine.evaluate(
+            CoreSetupEngine()
+            .evaluate(
                 rule_results
             )
         )
 
         quality_result = (
-            quality_engine.calculate(
+            QualityEngine()
+            .calculate(
                 rule_results=rule_results,
                 core_setup_result=core_setup_result
             )
         )
 
-        #
-        # Historische Analyse
-        # ALLE Setups
-        #
-
-        historical_all = (
-            historical_success_engine.analyze(
+        historical_result = (
+            HistoricalSuccessEngine()
+            .analyze(
                 symbol=symbol,
                 data=data,
                 profile=profile,
-                rule_set_name="entry_setup",
-                target_pct=0.08,
-                lookahead_days=60,
-                min_quality="MEDIUM",
-                top_n_similar=None
-            )
-        )
-
-        #
-        # Historische Analyse
-        # ÄHNLICHSTE Setups
-        #
-
-        historical_similar = (
-            historical_success_engine.analyze(
-                symbol=symbol,
-                data=data,
-                profile=profile,
-                rule_set_name="entry_setup",
+                rule_set_name=rule_set_name,
                 target_pct=0.08,
                 lookahead_days=60,
                 min_quality="MEDIUM",
@@ -200,96 +173,60 @@ def main():
             )
         )
 
-        #
-        # Confidence nur Rules
-        #
-
-        confidence_rule = (
-            confidence_engine.calculate(
+        confidence_result = (
+            ConfidenceEngine()
+            .calculate(
                 rule_results=rule_results,
-                historical_success_result=None
-            )
-        )
-
-        #
-        # Confidence mit allen Setups
-        #
-
-        confidence_all = (
-            confidence_engine.calculate(
-                rule_results=rule_results,
-                historical_success_result=historical_all
-            )
-        )
-
-        #
-        # Confidence mit Similarity
-        #
-
-        confidence_similar = (
-            confidence_engine.calculate(
-                rule_results=rule_results,
-                historical_success_result=historical_similar
+                historical_success_result=historical_result
             )
         )
 
         risk_result = (
-            risk_engine.calculate(
+            RiskEngine()
+            .calculate(
                 features
             )
         )
 
-        signal_result = (
-            signal_engine.create_signal(
+        signal = (
+            SignalEngine()
+            .create_signal(
                 symbol=symbol,
                 quality_result=quality_result,
-                confidence_result=confidence_similar,
+                confidence_result=confidence_result,
                 risk_result=risk_result
             )
         )
 
-        print("\nCore Setup:")
-        print(core_setup_result)
+        return StockAnalysisResult(
+            symbol=symbol,
+            profile_name=profile_name,
 
-        print("\nQuality:")
-        print(quality_result)
+            signal=signal,
 
-        print("\n--- HISTORICAL ALL SETUPS ---")
-        print(historical_all)
+            quality=quality_result.quality,
 
-        print(
-            f"Success Rate: "
-            f"{historical_all.success_rate:.2%}"
+            confidence=confidence_result.confidence,
+
+            risk_level=risk_result.level,
+
+            historical_success_rate=(
+                historical_result.success_rate
+            ),
+
+            setup_count=(
+                historical_result.setup_count
+            ),
+
+            sample_quality=(
+                historical_result.sample_quality
+            ),
+
+            average_similarity=(
+                historical_result.average_similarity
+            ),
+
+            reasons=(
+                signal.reasons
+            )
         )
-
-        print("\n--- HISTORICAL SIMILAR SETUPS ---")
-        print(historical_similar)
-
-        print(
-            f"Success Rate: "
-            f"{historical_similar.success_rate:.2%}"
-        )
-
-        print(
-            f"Average Similarity: "
-            f"{historical_similar.average_similarity}"
-        )
-
-        print("\n--- RULE CONFIDENCE ---")
-        print(confidence_rule)
-
-        print("\n--- ALL SETUPS CONFIDENCE ---")
-        print(confidence_all)
-
-        print("\n--- SIMILARITY CONFIDENCE ---")
-        print(confidence_similar)
-
-        print("\nRisk:")
-        print(risk_result)
-
-        print("\nFinal Signal:")
-        print(signal_result)
-
-
-if __name__ == "__main__":
-    main()
