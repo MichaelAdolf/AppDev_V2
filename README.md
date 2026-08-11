@@ -1,80 +1,115 @@
-from stockmind.domain.core_setup.core_setup_result import (
-    CoreSetupResult
+from stockmind.domain.quality.quality_result import (
+    QualityResult
 )
 
 
-class CoreSetupEngine:
+class QualityEngine:
 
-    REQUIRED_RULES = [
-        "rsi_oversold",
-        "lower_bollinger",
-        "adx_strength",
+    CONFIRMATION_RULES = [
+        "stochastic_oversold",
+        "macd_positive",
+        "trend",
     ]
 
-    def evaluate(
+    def calculate(
         self,
-        rule_results
-    ) -> CoreSetupResult:
+        rule_results,
+        core_setup_result=None
+    ) -> QualityResult:
 
-        results_by_name = {
-            result.rule_name: result
-            for result in rule_results
-        }
-
-        satisfied_rules = 0
-
-        core_score = 0.0
-
-        missing_rules = []
+        total_score = 0.0
 
         reasons = []
 
-        for rule_name in self.REQUIRED_RULES:
+        for result in rule_results:
 
-            result = results_by_name.get(
-                rule_name
-            )
+            total_score += result.score
 
-            if result is None:
+            if result.reason:
 
-                missing_rules.append(
-                    rule_name
+                reasons.append(
+                    result.reason
                 )
 
-                continue
+        if core_setup_result is None:
 
-            if result.triggered:
+            return self._calculate_legacy_quality(
+                total_score=total_score,
+                reasons=reasons
+            )
 
-                satisfied_rules += 1
+        if not core_setup_result.setup_detected:
 
-                core_score += result.score
+            missing = ", ".join(
+                core_setup_result.missing_rules
+            )
 
-                if result.reason:
-
-                    reasons.append(
-                        result.reason
+            return QualityResult(
+                quality="LOW",
+                score=total_score,
+                reasons=[
+                    *reasons,
+                    (
+                        "Core Setup nicht vollständig erfüllt: "
+                        f"{missing}"
                     )
-
-            else:
-
-                missing_rules.append(
-                    rule_name
-                )
-
-        setup_detected = (
-            satisfied_rules
-            == len(
-                self.REQUIRED_RULES
+                ]
             )
+
+        confirmation_score = 0.0
+
+        for result in rule_results:
+
+            if result.rule_name in self.CONFIRMATION_RULES:
+
+                confirmation_score += result.score
+
+        if confirmation_score >= 40:
+
+            quality = "VERY_HIGH"
+
+        elif confirmation_score >= 20:
+
+            quality = "HIGH"
+
+        elif confirmation_score >= 10:
+
+            quality = "MEDIUM"
+
+        else:
+
+            quality = "MEDIUM"
+
+        return QualityResult(
+            quality=quality,
+            score=total_score,
+            reasons=reasons
         )
 
-        return CoreSetupResult(
-            setup_detected=setup_detected,
-            satisfied_rules=satisfied_rules,
-            required_rules=len(
-                self.REQUIRED_RULES
-            ),
-            core_score=core_score,
-            missing_rules=missing_rules,
+    def _calculate_legacy_quality(
+        self,
+        total_score: float,
+        reasons: list[str]
+    ) -> QualityResult:
+
+        if total_score >= 75:
+
+            quality = "VERY_HIGH"
+
+        elif total_score >= 50:
+
+            quality = "HIGH"
+
+        elif total_score >= 25:
+
+            quality = "MEDIUM"
+
+        else:
+
+            quality = "LOW"
+
+        return QualityResult(
+            quality=quality,
+            score=total_score,
             reasons=reasons
         )
