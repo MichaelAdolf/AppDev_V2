@@ -1,46 +1,44 @@
-from stockmind.domain.watchlists.watchlist import (
-    Watchlist
-)
-
-from stockmind.domain.watchlists.watchlist_entry import (
-    WatchlistEntry
-)
-
-from stockmind.infrastructure.watchlists.watchlist_repository import (
-    WatchlistRepository
+from stockmind.application.use_cases.manage_watchlist_use_case import (
+    ManageWatchlistUseCase
 )
 
 
-class ManageWatchlistUseCase:
+def main():
 
-    def create(
-        self,
-        name: str,
-        symbols: list[str]
-    ):
+    use_case = (
+        ManageWatchlistUseCase()
+    )
 
-        watchlist = Watchlist(
-            name=name,
-            entries=[
-                WatchlistEntry(
-                    symbol=symbol
-                )
-                for symbol in symbols
-            ]
+    use_case.create(
+        name="tech_stocks",
+        symbols=[
+            "NVDA",
+            "AMD",
+            "MSFT",
+            "AAPL",
+            "GOOGL"
+        ]
+    )
+
+    watchlist = (
+        use_case.load(
+            "tech_stocks"
+        )
+    )
+
+    print("\nWATCHLIST")
+
+    print(
+        f"Name: "
+        f"{watchlist.name}"
+    )
+
+    for entry in watchlist.entries:
+
+        print(
+            entry.symbol
         )
 
-        WatchlistRepository().save(
-            watchlist
-        )
 
-    def load(
-        self,
-        name: str
-    ) -> Watchlist:
-
-        return (
-            WatchlistRepository()
-            .load(
-                name
-            )
-        )
+if __name__ == "__main__":
+    main()
