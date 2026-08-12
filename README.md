@@ -1,54 +1,39 @@
-import sqlite3
+from stockmind.application.use_cases.analyze_stock_use_case import (
+    AnalyzeStockUseCase
+)
 
-from stockmind.domain.history.analysis_history_entry import (
-    AnalysisHistoryEntry
+from stockmind.infrastructure.history.analysis_history_repository import (
+    AnalysisHistoryRepository
 )
 
 
-class AnalysisHistoryRepository:
+def main():
 
-    def __init__(
-        self,
-        database_path: str = "stockmind.db"
-    ):
+    AnalyzeStockUseCase().execute(
+        symbol="NVDA",
+        profile_name="balanced"
+    )
 
-        self._database_path = database_path
+    AnalyzeStockUseCase().execute(
+        symbol="NVDA",
+        profile_name="balanced"
+    )
 
-        self._initialize()
-
-    def _initialize(
-        self
-    ):
-
-        connection = sqlite3.connect(
-            self._database_path
+    history = (
+        AnalysisHistoryRepository()
+        .load_by_symbol(
+            "NVDA"
         )
+    )
 
-        cursor = connection.cursor()
+    print(
+        "\n=== HISTORY ===\n"
+    )
 
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS analysis_history (
+    for entry in history:
 
-                analysis_date TEXT,
+        print(entry)
 
-                symbol TEXT,
 
-                profile_name TEXT,
-
-                opportunity_score REAL,
-
-                confidence REAL,
-
-                historical_success_rate REAL,
-
-                risk_level TEXT,
-
-                signal TEXT
-            )
-            """
-        )
-
-        connection.commit()
-
-        connection.close()
+if __name__ == "__main__":
+    main()
