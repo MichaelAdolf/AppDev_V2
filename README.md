@@ -1,44 +1,54 @@
-from stockmind.application.use_cases.manage_watchlist_use_case import (
-    ManageWatchlistUseCase
+import sqlite3
+
+from stockmind.domain.history.analysis_history_entry import (
+    AnalysisHistoryEntry
 )
 
 
-def main():
+class AnalysisHistoryRepository:
 
-    use_case = (
-        ManageWatchlistUseCase()
-    )
+    def __init__(
+        self,
+        database_path: str = "stockmind.db"
+    ):
 
-    use_case.create(
-        name="tech_stocks",
-        symbols=[
-            "NVDA",
-            "AMD",
-            "MSFT",
-            "AAPL",
-            "GOOGL"
-        ]
-    )
+        self._database_path = database_path
 
-    watchlist = (
-        use_case.load(
-            "tech_stocks"
-        )
-    )
+        self._initialize()
 
-    print("\nWATCHLIST")
+    def _initialize(
+        self
+    ):
 
-    print(
-        f"Name: "
-        f"{watchlist.name}"
-    )
-
-    for entry in watchlist.entries:
-
-        print(
-            entry.symbol
+        connection = sqlite3.connect(
+            self._database_path
         )
 
+        cursor = connection.cursor()
 
-if __name__ == "__main__":
-    main()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS analysis_history (
+
+                analysis_date TEXT,
+
+                symbol TEXT,
+
+                profile_name TEXT,
+
+                opportunity_score REAL,
+
+                confidence REAL,
+
+                historical_success_rate REAL,
+
+                risk_level TEXT,
+
+                signal TEXT
+            )
+            """
+        )
+
+        connection.commit()
+
+        connection.close()
