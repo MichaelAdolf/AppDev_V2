@@ -1,74 +1,72 @@
-from stockmind.domain.scoring.opportunity_score_result import (
-    OpportunityScoreResult
+from stockmind.application.use_cases.run_analysis_use_case import (
+    RunAnalysisUseCase
 )
 
 
-class OpportunityScoreEngine:
+def main():
 
-    QUALITY_POINTS = {
-        "LOW": 25,
-        "MEDIUM": 50,
-        "HIGH": 75,
-        "VERY_HIGH": 100
-    }
+    symbols = [
+        "NVDA",
+        "AMD",
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+    ]
 
-    RISK_PENALTY = {
-        "LOW": 0,
-        "MEDIUM": 15,
-        "HIGH": 30
-    }
+    result = (
+        RunAnalysisUseCase()
+        .execute(
+            symbols=symbols,
+            profile_name="balanced"
+        )
+    )
 
-    def calculate(
-        self,
-        quality_result,
-        confidence_result,
-        historical_success_result,
-        risk_result
-    ) -> OpportunityScoreResult:
+    print(
+        "\n=== OPPORTUNITY RANKING ===\n"
+    )
 
-        quality_points = self.QUALITY_POINTS.get(
-            quality_result.quality,
-            0
+    rank = 1
+
+    for stock in result.stock_results:
+
+        print(
+            f"{rank}. {stock.symbol}"
         )
 
-        quality_component = (
-            quality_points * 0.30
+        print(
+            f"Opportunity Score: "
+            f"{stock.opportunity_score:.2f}"
         )
 
-        confidence_component = (
-            confidence_result.confidence
-            * 100
-            * 0.40
+        print(
+            f"Confidence: "
+            f"{stock.confidence:.2%}"
         )
 
-        historical_component = (
-            historical_success_result.success_rate
-            * 100
-            * 0.20
+        print(
+            f"Historical Success: "
+            f"{stock.historical_success_rate:.2%}"
         )
 
-        risk_penalty = (
-            self.RISK_PENALTY.get(
-                risk_result.level,
-                0
-            )
+        print(
+            f"Quality: "
+            f"{stock.quality}"
         )
 
-        risk_component = (
-            risk_penalty * -0.10
+        print(
+            f"Risk: "
+            f"{stock.risk_level}"
         )
 
-        score = (
-            quality_component
-            + confidence_component
-            + historical_component
-            + risk_component
+        print(
+            f"Signal: "
+            f"{stock.signal.signal.value}"
         )
 
-        return OpportunityScoreResult(
-            score=score,
-            quality_component=quality_component,
-            confidence_component=confidence_component,
-            historical_component=historical_component,
-            risk_component=risk_component
-        )
+        print()
+
+        rank += 1
+
+
+if __name__ == "__main__":
+    main()
