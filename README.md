@@ -1,74 +1,49 @@
-from stockmind.domain.explainability.explanation_result import (
-    ExplanationResult
+from stockmind.application.use_cases.analyze_stock_use_case import (
+    AnalyzeStockUseCase
 )
 
 
-class ExplanationEngine:
+def main():
 
-    def create(
-        self,
-        symbol: str,
-        core_setup_result,
-        quality_result,
-        confidence_result,
-        historical_result,
-        risk_result,
-        opportunity_result,
-        rule_results
-    ) -> ExplanationResult:
+    result = (
+        AnalyzeStockUseCase()
+        .execute(
+            symbol="NVDA",
+            profile_name="balanced"
+        )
+    )
 
-        strengths = []
+    print("\n=== ANALYSE ===\n")
 
-        weaknesses = []
+    print(
+        result.explanation.title
+    )
 
-        for result in rule_results:
+    print(
+        result.explanation.summary
+    )
 
-            if result.triggered:
+    print("\nSTÄRKEN")
 
-                strengths.append(
-                    result.reason
-                )
+    for item in result.explanation.strengths:
 
-            else:
-
-                weaknesses.append(
-                    result.rule_name
-                )
-
-        strengths.append(
-            (
-                f"Historische Erfolgsrate "
-                f"{historical_result.success_rate:.1%}"
-            )
+        print(
+            f"✅ {item}"
         )
 
-        if (
-            historical_result.average_similarity
-            is not None
-        ):
+    print("\nSCHWÄCHEN")
 
-            strengths.append(
-                (
-                    f"Durchschnittliche Ähnlichkeit "
-                    f"{historical_result.average_similarity:.2f}"
-                )
-            )
+    for item in result.explanation.weaknesses:
 
-        summary = (
-            f"{symbol}: "
-            f"{quality_result.quality} Setup, "
-            f"Confidence "
-            f"{confidence_result.confidence:.1%}, "
-            f"Risk "
-            f"{risk_result.level}"
+        print(
+            f"⚠ {item}"
         )
 
-        return ExplanationResult(
-            title=f"{symbol} Analyse",
-            summary=summary,
-            strengths=strengths,
-            weaknesses=weaknesses,
-            opportunity_score=(
-                opportunity_result.score
-            )
-        )
+    print(
+        f"\nOpportunity Score: "
+        f"{result.opportunity_score:.2f}"
+    )
+
+
+if __name__ == "__main__":
+    main()
