@@ -5,44 +5,58 @@ from stockmind.application.use_cases.analyze_stock_use_case import (
 
 def main():
 
-    result = (
-        AnalyzeStockUseCase()
-        .execute(
-            symbol="NVDA",
-            profile_name="balanced"
+    profiles = [
+        "conservative",
+        "balanced",
+        "aggressive"
+    ]
+
+    for profile in profiles:
+
+        result = (
+            AnalyzeStockUseCase()
+            .execute(
+                symbol="NVDA",
+                profile_name=profile
+            )
         )
-    )
-
-    print("\n=== ANALYSE ===\n")
-
-    print(
-        result.explanation.title
-    )
-
-    print(
-        result.explanation.summary
-    )
-
-    print("\nSTÄRKEN")
-
-    for item in result.explanation.strengths:
 
         print(
-            f"✅ {item}"
+            "\n================================"
         )
-
-    print("\nSCHWÄCHEN")
-
-    for item in result.explanation.weaknesses:
 
         print(
-            f"⚠ {item}"
+            profile.upper()
         )
 
-    print(
-        f"\nOpportunity Score: "
-        f"{result.opportunity_score:.2f}"
-    )
+        print(
+            "================================"
+        )
+
+        print(
+            f"Score: "
+            f"{result.opportunity_score:.2f}"
+        )
+
+        print(
+            f"Confidence: "
+            f"{result.confidence:.2%}"
+        )
+
+        print(
+            f"Historical: "
+            f"{result.historical_success_rate:.2%}"
+        )
+
+        print(
+            f"Risk: "
+            f"{result.risk_level}"
+        )
+
+        print(
+            f"Signal: "
+            f"{result.signal.signal.value}"
+        )
 
 
 if __name__ == "__main__":
