@@ -1,39 +1,48 @@
-from stockmind.application.use_cases.analyze_stock_use_case import (
-    AnalyzeStockUseCase
-)
-
-from stockmind.infrastructure.history.analysis_history_repository import (
-    AnalysisHistoryRepository
-)
-
-
-def main():
-
-    AnalyzeStockUseCase().execute(
-        symbol="NVDA",
-        profile_name="balanced"
-    )
-
-    AnalyzeStockUseCase().execute(
-        symbol="NVDA",
-        profile_name="balanced"
-    )
-
-    history = (
-        AnalysisHistoryRepository()
-        .load_by_symbol(
-            "NVDA"
+    def load_by_symbol(
+        self,
+        symbol: str
+    ) -> listconnection = sqlite3.connect(
+            self._database_path
         )
-    )
 
-    print(
-        "\n=== HISTORY ===\n"
-    )
+        cursor = connection.cursor()
 
-    for entry in history:
+        cursor.execute(
+            """
+            SELECT
 
-        print(entry)
+                analysis_date,
+                symbol,
+                profile_name,
+                opportunity_score,
+                confidence,
+                historical_success_rate,
+                risk_level,
+                signal
 
+            FROM analysis_history
 
-if __name__ == "__main__":
-    main()
+            WHERE symbol = ?
+
+            ORDER BY analysis_date
+            """,
+            (symbol,)
+        )
+
+        rows = cursor.fetchall()
+
+        connection.close()
+
+        return [
+            AnalysisHistoryEntry(
+                analysis_date=row[0],
+                symbol=row[1],
+                profile_name=row[2],
+                opportunity_score=row[3],
+                confidence=row[4],
+                historical_success_rate=row[5],
+                risk_level=row[6],
+                signal=row[7]
+            )
+            for row in rows
+        ]
