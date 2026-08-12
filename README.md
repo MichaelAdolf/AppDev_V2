@@ -1,63 +1,126 @@
-from stockmind.application.use_cases.analyze_stock_use_case import (
-    AnalyzeStockUseCase
+import sqlite3
+
+from stockmind.domain.watchlists.watchlist import (
+    Watchlist
+)
+
+from stockmind.domain.watchlists.watchlist_entry import (
+    WatchlistEntry
 )
 
 
-def main():
+class WatchlistRepository:
 
-    profiles = [
-        "conservative",
-        "balanced",
-        "aggressive"
-    ]
+    def __init__(
+        self,
+        database_path: str = "stockmind.db"
+    ):
 
-    for profile in profiles:
+        self._database_path = database_path
 
-        result = (
-            AnalyzeStockUseCase()
-            .execute(
-                symbol="NVDA",
-                profile_name=profile
+        self._initialize()
+
+    def _initialize(
+        self
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS watchlists (
+
+                name TEXT NOT NULL,
+
+                symbol TEXT NOT NULL
             )
+            """
         )
 
-        print(
-            "\n================================"
+        connection.commit()
+
+        connection.close()
+
+    def save(
+        self,
+        watchlist: Watchlist
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
         )
 
-        print(
-            profile.upper()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM watchlists
+            WHERE name = ?
+            """,
+            (watchlist.name,)
         )
 
-        print(
-            "================================"
+        for entry in watchlist.entries:
+
+            cursor.execute(
+                """
+                INSERT INTO watchlists
+                (
+                    name,
+                    symbol
+                )
+                VALUES
+                (
+                    ?,
+                    ?
+                )
+                """,
+                (
+                    watchlist.name,
+                    entry.symbol
+                )
+            )
+
+        connection.commit()
+
+        connection.close()
+
+    def load(
+        self,
+        name: str
+    ) -> Watchlist:
+
+        connection = sqlite3.connect(
+            self._database_path
         )
 
-        print(
-            f"Score: "
-            f"{result.opportunity_score:.2f}"
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT symbol
+            FROM watchlists
+            WHERE name = ?
+            """,
+            (name,)
         )
 
-        print(
-            f"Confidence: "
-            f"{result.confidence:.2%}"
+        rows = cursor.fetchall()
+
+        connection.close()
+
+        entries = [
+            WatchlistEntry(
+                symbol=row[0]
+            )
+            for row in rows
+        ]
+
+        return Watchlist(
+            name=name,
+            entries=entries
         )
-
-        print(
-            f"Historical: "
-            f"{result.historical_success_rate:.2%}"
-        )
-
-        print(
-            f"Risk: "
-            f"{result.risk_level}"
-        )
-
-        print(
-            f"Signal: "
-            f"{result.signal.signal.value}"
-        )
-
-
-if __name__ == "__main__":
-    main()
