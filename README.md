@@ -1,72 +1,74 @@
-from stockmind.application.use_cases.run_analysis_use_case import (
-    RunAnalysisUseCase
+from stockmind.domain.explainability.explanation_result import (
+    ExplanationResult
 )
 
 
-def main():
+class ExplanationEngine:
 
-    symbols = [
-        "NVDA",
-        "AMD",
-        "AAPL",
-        "MSFT",
-        "GOOGL",
-    ]
+    def create(
+        self,
+        symbol: str,
+        core_setup_result,
+        quality_result,
+        confidence_result,
+        historical_result,
+        risk_result,
+        opportunity_result,
+        rule_results
+    ) -> ExplanationResult:
 
-    result = (
-        RunAnalysisUseCase()
-        .execute(
-            symbols=symbols,
-            profile_name="balanced"
-        )
-    )
+        strengths = []
 
-    print(
-        "\n=== OPPORTUNITY RANKING ===\n"
-    )
+        weaknesses = []
 
-    rank = 1
+        for result in rule_results:
 
-    for stock in result.stock_results:
+            if result.triggered:
 
-        print(
-            f"{rank}. {stock.symbol}"
-        )
+                strengths.append(
+                    result.reason
+                )
 
-        print(
-            f"Opportunity Score: "
-            f"{stock.opportunity_score:.2f}"
-        )
+            else:
 
-        print(
-            f"Confidence: "
-            f"{stock.confidence:.2%}"
-        )
+                weaknesses.append(
+                    result.rule_name
+                )
 
-        print(
-            f"Historical Success: "
-            f"{stock.historical_success_rate:.2%}"
+        strengths.append(
+            (
+                f"Historische Erfolgsrate "
+                f"{historical_result.success_rate:.1%}"
+            )
         )
 
-        print(
-            f"Quality: "
-            f"{stock.quality}"
+        if (
+            historical_result.average_similarity
+            is not None
+        ):
+
+            strengths.append(
+                (
+                    f"Durchschnittliche Ähnlichkeit "
+                    f"{historical_result.average_similarity:.2f}"
+                )
+            )
+
+        summary = (
+            f"{symbol}: "
+            f"{quality_result.quality} Setup, "
+            f"Confidence "
+            f"{confidence_result.confidence:.1%}, "
+            f"Risk "
+            f"{risk_result.level}"
         )
 
-        print(
-            f"Risk: "
-            f"{stock.risk_level}"
+        return ExplanationResult(
+            title=f"{symbol} Analyse",
+            summary=summary,
+            strengths=strengths,
+            weaknesses=weaknesses,
+            opportunity_score=(
+                opportunity_result.score
+            )
         )
-
-        print(
-            f"Signal: "
-            f"{stock.signal.signal.value}"
-        )
-
-        print()
-
-        rank += 1
-
-
-if __name__ == "__main__":
-    main()
