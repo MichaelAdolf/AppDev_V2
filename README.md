@@ -1,62 +1,74 @@
-from stockmind.domain.history.top_mover_result import (
-    TopMoverResult
+from stockmind.application.use_cases.run_analysis_use_case import (
+    RunAnalysisUseCase
 )
 
-from stockmind.domain.history.opportunity_trend_engine import (
-    OpportunityTrendEngine
+from stockmind.infrastructure.history.analysis_history_repository import (
+    AnalysisHistoryRepository
+)
+
+from stockmind.domain.history.watchlist_trend_engine import (
+    WatchlistTrendEngine
 )
 
 
-class WatchlistTrendEngine:
+def main():
 
-    def analyze(
-        self,
-        repository,
-        symbols: list[str]
-    ) -> list[TopMoverResult]:     trend_engine = (
-            OpportunityTrendEngine()
+    symbols = [
+        "NVDA",
+        "AMD",
+        "MSFT",
+        "AAPL",
+        "GOOGL"
+    ]
+
+    #
+    # einige Einträge erzeugen
+    #
+
+    RunAnalysisUseCase().execute(
+        symbols=symbols,
+        profile_name="balanced"
+    )
+
+    movers = (
+        WatchlistTrendEngine()
+        .analyze(
+            repository=AnalysisHistoryRepository(),
+            symbols=symbols
+        )
+    )
+
+    print(
+        "\n=== TOP MOVERS ===\n"
+    )
+
+    rank = 1
+
+    for mover in movers:
+
+        print(
+            f"{rank}. {mover.symbol}"
         )
 
-        for symbol in symbols:
-
-            history = (
-                repository.load_by_symbol(
-                    symbol
-                )
-            )
-
-            if not history:
-
-                continue
-
-            trend_result = (
-                trend_engine.analyze(
-                    history
-                )
-            )
-
-            results.append(
-                TopMoverResult(
-                    symbol=symbol,
-
-                    latest_score=(
-                        trend_result.latest_score
-                    ),
-
-                    score_change=(
-                        trend_result.score_change
-                    ),
-
-                    trend=(
-                        trend_result.trend
-                    )
-                )
-            )
-
-        results.sort(
-            key=lambda item:
-                item.score_change,
-            reverse=True
+        print(
+            f"Latest Score: "
+            f"{mover.latest_score:.2f}"
         )
 
-        return results
+        print(
+            f"Change: "
+            f"{mover.score_change:.2f}"
+        )
+
+        print(
+            f"Trend: "
+            f"{mover.trend}"
+        )
+
+        print()
+
+        rank += 1
+
+
+if __name__ == "__main__":
+    main()
