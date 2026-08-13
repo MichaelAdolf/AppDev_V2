@@ -1,48 +1,60 @@
-    def load_by_symbol(
+from stockmind.domain.history.opportunity_trend_result import (
+    OpportunityTrendResult
+)
+
+
+class OpportunityTrendEngine:
+
+    def analyze(
         self,
-        symbol: str
-    ) -> listconnection = sqlite3.connect(
-            self._database_path
-        )
+        history
+    ) -> OpportunityTrendResult:
 
-        cursor = connection.cursor()
+        if not history:
 
-        cursor.execute(
-            """
-            SELECT
-
-                analysis_date,
-                symbol,
-                profile_name,
-                opportunity_score,
-                confidence,
-                historical_success_rate,
-                risk_level,
-                signal
-
-            FROM analysis_history
-
-            WHERE symbol = ?
-
-            ORDER BY analysis_date
-            """,
-            (symbol,)
-        )
-
-        rows = cursor.fetchall()
-
-        connection.close()
-
-        return [
-            AnalysisHistoryEntry(
-                analysis_date=row[0],
-                symbol=row[1],
-                profile_name=row[2],
-                opportunity_score=row[3],
-                confidence=row[4],
-                historical_success_rate=row[5],
-                risk_level=row[6],
-                signal=row[7]
+            return OpportunityTrendResult(
+                trend="NO_DATA",
+                average_score=0.0,
+                latest_score=0.0,
+                score_change=0.0,
+                history_size=0
             )
-            for row in rows
+
+        scores = [
+            item.opportunity_score
+            for item in history
         ]
+
+        average_score = (
+            sum(scores)
+            / len(scores)
+        )
+
+        latest_score = scores[-1]
+
+        first_score = scores[0]
+
+        score_change = (
+            latest_score
+            - first_score
+        )
+
+        if score_change >= 10:
+
+            trend = "TRENDING_UP"
+
+        elif score_change <= -10:
+
+            trend = "TRENDING_DOWN"
+
+        else:
+
+            trend = "SIDEWAYS"
+
+        return OpportunityTrendResult(
+            trend=trend,
+            average_score=average_score,
+            latest_score=latest_score,
+            score_change=score_change,
+            history_size=len(scores)
+        )
