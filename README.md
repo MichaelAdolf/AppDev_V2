@@ -1,10 +1,35 @@
-st.divider()
+def _initialize(
+    self
+):
 
-tab1, tab2, tab3, tab4 = st.tabs(
-    [
-        "📊 Übersicht",
-        "🧠 Analyse",
-        "📜 Historie",
-        "📈 Indikatoren"
-    ]
-)
+    connection = sqlite3.connect(
+        self._database_path
+    )
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS analysis_details (
+
+            symbol TEXT NOT NULL,
+
+            profile_name TEXT NOT NULL,
+
+            summary TEXT,
+
+            strengths TEXT,
+
+            weaknesses TEXT,
+
+            PRIMARY KEY (
+                symbol,
+                profile_name
+            )
+        )
+        """
+    )
+
+    connection.commit()
+
+    connection.close()
