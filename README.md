@@ -1,20 +1,46 @@
-st.subheader(
-    "🔍 Detailansicht öffnen"
+import streamlit as st
+
+from stockmind.infrastructure.history.latest_analysis_repository import (
+    LatestAnalysisRepository
 )
 
-for item in results:
 
-    col1, col2 = st.columns(
-        [1, 4]
+def render(
+    profile_name: str
+):
+
+    st.subheader(
+        "🔍 Aktie auswählen"
     )
 
-    with col1:
+    results = (
+        LatestAnalysisRepository()
+        .load_all(
+            profile_name
+        )
+    )
 
-        if st.button(
-            f"{item.symbol}",
-            key=f"btn_{item.symbol}"
-        ):
+    symbols = [
+        item.symbol
+        for item in results
+    ]
 
-            st.session_state[
-                "selected_symbol"
-            ] = item.symbol
+    if not symbols:
+
+        st.warning(
+            "Keine Aktien vorhanden."
+        )
+
+        return
+
+    selected = st.selectbox(
+        "Aktie",
+        symbols,
+        index=0
+    )
+
+    st.session_state[
+        "selected_symbol"
+    ] = selected
+
+    return selected
