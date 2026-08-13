@@ -1,43 +1,19 @@
-connection = sqlite3.connect(
-    self._database_path
-)
+AnalysisDetailRepository().save(
+    AnalysisDetailEntry(
+        symbol=symbol,
 
-cursor = connection.cursor()
+        profile_name=profile_name,
 
-cursor.execute(
-    """
-    SELECT
+        summary=(
+            explanation_result.summary
+        ),
 
-        symbol,
-        profile_name,
-        summary,
-        strengths,
-        weaknesses
+        strengths="|".join(
+            explanation_result.strengths
+        ),
 
-    FROM analysis_details
-
-    WHERE symbol = ?
-    AND profile_name = ?
-    """,
-    (
-        symbol,
-        profile_name
+        weaknesses="|".join(
+            explanation_result.weaknesses
+        )
     )
 )
-
-row = cursor.fetchone()
-
-connection.close()
-
-if row is None:
-
-    return None
-
-return AnalysisDetailEntry(
-    symbol=row[0],
-    profile_name=row[1],
-    summary=row[2],
-    strengths=row[3],
-    weaknesses=row[4]
-)
-``
