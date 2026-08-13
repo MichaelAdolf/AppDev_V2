@@ -1,9 +1,42 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_latest_analysis.py
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_latest_analysis.py", line 1, in <module>
-    from stockmind.application.use_cases.run_analysis_use_case import ( RunAnalysisUseCase )
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\use_cases\run_analysis_use_case.py", line 3, in <module>
-    from stockmind.application.use_cases.analyze_stock_use_case import ( AnalyzeStockUseCase )
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\use_cases\analyze_stock_use_case.py", line 97, in <module>
-    from stockmind.domain.history.analysis_detail_entry import AnalysisDetailEntry
-ImportError: cannot import name 'AnalysisDetailEntry' from 'stockmind.domain.history.analysis_detail_entry' (D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\domain\history\analysis_detail_entry.py)
+connection = sqlite3.connect(
+    self._database_path
+)
+
+cursor = connection.cursor()
+
+cursor.execute(
+    """
+    SELECT
+
+        symbol,
+        profile_name,
+        summary,
+        strengths,
+        weaknesses
+
+    FROM analysis_details
+
+    WHERE symbol = ?
+    AND profile_name = ?
+    """,
+    (
+        symbol,
+        profile_name
+    )
+)
+
+row = cursor.fetchone()
+
+connection.close()
+
+if row is None:
+
+    return None
+
+return AnalysisDetailEntry(
+    symbol=row[0],
+    profile_name=row[1],
+    summary=row[2],
+    strengths=row[3],
+    weaknesses=row[4]
+)
