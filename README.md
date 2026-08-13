@@ -1,34 +1,39 @@
-from stockmind.application.use_cases.run_analysis_use_case import (
-    RunAnalysisUseCase
-)
+def _initialize(
+    self
+):
 
-from stockmind.infrastructure.history.latest_analysis_repository import (
-    LatestAnalysisRepository
-)
-
-
-def main():
-
-    RunAnalysisUseCase().execute(
-        symbols=[
-            "NVDA",
-            "AMD",
-            "MSFT"
-        ],
-        profile_name="balanced"
+    connection = sqlite3.connect(
+        self._database_path
     )
 
-    results = (
-        LatestAnalysisRepository()
-        .load_all(
-            "balanced"
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS latest_analysis (
+
+            symbol TEXT NOT NULL,
+
+            profile_name TEXT NOT NULL,
+
+            opportunity_score REAL,
+
+            confidence REAL,
+
+            historical_success_rate REAL,
+
+            risk_level TEXT,
+
+            signal TEXT,
+
+            PRIMARY KEY (
+                symbol,
+                profile_name
+            )
         )
+        """
     )
 
-    for result in results:
+    connection.commit()
 
-        print(result)
-
-
-if __name__ == "__main__":
-    main()
+    connection.close()
