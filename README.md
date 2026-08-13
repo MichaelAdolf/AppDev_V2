@@ -1,5 +1,5 @@
-from stockmind.infrastructure.history.analysis_history_repository import (
-    AnalysisHistoryRepository
+from stockmind.domain.history.top_mover_result import (
+    TopMoverResult
 )
 
 from stockmind.domain.history.opportunity_trend_engine import (
@@ -7,28 +7,56 @@ from stockmind.domain.history.opportunity_trend_engine import (
 )
 
 
-def main():
+class WatchlistTrendEngine:
 
-    history = (
-        AnalysisHistoryRepository()
-        .load_by_symbol(
-            "NVDA"
+    def analyze(
+        self,
+        repository,
+        symbols: list[str]
+    ) -> list[TopMoverResult]:     trend_engine = (
+            OpportunityTrendEngine()
         )
-    )
 
-    result = (
-        OpportunityTrendEngine()
-        .analyze(
-            history
+        for symbol in symbols:
+
+            history = (
+                repository.load_by_symbol(
+                    symbol
+                )
+            )
+
+            if not history:
+
+                continue
+
+            trend_result = (
+                trend_engine.analyze(
+                    history
+                )
+            )
+
+            results.append(
+                TopMoverResult(
+                    symbol=symbol,
+
+                    latest_score=(
+                        trend_result.latest_score
+                    ),
+
+                    score_change=(
+                        trend_result.score_change
+                    ),
+
+                    trend=(
+                        trend_result.trend
+                    )
+                )
+            )
+
+        results.sort(
+            key=lambda item:
+                item.score_change,
+            reverse=True
         )
-    )
 
-    print(
-        "\n=== TREND ===\n"
-    )
-
-    print(result)
-
-
-if __name__ == "__main__":
-    main()
+        return results
