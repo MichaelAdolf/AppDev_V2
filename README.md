@@ -1,74 +1,62 @@
+import streamlit as st
+import pandas as pd
+
 from stockmind.application.use_cases.run_analysis_use_case import (
     RunAnalysisUseCase
 )
 
-from stockmind.infrastructure.history.analysis_history_repository import (
-    AnalysisHistoryRepository
+from stockmind.application.use_cases.manage_watchlist_use_case import (
+    ManageWatchlistUseCase
 )
 
-from stockmind.domain.history.watchlist_trend_engine import (
-    WatchlistTrendEngine
+st.title("🏆 Opportunity Ranking")
+
+watchlist = (
+    ManageWatchlistUseCase()
+    .load("tech_stocks")
 )
 
+symbols = [
+    entry.symbol
+    for entry in watchlist.entries
+]
 
-def main():
-
-    symbols = [
-        "NVDA",
-        "AMD",
-        "MSFT",
-        "AAPL",
-        "GOOGL"
-    ]
-
-    #
-    # einige Einträge erzeugen
-    #
-
-    RunAnalysisUseCase().execute(
+result = (
+    RunAnalysisUseCase()
+    .execute(
         symbols=symbols,
         profile_name="balanced"
     )
+)
 
-    movers = (
-        WatchlistTrendEngine()
-        .analyze(
-            repository=AnalysisHistoryRepository(),
-            symbols=symbols
-        )
+rows = []
+
+for stock in result.stock_results:
+
+    rows.append(
+        {
+            "Symbol": stock.symbol,
+            "Score": round(
+                stock.opportunity_score,
+                2
+            ),
+            "Signal": stock.signal.signal.value,
+            "Confidence": round(
+                stock.confidence * 100,
+                1
+            ),
+            "Historical Success": round(
+                stock.historical_success_rate
+                * 100,
+                1
+            ),
+            "Risk": stock.risk_level
+        }
     )
 
-    print(
-        "\n=== TOP MOVERS ===\n"
-    )
+df = pd.DataFrame(rows)
 
-    rank = 1
-
-    for mover in movers:
-
-        print(
-            f"{rank}. {mover.symbol}"
-        )
-
-        print(
-            f"Latest Score: "
-            f"{mover.latest_score:.2f}"
-        )
-
-        print(
-            f"Change: "
-            f"{mover.score_change:.2f}"
-        )
-
-        print(
-            f"Trend: "
-            f"{mover.trend}"
-        )
-
-        print()
-
-        rank += 1
-
-
-if __name__ == "__main__":
-    main()
+st.dataframe(
+    df,
+    use_container_width=True
+)
