@@ -6,12 +6,9 @@ from stockmind.infrastructure.history.latest_analysis_repository import (
 
 
 def render(
-    profile_name: str
+    profile_name: str,
+    symbol: str
 ):
-
-    st.subheader(
-        "🔍 Aktie auswählen"
-    )
 
     results = (
         LatestAnalysisRepository()
@@ -20,27 +17,61 @@ def render(
         )
     )
 
-    symbols = [
-        item.symbol
-        for item in results
-    ]
+    stock = None
 
-    if not symbols:
+    for item in results:
+
+        if item.symbol == symbol:
+
+            stock = item
+
+            break
+
+    if stock is None:
 
         st.warning(
-            "Keine Aktien vorhanden."
+            "Keine Daten gefunden."
         )
 
         return
 
-    selected = st.selectbox(
-        "Aktie",
-        symbols,
-        index=0
+    st.header(
+        f"📈 {symbol}"
     )
 
-    st.session_state[
-        "selected_symbol"
-    ] = selected
+    col1, col2, col3, col4 = st.columns(4)
 
-    return selected
+    with col1:
+
+        st.metric(
+            "Score",
+            round(
+                stock.opportunity_score,
+                2
+            )
+        )
+
+    with col2:
+
+        st.metric(
+            "Confidence",
+            f"{stock.confidence:.1%}"
+        )
+
+    with col3:
+
+        st.metric(
+            "Historical",
+            f"{stock.historical_success_rate:.1%}"
+        )
+
+    with col4:
+
+        st.metric(
+            "Signal",
+            stock.signal
+        )
+
+    st.info(
+        "Detailanalyse folgt in Phase 11.4"
+    )
