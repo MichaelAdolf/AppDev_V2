@@ -1,63 +1,23 @@
-import streamlit as st
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> streamlit run ui/streamlit_app.py            
+2026-08-13 19:52:17.546 Uvicorn server started on :::8501
 
-from ui.components.watchlist_view import (
-    render as render_watchlist
-)
+  You can now view your Streamlit app in your browser.
 
-from ui.components.top_movers_view import (
-    render as render_top_movers
-)
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.178.32:8501
 
-from ui.components.portfolio_view import (
-    render as render_portfolio
-)
+  Help agents write better Streamlit apps?
+  Install the official Streamlit skills by running streamlit skills in your terminal.
 
-st.set_page_config(
-    page_title="StockMind",
-    layout="wide"
-)
-
-st.title("📈 StockMind")
-
-#
-# Sidebar
-#
-
-st.sidebar.header(
-    "StockMind"
-)
-
-profile = st.sidebar.selectbox(
-    "Profil",
-    [
-        "conservative",
-        "balanced",
-        "aggressive"
-    ]
-)
-
-#
-# Main Tabs
-#
-
-tab1, tab2, tab3 = st.tabs(
-    [
-        "🏆 Watchlist",
-        "📈 Top Movers",
-        "💼 Portfolio"
-    ]
-)
-
-with tab1:
-
-    render_watchlist(
-        profile_name=profile
+2026-08-13 19:52:18.146 Uncaught app execution
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 136, in exec_func_with_error_handling
+    result = func()
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 816, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 3, in <module>
+    from ui.components.watchlist_view import (
+        render as render_watchlist
     )
-
-with tab2:
-
-    render_top_movers()
-
-with tab3:
-
-    render_portfolio()
+ModuleNotFoundError: No module named 'ui'
