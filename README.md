@@ -1,4 +1,4 @@
-def _initializeconnection = sqlite3.connect(
+connection = sqlite3.connect(
     self._database_path
 )
 
@@ -6,63 +6,38 @@ cursor = connection.cursor()
 
 cursor.execute(
     """
-    INSERT OR REPLACE INTO
-    analysis_details
-    (
+    SELECT
+
         symbol,
         profile_name,
         summary,
         strengths,
         weaknesses
-    )
-    VALUES
-    (
-        ?, ?, ?, ?, ?
-    )
+
+    FROM analysis_details
+
+    WHERE symbol = ?
+    AND profile_name = ?
     """,
     (
-        entry.symbol,
-        entry.profile_name,
-        entry.summary,
-        entry.strengths,
-        entry.weaknesses
+        symbol,
+        profile_name
     )
 )
 
-connection.commit()
+row = cursor.fetchone()
 
 connection.close()
-    self
-):
 
-    connection = sqlite3.connect(
-        self._database_path
-    )
+if row is None:
 
-    cursor = connection.cursor()
+    return None
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS analysis_details (
-
-            symbol TEXT NOT NULL,
-
-            profile_name TEXT NOT NULL,
-
-            summary TEXT,
-
-            strengths TEXT,
-
-            weaknesses TEXT,
-
-            PRIMARY KEY (
-                symbol,
-                profile_name
-            )
-        )
-        """
-    )
-
-    connection.commit()
-
-    connection.close()
+return AnalysisDetailEntry(
+    symbol=row[0],
+    profile_name=row[1],
+    summary=row[2],
+    strengths=row[3],
+    weaknesses=row[4]
+)
+``
