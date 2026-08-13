@@ -1,6 +1,7 @@
-def _initialize(
-    self
-):
+def load_all(
+    self,
+    profile_name: str
+) -> list[LatestAnalysisEntry]:
 
     connection = sqlite3.connect(
         self._database_path
@@ -10,30 +11,38 @@ def _initialize(
 
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS latest_analysis (
+        SELECT
 
-            symbol TEXT NOT NULL,
+            symbol,
+            profile_name,
+            opportunity_score,
+            confidence,
+            historical_success_rate,
+            risk_level,
+            signal
 
-            profile_name TEXT NOT NULL,
+        FROM latest_analysis
 
-            opportunity_score REAL,
+        WHERE profile_name = ?
 
-            confidence REAL,
-
-            historical_success_rate REAL,
-
-            risk_level TEXT,
-
-            signal TEXT,
-
-            PRIMARY KEY (
-                symbol,
-                profile_name
-            )
-        )
-        """
+        ORDER BY opportunity_score DESC
+        """,
+        (profile_name,)
     )
 
-    connection.commit()
+    rows = cursor.fetchall()
 
     connection.close()
+
+    return [
+        LatestAnalysisEntry(
+            symbol=row[0],
+            profile_name=row[1],
+            opportunity_score=row[2],
+            confidence=row[3],
+            historical_success_rate=row[4],
+            risk_level=row[5],
+            signal=row[6]
+        )
+        for row in rows
+    ]
