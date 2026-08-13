@@ -1,13 +1,10 @@
-with tab4:
+st.divider()
 
-    st.subheader(
-        "Technische Indikatoren"
-    )
-
-    st.info(
-        (
-            "RSI, MACD, ADX, "
-            "Bollinger und Stochastic "
-            "folgen im nächsten Schritt."
-        )
-    )
+tab1, tab2, tab3, tab4 = st.tabs(
+    [
+        "📊 Übersicht",
+        "🧠 Analyse",
+        "📜 Historie",
+        "📈 Indikatoren"
+    ]
+)
