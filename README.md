@@ -1,42 +1,39 @@
-connection = sqlite3.connect(
-    self._database_path
+from stockmind.application.use_cases.run_analysis_use_case import (
+    RunAnalysisUseCase
 )
 
-cursor = connection.cursor()
 
-cursor.execute(
-    """
-    SELECT
+def main():
 
-        symbol,
-        profile_name,
-        summary,
-        strengths,
-        weaknesses
+    symbols = [
+        "NVDA",
+        "AMD",
+        "MSFT",
+        "AAPL",
+        "GOOGL",
+        "AMZN",
+        "META",
+        "PLTR",
+        "TSLA"
+    ]
 
-    FROM analysis_details
+    profiles = [
+        "conservative",
+        "balanced",
+        "aggressive"
+    ]
 
-    WHERE symbol = ?
-    AND profile_name = ?
-    """,
-    (
-        symbol,
-        profile_name
-    )
-)
+    for profile in profiles:
 
-row = cursor.fetchone()
+        print(
+            f"Refreshing {profile}"
+        )
 
-connection.close()
+        RunAnalysisUseCase().execute(
+            symbols=symbols,
+            profile_name=profile
+        )
 
-if row is None:
 
-    return None
-
-return AnalysisDetailEntry(
-    symbol=row[0],
-    profile_name=row[1],
-    summary=row[2],
-    strengths=row[3],
-    weaknesses=row[4]
-)
+if __name__ == "__main__":
+    main()
