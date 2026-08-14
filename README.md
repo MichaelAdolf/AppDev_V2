@@ -1,162 +1,95 @@
-import pandas as pd
-import streamlit as st
+from stockmind.application.dashboard.models.alert_result import (
+    AlertResult
+)
 
-from stockmind.application.dashboard.use_cases.watchlist_dashboard_use_case import (
-    WatchlistDashboardUseCase
+from stockmind.infrastructure.history.latest_analysis_repository import (
+    LatestAnalysisRepository
 )
 
 
-def render(
-    profile_name: str
-):
+class AlertsDashboardUseCase:
 
-    dashboard = (
-        WatchlistDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
+    def load(
+        self,
+        profile_name: str
+    ) -> list[AlertResult]:
 
-    results = (
-        dashboard.stocks
-    )
-
-    #
-    # Info Cards
-    #
-
-    col1, col2, col3, col4, col5 = (
-        st.columns(5)
-    )
-
-    with col1:
-
-        st.metric(
-            "Aktien",
-            dashboard.stock_count
+        results = (
+            LatestAnalysisRepository()
+            .load_all(
+                profile_name
+            )
         )
 
-    with col2:
+        alerts = []
 
-        st.metric(
-            "BUY",
-            dashboard.buy_count
-        )
+        for item in results:
 
-    with col3:
+            if item.opportunity_score >= 85:
 
-        st.metric(
-            "HOLD",
-            dashboard.hold_count
-        )
+                alerts.append(
+                    AlertResult(
+                        title="Hot Opportunity",
+                        message=(
+                            f"{item.symbol} hat einen sehr hohen "
+                            f"Opportunity Score von "
+                            f"{item.opportunity_score:.1f}."
+                        ),
+                        severity="success"
+                    )
+                )
 
-    with col4:
+            elif item.opportunity_score >= 75:
 
-        st.metric(
-            "SELL",
-            dashboard.sell_count
-        )
+                alerts.append(
+                    AlertResult(
+                        title="Interessantes Setup",
+                        message=(
+                            f"{item.symbol} ist beobachtenswert "
+                            f"mit einem Opportunity Score von "
+                            f"{item.opportunity_score:.1f}."
+                        ),
+                        severity="info"
+                    )
+                )
 
-    with col5:
+            if item.confidence >= 0.75:
 
-        st.metric(
-            "Hot Opps",
-            dashboard.hot_opportunities
-        )
+                alerts.append(
+                    AlertResult(
+                        title="Hohe Confidence",
+                        message=(
+                            f"{item.symbol} hat eine Confidence "
+                            f"von {item.confidence:.1%}."
+                        ),
+                        severity="success"
+                    )
+                )
 
-    st.divider()
+            if item.risk_level == "HIGH":
 
-    #
-    # Alerts
-    #
+                alerts.append(
+                    AlertResult(
+                        title="Erhöhtes Risiko",
+                        message=(
+                            f"{item.symbol} hat aktuell ein "
+                            f"hohes Risikoniveau."
+                        ),
+                        severity="warning"
+                    )
+                )
 
-    st.subheader(
-        "🔥 Alerts"
-    )
+            if item.signal == "BUY":
 
-    #
-    # Platzhalter
-    # Kommt später aus
-    # AlertsDashboardUseCase
-    #
+                alerts.append(
+                    AlertResult(
+                        title="BUY Signal",
+                        message=(
+                            f"{item.symbol} hat aktuell ein "
+                            f"BUY Signal."
+                        ),
+                        severity="success"
+                    )
+                )
 
-    st.info(
-        "Alerts Dashboard folgt im nächsten Schritt."
-    )
-
-    st.divider()
-
-    #
-    # Watchlist Tabelle
-    #
-
-    rows = []
-
-    for item in results:
-
-        rows.append(
-            {
-                "Symbol":
-                    item.symbol,
-
-                "Score":
-                    round(
-                        item.opportunity_score,
-                        2
-                    ),
-
-                "Signal":
-                    item.signal,
-
-                "Confidence":
-                    round(
-                        item.confidence
-                        * 100,
-                        1
-                    ),
-
-                "Historical":
-                    round(
-                        item.historical_success_rate
-                        * 100,
-                        1
-                    ),
-
-                "Risk":
-                    item.risk_level
-            }
-        )
-
-    df = pd.DataFrame(
-        rows
-    )
-
-    st.subheader(
-        "📋 Watchlist"
-    )
-
-    st.dataframe(
-        df,
-        use_container_width=True
-    )
-
-    st.divider()
-
-    #
-    # Aktienauswahl
-    #
-
-    st.subheader(
-        "🔍 Detailansicht öffnen"
-    )
-
-    for item in results:
-
-        if st.button(
-            item.symbol,
-            key=f"btn_{item.symbol}"
-        ):
-
-            st.session_state[
-                "selected_symbol"
-            ] = item.symbol
+        return alerts
