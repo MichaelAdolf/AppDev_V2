@@ -1,47 +1,10 @@
-    def save(
-            self,
-            symbol: str,
-            profile_name: str
-    ) -> AnalysisDetailEntry | None:
-        connection = sqlite3.connect(
-            self._database_path
-        )
+class HistoricalSetupRepository:
 
-        cursor = connection.cursor()
+    def __init__(
+        self,
+        database_path: str = "stockmind.db"
+    ):
 
-        cursor.execute(
-            """
-            SELECT
+        self._database_path = database_path
 
-                symbol,
-                profile_name,
-                summary,
-                strengths,
-                weaknesses
-
-            FROM analysis_details
-
-            WHERE symbol = ?
-            AND profile_name = ?
-            """,
-            (
-                symbol,
-                profile_name
-            )
-        )
-
-        row = cursor.fetchone()
-
-        connection.close()
-
-        if row is None:
-
-            return None
-
-        return AnalysisDetailEntry(
-            symbol=row[0],
-            profile_name=row[1],
-            summary=row[2],
-            strengths=row[3],
-            weaknesses=row[4]
-        )
+        self._initialize()
