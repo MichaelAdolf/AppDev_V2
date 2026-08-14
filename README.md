@@ -1,32 +1,47 @@
-you mean 'weakness'?
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_dashboard_data.py
-Refreshing conservative
-ERROR analysing NVDA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMD: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing MSFT: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AAPL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing GOOGL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMZN: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing META: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing PLTR: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing TSLA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-Refreshing balanced
-ERROR analysing NVDA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMD: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing MSFT: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AAPL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing GOOGL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMZN: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing META: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing PLTR: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing TSLA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-Refreshing aggressive
-ERROR analysing NVDA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMD: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing MSFT: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AAPL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing GOOGL: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing AMZN: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing META: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing PLTR: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
-ERROR analysing TSLA: AnalysisDetailRepository.save() missing 1 required positional argument: 'profile_name'
+    def save(
+            self,
+            symbol: str,
+            profile_name: str
+    ) -> AnalysisDetailEntry | None:
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+
+                symbol,
+                profile_name,
+                summary,
+                strengths,
+                weaknesses
+
+            FROM analysis_details
+
+            WHERE symbol = ?
+            AND profile_name = ?
+            """,
+            (
+                symbol,
+                profile_name
+            )
+        )
+
+        row = cursor.fetchone()
+
+        connection.close()
+
+        if row is None:
+
+            return None
+
+        return AnalysisDetailEntry(
+            symbol=row[0],
+            profile_name=row[1],
+            summary=row[2],
+            strengths=row[3],
+            weaknesses=row[4]
+        )
