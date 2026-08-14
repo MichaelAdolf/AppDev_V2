@@ -1,153 +1,130 @@
-import sqlite3
+import yfinance as yf
 
 from stockmind.domain.history.chart_point import (
     ChartPoint
 )
 
+from stockmind.infrastructure.history.chart_data_repository import (
+    ChartDataRepository
+)
 
-class ChartDataRepository:
 
-    def __init__(
-        self,
-        database_path: str = "stockmind.db"
-    ):
+SYMBOLS = [
+    "NVDA",
+    "AMD",
+    "MSFT",
+    "AAPL",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "PLTR",
+    "TSLA",
+]
 
-        self._database_path = database_path
 
-        self._initialize()
+def build_chart_points(
+    symbol: str
+) -> list[ChartPoint]:
 
-    def _initialize(
-        self
-    ):
+    ticker = yf.Ticker(
+        symbol
+    )
 
-        connection = sqlite3.connect(
-            self._database_path
+    data = ticker.history(
+        period="1y"
+    )
+
+    data = data.copy()
+
+    data["BB_Middle"] = (
+        data["Close"]
+        .rolling(
+            window=20
         )
+        .mean()
+    )
 
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS chart_data (
-
-                symbol TEXT NOT NULL,
-
-                trading_date TEXT NOT NULL,
-
-                close_price REAL,
-
-                bollinger_upper REAL,
-
-                bollinger_middle REAL,
-
-                bollinger_lower REAL,
-
-                PRIMARY KEY (
-                    symbol,
-                    trading_date
-                )
-            )
-            """
+    data["BB_Std"] = (
+        data["Close"]
+        .rolling(
+            window=20
         )
+        .std()
+    )
 
-        connection.commit()
+    data["BB_Upper"] = (
+        data["BB_Middle"]
+        + data["BB_Std"] * 2
+    )
 
-        connection.close()
+    data["BB_Lower"] = (
+        data["BB_Middle"]
+        - data["BB_Std"] * 2
+    )
 
-    def replace_for_symbol(
-        self,
-        symbol: str,
-        points: list[ChartPoint]
-    ):
+    points = []
 
-        connection = sqlite3.connect(
-            self._database_path
-        )
+    for index, row in data.iterrows():
 
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            DELETE FROM chart_data
-            WHERE symbol = ?
-            """,
-            (symbol,)
-        )
-
-        for point in points:
-
-            cursor.execute(
-                """
-                INSERT OR REPLACE INTO chart_data
-                (
-                    symbol,
-                    trading_date,
-                    close_price,
-                    bollinger_upper,
-                    bollinger_middle,
-                    bollinger_lower
-                )
-                VALUES
-                (
-                    ?, ?, ?, ?, ?, ?
-                )
-                """,
-                (
-                    point.symbol,
-                    point.trading_date,
-                    point.close_price,
-                    point.bollinger_upper,
-                    point.bollinger_middle,
-                    point.bollinger_lower
-                )
-            )
-
-        connection.commit()
-
-        connection.close()
-
-    def load_by_symbol(
-        self,
-        symbol: str
-    ) -> list[ChartPoint]:
-
-        connection = sqlite3.connect(
-            self._database_path
-        )
-
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            SELECT
-                symbol,
-                trading_date,
-                close_price,
-                bollinger_upper,
-                bollinger_middle,
-                bollinger_lower
-
-            FROM chart_data
-
-            WHERE symbol = ?
-
-            ORDER BY trading_date
-            """,
-            (symbol,)
-        )
-
-        rows = cursor.fetchall()
-
-        connection.close()
-
-        return [
+        points.append(
             ChartPoint(
-                symbol=row[0],
-                trading_date=row[1],
-                close_price=row[2],
-                bollinger_upper=row[3],
-                bollinger_middle=row[4],
-                bollinger_lower=row[5]
+                symbol=symbol,
+
+                trading_date=(
+                    index.date()
+                    .isoformat()
+                ),
+
+                close_price=float(
+                    row["Close"]
+                ),
+
+                bollinger_upper=(
+                    None
+                    if row["BB_Upper"] != row["BB_Upper"]
+                    else float(row["BB_Upper"])
+                ),
+
+                bollinger_middle=(
+                    None
+                    if row["BB_Middle"] != row["BB_Middle"]
+                    else float(row["BB_Middle"])
+                ),
+
+                bollinger_lower=(
+                    None
+                    if row["BB_Lower"] != row["BB_Lower"]
+                    else float(row["BB_Lower"])
+                )
             )
-            for row in rows
-        ]
+        )
+
+    return points
+
+
+def main():
+
+    repository = ChartDataRepository()
+
+    for symbol in SYMBOLS:
+
+        print(
+            f"Refreshing chart data for {symbol}"
+        )
+
+        points = build_chart_points(
+            symbol
+        )
+
+        repository.replace_for_symbol(
+            symbol=symbol,
+            points=points
+        )
+
+    print(
+        "Chart data refresh complete."
+    )
+
+
+if __name__ == "__main__":
+    main()
