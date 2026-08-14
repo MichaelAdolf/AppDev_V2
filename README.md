@@ -1,49 +1,140 @@
-from dataclasses import dataclass
-
-from stockmind.domain.history.analysis_history_entry import (
-    AnalysisHistoryEntry
+from stockmind.application.dashboard.models.stock_detail_dashboard_result import (
+    StockDetailDashboardResult
 )
 
-from stockmind.domain.history.historical_setup_entry import (
-    HistoricalSetupEntry
+from stockmind.infrastructure.history.latest_analysis_repository import (
+    LatestAnalysisRepository
+)
+
+from stockmind.infrastructure.history.analysis_detail_repository import (
+    AnalysisDetailRepository
+)
+
+from stockmind.infrastructure.history.analysis_history_repository import (
+    AnalysisHistoryRepository
+)
+
+from stockmind.application.dashboard.use_cases.historical_setup_dashboard_use_case import (
+    HistoricalSetupDashboardUseCase
 )
 
 
-@dataclass(frozen=True)
-class StockDetailDashboardResult:
+class StockDetailDashboardUseCase:
 
-    symbol: str
+    def load(
+        self,
+        profile_name: str,
+        symbol: str
+    ) -> StockDetailDashboardResult:
 
-    score: float
+        latest_entries = (
+            LatestAnalysisRepository()
+            .load_all(
+                profile_name
+            )
+        )
 
-    confidence: float
+        stock = next(
+            (
+                item
+                for item in latest_entries
+                if item.symbol == symbol
+            ),
+            None
+        )
 
-    historical_success_rate: float
+        if stock is None:
 
-    risk_level: str
+            raise ValueError(
+                f"Keine aktuellen Analysedaten für {symbol} gefunden."
+            )
 
-    signal: str
+        detail = (
+            AnalysisDetailRepository()
+            .load(
+                symbol=symbol,
+                profile_name=profile_name
+            )
+        )
 
-    summary: str
+        history = (
+            AnalysisHistoryRepository()
+            .load_by_symbol(
+                symbol
+            )
+        )
 
-    strengths: list[str]
+        setup_dashboard = (
+            HistoricalSetupDashboardUseCase()
+            .load(
+                symbol
+            )
+        )
 
-    weaknesses: list[str]
+        return StockDetailDashboardResult(
+            symbol=stock.symbol,
 
-    history: list[AnalysisHistoryEntry]
+            score=stock.opportunity_score,
 
-    historical_setups: list[HistoricalSetupEntry]
+            confidence=stock.confidence,
 
-    setup_count: int
+            historical_success_rate=(
+                stock.historical_success_rate
+            ),
 
-    successful_setup_count: int
+            risk_level=stock.risk_level,
 
-    failed_setup_count: int
+            signal=stock.signal,
 
-    setup_success_rate: float
+            summary=(
+                detail.summary
+                if detail
+                else ""
+            ),
 
-    average_setup_days: float
+            strengths=(
+                detail.strengths.split("|")
+                if detail and detail.strengths
+                else []
+            ),
 
-    average_setup_gain: float
+            weaknesses=(
+                detail.weaknesses.split("|")
+                if detail and detail.weaknesses
+                else []
+            ),
 
-    average_setup_drawdown: float
+            history=history,
+
+            historical_setups=(
+                setup_dashboard.setups
+            ),
+
+            setup_count=(
+                setup_dashboard.setup_count
+            ),
+
+            successful_setup_count=(
+                setup_dashboard.successful_count
+            ),
+
+            failed_setup_count=(
+                setup_dashboard.failed_count
+            ),
+
+            setup_success_rate=(
+                setup_dashboard.success_rate
+            ),
+
+            average_setup_days=(
+                setup_dashboard.average_days
+            ),
+
+            average_setup_gain=(
+                setup_dashboard.average_gain
+            ),
+
+            average_setup_drawdown=(
+                setup_dashboard.average_drawdown
+            )
+        )
