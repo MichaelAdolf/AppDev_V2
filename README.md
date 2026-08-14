@@ -1,19 +1,35 @@
-from stockmind.application.dashboard.use_cases.historical_setup_dashboard_use_case import (
-    HistoricalSetupDashboardUseCase
+from dataclasses import dataclass
+
+from stockmind.domain.history.analysis_history_entry import (
+    AnalysisHistoryEntry
+)
+
+from stockmind.domain.history.historical_setup_entry import (
+    HistoricalSetupEntry
 )
 
 
-def main():
+@dataclass(frozen=True)
+class StockDetailDashboardResult:
 
-    result = (
-        HistoricalSetupDashboardUseCase()
-        .load(
-            "NVDA"
-        )
-    )
+    symbol: str
 
-    print(result)
+    score: float
 
+    confidence: float
 
-if __name__ == "__main__":
-    main()
+    historical_success_rate: float
+
+    risk_level: str
+
+    signal: str
+
+    summary: str
+
+    strengths: list[str]
+
+    weaknesses: list[str]
+
+    history: list[AnalysisHistoryEntry]
+
+    historical_setups: list[HistoricalSetupEntry]
