@@ -1,59 +1,35 @@
-from random import randint, uniform
+setup_df = pd.DataFrame(
+    [
+        {
+            "Date":
+                s.setup_date,
 
-from stockmind.domain.history.historical_setup_entry import (
-    HistoricalSetupEntry
-)
+            "Success":
+                "✅"
+                if s.success
+                else "🔴",
 
-from stockmind.infrastructure.history.historical_setup_repository import (
-    HistoricalSetupRepository
-)
+            "Entry":
+                round(
+                    s.entry_price,
+                    2
+                ),
 
+            "Days":
+                s.days_to_target,
 
-def main():
+            "Gain %":
+                round(
+                    s.max_gain_pct,
+                    2
+                ),
 
-    repo = (
-        HistoricalSetupRepository()
-    )
-
-    for symbol in [
-        "NVDA",
-        "AMD",
-        "MSFT"
-    ]:
-
-        for i in range(20):
-
-            repo.save(
-                HistoricalSetupEntry(
-                    symbol=symbol,
-
-                    setup_date=(
-                        f"2025-{(i % 12)+1:02d}-01"
-                    ),
-
-                    entry_price=100 + i,
-
-                    target_pct=0.08,
-
-                    success=i % 3 != 0,
-
-                    days_to_target=randint(
-                        5,
-                        60
-                    ),
-
-                    max_gain_pct=uniform(
-                        5,
-                        25
-                    ),
-
-                    max_drawdown_pct=uniform(
-                        -15,
-                        0
-                    )
+            "Drawdown %":
+                round(
+                    s.max_drawdown_pct,
+                    2
                 )
-            )
-
-
-if __name__ == "__main__":
-    main()
+        }
+        for s in setups
+    ]
+)
