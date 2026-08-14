@@ -1,211 +1,94 @@
-import pandas as pd
-import streamlit as st
-
-from stockmind.application.dashboard.use_cases.watchlist_dashboard_use_case import (
-    WatchlistDashboardUseCase
+from stockmind.application.dashboard.models.historical_setup_dashboard_result import (
+    HistoricalSetupDashboardResult
 )
 
-from stockmind.application.dashboard.use_cases.alerts_dashboard_use_case import (
-    AlertsDashboardUseCase
+from stockmind.infrastructure.history.historical_setup_repository import (
+    HistoricalSetupRepository
 )
 
 
-def render_alert(
-    alert
-):
+class HistoricalSetupDashboardUseCase:
 
-    message = (
-        f"**{alert.title}**  \n"
-        f"{alert.message}"
-    )
+    def load(
+        self,
+        symbol: str
+    ) -> HistoricalSetupDashboardResult:
 
-    if alert.severity == "success":
-
-        st.success(
-            message
+        setups = (
+            HistoricalSetupRepository()
+            .load_by_symbol(
+                symbol
+            )
         )
 
-    elif alert.severity == "warning":
+        if not setups:
 
-        st.warning(
-            message
-        )
-
-    elif alert.severity == "error":
-
-        st.error(
-            message
-        )
-
-    else:
-
-        st.info(
-            message
-        )
-
-
-def render(
-    profile_name: str
-):
-
-    dashboard = (
-        WatchlistDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    results = (
-        dashboard.stocks
-    )
-
-    #
-    # Info Cards
-    #
-
-    col1, col2, col3, col4, col5 = (
-        st.columns(5)
-    )
-
-    with col1:
-
-        st.metric(
-            "Aktien",
-            dashboard.stock_count
-        )
-
-    with col2:
-
-        st.metric(
-            "BUY",
-            dashboard.buy_count
-        )
-
-    with col3:
-
-        st.metric(
-            "HOLD",
-            dashboard.hold_count
-        )
-
-    with col4:
-
-        st.metric(
-            "SELL",
-            dashboard.sell_count
-        )
-
-    with col5:
-
-        st.metric(
-            "Hot Opps",
-            dashboard.hot_opportunities
-        )
-
-    st.divider()
-
-    #
-    # Alerts
-    #
-
-    st.subheader(
-        "🔥 Alerts"
-    )
-
-    alerts = (
-        AlertsDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    if alerts:
-
-        for alert in alerts[:10]:
-
-            render_alert(
-                alert
+            return HistoricalSetupDashboardResult(
+                setup_count=0,
+                successful_count=0,
+                failed_count=0,
+                success_rate=0.0,
+                average_days=0.0,
+                average_gain=0.0,
+                average_drawdown=0.0,
+                setups=[]
             )
 
-    else:
-
-        st.success(
-            "Keine besonderen Alerts vorhanden."
+        successful_count = len(
+            [
+                s
+                for s in setups
+                if s.success
+            ]
         )
 
-    st.divider()
-
-    #
-    # Watchlist Tabelle
-    #
-
-    rows = []
-
-    for item in results:
-
-        rows.append(
-            {
-                "Symbol":
-                    item.symbol,
-
-                "Score":
-                    round(
-                        item.opportunity_score,
-                        2
-                    ),
-
-                "Signal":
-                    item.signal,
-
-                "Confidence":
-                    round(
-                        item.confidence
-                        * 100,
-                        1
-                    ),
-
-                "Historical":
-                    round(
-                        item.historical_success_rate
-                        * 100,
-                        1
-                    ),
-
-                "Risk":
-                    item.risk_level
-            }
+        failed_count = (
+            len(setups)
+            - successful_count
         )
 
-    df = pd.DataFrame(
-        rows
-    )
+        success_rate = (
+            successful_count
+            / len(setups)
+            * 100
+        )
 
-    st.subheader(
-        "📋 Watchlist"
-    )
+        valid_days = [
+            s.days_to_target
+            for s in setups
+            if s.days_to_target is not None
+        ]
 
-    st.dataframe(
-        df,
-        use_container_width=True
-    )
+        average_days = (
+            sum(valid_days)
+            / len(valid_days)
+            if valid_days
+            else 0.0
+        )
 
-    st.divider()
+        average_gain = (
+            sum(
+                s.max_gain_pct
+                for s in setups
+            )
+            / len(setups)
+        )
 
-    #
-    # Aktienauswahl
-    #
+        average_drawdown = (
+            sum(
+                s.max_drawdown_pct
+                for s in setups
+            )
+            / len(setups)
+        )
 
-    st.subheader(
-        "🔍 Detailansicht öffnen"
-    )
-
-    for item in results:
-
-        if st.button(
-            item.symbol,
-            key=f"btn_{item.symbol}"
-        ):
-
-            st.session_state[
-                "selected_symbol"
-            ] = item.symbol
+        return HistoricalSetupDashboardResult(
+            setup_count=len(setups),
+            successful_count=successful_count,
+            failed_count=failed_count,
+            success_rate=success_rate,
+            average_days=average_days,
+            average_gain=average_gain,
+            average_drawdown=average_drawdown,
+            setups=setups
+        )
