@@ -1,53 +1,59 @@
-def load_by_symbol(
-    self,
-    symbol: str
-) -> list```
+from random import randint, uniform
 
-Inhalt:
-
-```python
-connection = sqlite3.connect(
-    self._database_path
+from stockmind.domain.history.historical_setup_entry import (
+    HistoricalSetupEntry
 )
 
-cursor = connection.cursor()
-
-cursor.execute(
-    """
-    SELECT
-
-        symbol,
-        setup_date,
-        entry_price,
-        target_pct,
-        success,
-        days_to_target,
-        max_gain_pct,
-        max_drawdown_pct
-
-    FROM historical_setups
-
-    WHERE symbol = ?
-
-    ORDER BY setup_date DESC
-    """,
-    (symbol,)
+from stockmind.infrastructure.history.historical_setup_repository import (
+    HistoricalSetupRepository
 )
 
-rows = cursor.fetchall()
 
-connection.close()
+def main():
 
-return [
-    HistoricalSetupEntry(
-        symbol=row[0],
-        setup_date=row[1],
-        entry_price=row[2],
-        target_pct=row[3],
-        success=bool(row[4]),
-        days_to_target=row[5],
-        max_gain_pct=row[6],
-        max_drawdown_pct=row[7]
+    repo = (
+        HistoricalSetupRepository()
     )
-    for row in rows
-]
+
+    for symbol in [
+        "NVDA",
+        "AMD",
+        "MSFT"
+    ]:
+
+        for i in range(20):
+
+            repo.save(
+                HistoricalSetupEntry(
+                    symbol=symbol,
+
+                    setup_date=(
+                        f"2025-{(i % 12)+1:02d}-01"
+                    ),
+
+                    entry_price=100 + i,
+
+                    target_pct=0.08,
+
+                    success=i % 3 != 0,
+
+                    days_to_target=randint(
+                        5,
+                        60
+                    ),
+
+                    max_gain_pct=uniform(
+                        5,
+                        25
+                    ),
+
+                    max_drawdown_pct=uniform(
+                        -15,
+                        0
+                    )
+                )
+            )
+
+
+if __name__ == "__main__":
+    main()
