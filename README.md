@@ -1,21 +1,30 @@
 import sqlite3
 
-conne*tion = sqlite3.connect(
-    "stock*ind.db"
-)
 
-cursor = connection.cur*or()
+def main():
 
-cursor.execute(
-    """
-    *ELECT COUNT(*)
-    FROM historical*setups
-    """
-)
+    connection = sqlite3.connect(
+        "stockmind.db"
+    )
 
-print(
-    curso*.fetchone()
-)
+    cursor = connection.cursor()
 
-connection.close()
-*
+    cursor.execute(
+        """
+        SELECT COUNT(1)
+        FROM historical_setups
+        """
+    )
+
+    count = cursor.fetchone()[0]
+
+    print(
+        f"Historical setups found: {count}"
+    )
+
+    connection.close()
+
+
+if __name__ == "__main__":
+
+    main()
