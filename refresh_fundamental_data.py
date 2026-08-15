@@ -1,12 +1,26 @@
-from stockmind.application.dashboard.use_cases.fundamental_dashboard_use_case import (
-    FundamentalDashboardUseCase
+import sqlite3
+
+connection = sqlite3.connect(
+    "stockmind.db"
 )
 
-result = (
-    FundamentalDashboardUseCase()
-    .load(
-        "NVDA"
-    )
+cursor = connection.cursor()
+
+cursor.execute(
+    """
+    SELECT *
+    FROM fundamental_data
+    """
 )
 
-print(result)
+rows = cursor.fetchall()
+
+print(
+    f"Anzahl Datensätze: {len(rows)}"
+)
+
+for row in rows[:3]:
+
+    print(row)
+
+connection.close()
