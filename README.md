@@ -1,14 +1,15 @@
-@app.delete(
-    "/watchlist/{symbol}"
+from stockmind.infrastructure.watchlists.watchlist_repository import (
+    WatchlistRepository
 )
-def remove_stock(
-    symbol: str
-):
 
-    RemoveStockUseCase().execute(
-        symbol
-    )
 
-    return {
-        "removed": symbol
-    }
+class RemoveStockUseCase:
+
+    def execute(
+        self,
+        symbol: str
+    ):
+
+        WatchlistRepository().remove(
+            symbol
+        )
