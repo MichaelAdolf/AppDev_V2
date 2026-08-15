@@ -1,179 +1,153 @@
-import plotly.graph_objects as go
-import streamlit as st
+import sqlite3
 
-from stockmind.infrastructure.history.chart_data_repository import (
-    ChartDataRepository
-)
-
-from stockmind.infrastructure.history.historical_setup_repository import (
-    HistoricalSetupRepository
+from stockmind.domain.history.indicator_chart_point import (
+    IndicatorChartPoint
 )
 
 
-def render(
-    symbol: str
-):
+class IndicatorChartDataRepository:
 
-    points = (
-        ChartDataRepository()
-        .load_by_symbol(
-            symbol
-        )
-    )
+    def __init__(
+        self,
+        database_path: str = "stockmind.db"
+    ):
 
-    setups = (
-        HistoricalSetupRepository()
-        .load_by_symbol(
-            symbol
-        )
-    )
+        self._database_path = database_path
 
-    if not points:
+        self._initialize()
 
-        st.warning(
-            "Keine Chartdaten vorhanden."
+    def _initialize(
+        self
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
         )
 
-        return
+        cursor = connection.cursor()
 
-    dates = [
-        point.trading_date
-        for point in points
-    ]
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS indicator_chart_data (
 
-    close_prices = [
-        point.close_price
-        for point in points
-    ]
+                symbol TEXT NOT NULL,
 
-    upper = [
-        point.bollinger_upper
-        for point in points
-    ]
+                trading_date TEXT NOT NULL,
 
-    middle = [
-        point.bollinger_middle
-        for point in points
-    ]
+                rsi_14 REAL,
 
-    lower = [
-        point.bollinger_lower
-        for point in points
-    ]
+                macd REAL,
 
-    fig = go.Figure()
+                macd_signal REAL,
 
-    fig.add_trace(
-        go.Scatter(
-            x=dates,
-            y=close_prices,
-            mode="lines",
-            name="Close"
-        )
-    )
+                macd_histogram REAL,
 
-    fig.add_trace(
-        go.Scatter(
-            x=dates,
-            y=upper,
-            mode="lines",
-            name="BB Upper",
-            line=dict(
-                dash="dash"
+                PRIMARY KEY (
+                    symbol,
+                    trading_date
+                )
             )
+            """
         )
-    )
 
-    fig.add_trace(
-        go.Scatter(
-            x=dates,
-            y=middle,
-            mode="lines",
-            name="BB Middle",
-            line=dict(
-                dash="dot"
+        connection.commit()
+
+        connection.close()
+
+    def replace_for_symbol(
+        self,
+        symbol: str,
+        points: list[IndicatorChartPoint]
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM indicator_chart_data
+            WHERE symbol = ?
+            """,
+            (symbol,)
+        )
+
+        for point in points:
+
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO indicator_chart_data
+                (
+                    symbol,
+                    trading_date,
+                    rsi_14,
+                    macd,
+                    macd_signal,
+                    macd_histogram
+                )
+                VALUES
+                (
+                    ?, ?, ?, ?, ?, ?
+                )
+                """,
+                (
+                    point.symbol,
+                    point.trading_date,
+                    point.rsi_14,
+                    point.macd,
+                    point.macd_signal,
+                    point.macd_histogram
+                )
             )
-        )
-    )
 
-    fig.add_trace(
-        go.Scatter(
-            x=dates,
-            y=lower,
-            mode="lines",
-            name="BB Lower",
-            line=dict(
-                dash="dash"
+        connection.commit()
+
+        connection.close()
+
+    def load_by_symbol(
+        self,
+        symbol: str
+    ) -> list[IndicatorChartPoint]:
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                symbol,
+                trading_date,
+                rsi_14,
+                macd,
+                macd_signal,
+                macd_histogram
+
+            FROM indicator_chart_data
+
+            WHERE symbol = ?
+
+            ORDER BY trading_date
+            """,
+            (symbol,)
+        )
+
+        rows = cursor.fetchall()
+
+        connection.close()
+
+        return [
+            IndicatorChartPoint(
+                symbol=row[0],
+                trading_date=row[1],
+                rsi_14=row[2],
+                macd=row[3],
+                macd_signal=row[4],
+                macd_histogram=row[5]
             )
-        )
-    )
-
-    successful_setups = [
-        setup
-        for setup in setups
-        if setup.success
-    ]
-
-    failed_setups = [
-        setup
-        for setup in setups
-        if not setup.success
-    ]
-
-    fig.add_trace(
-        go.Scatter(
-            x=[
-                setup.setup_date
-                for setup in successful_setups
-            ],
-            y=[
-                setup.entry_price
-                for setup in successful_setups
-            ],
-            mode="markers",
-            name="Successful Setup",
-            marker=dict(
-                color="green",
-                size=10,
-                symbol="circle"
-            )
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=[
-                setup.setup_date
-                for setup in failed_setups
-            ],
-            y=[
-                setup.entry_price
-                for setup in failed_setups
-            ],
-            mode="markers",
-            name="Failed Setup",
-            marker=dict(
-                color="red",
-                size=10,
-                symbol="x"
-            )
-        )
-    )
-
-    fig.update_layout(
-        title=f"{symbol} Kurschart mit Bollinger und Setups",
-        xaxis_title="Datum",
-        yaxis_title="Kurs",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+            for row in rows
+        ]
