@@ -1,14 +1,13 @@
-AttributeError: 'NoneType' object has no attribute 'fundamental_score'
-
-File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 90, in <module>
-    render_stock_detail(
-    ~~~~~~~~~~~~~~~~~~~^
-        profile_name=profile,
-        ^^^^^^^^^^^^^^^^^^^^^
-        symbol=selected_symbol
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\stock_detail_view.py", line 438, in render
-    f"{fundamentals.fundamental_score:.0f}/100"
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_fundamental_data.py                                          
+Refreshing fundamentals for NVDA
+Refreshing fundamentals for AMD
+Refreshing fundamentals for MSFT
+Refreshing fundamentals for AAPL
+Refreshing fundamentals for GOOGL
+Refreshing fundamentals for AMZN
+Refreshing fundamentals for META
+Refreshing fundamentals for PLTR
+Refreshing fundamentals for TSLA
+Refreshed fundamentals for 9 symbols.
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_fundamental_data.py   
+Anzahl Datensätze: 0
