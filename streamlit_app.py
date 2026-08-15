@@ -20,12 +20,27 @@ from components.stock_selector import (
     render as render_stock_selector
 )
 
+from stockmind.application.watchlists.add_stock_use_case import (
+    AddStockUseCase
+)
+
+from stockmind.application.watchlists.remove_stock_use_case import (
+    RemoveStockUseCase
+)
+
+from stockmind.infrastructure.watchlists.watchlist_repository import (
+    WatchlistRepository
+)
+
+
 st.set_page_config(
     page_title="StockMind",
     layout="wide"
 )
 
-st.title("📈 StockMind")
+st.title(
+    "📈 StockMind"
+)
 
 #
 # Sidebar
@@ -44,6 +59,83 @@ profile = st.sidebar.selectbox(
     ]
 )
 
+#
+# Watchlist Verwaltung
+#
+
+st.sidebar.divider()
+
+st.sidebar.subheader(
+    "📋 Watchlist verwalten"
+)
+
+new_symbol = st.sidebar.text_input(
+    "Aktie hinzufügen",
+    value=""
+)
+
+if st.sidebar.button(
+    "➕ Hinzufügen"
+):
+
+    if new_symbol.strip():
+
+        added = (
+            AddStockUseCase()
+            .execute(
+                new_symbol
+            )
+        )
+
+        if added:
+
+            st.sidebar.success(
+                f"{new_symbol.upper()} hinzugefügt."
+            )
+
+        else:
+
+            st.sidebar.warning(
+                "Aktie bereits vorhanden."
+            )
+
+        st.rerun()
+
+watchlist_entries = (
+    WatchlistRepository()
+    .load_all()
+)
+
+if watchlist_entries:
+
+    selected_remove = (
+        st.sidebar.selectbox(
+            "Aktie entfernen",
+            options=[
+                entry.symbol
+                for entry in watchlist_entries
+            ]
+        )
+    )
+
+    if st.sidebar.button(
+        "➖ Entfernen"
+    ):
+
+        RemoveStockUseCase().execute(
+            selected_remove
+        )
+
+        st.sidebar.success(
+            f"{selected_remove} entfernt."
+        )
+
+        st.rerun()
+
+#
+# Auswahl
+#
+
 selected_symbol = (
     render_stock_selector(
         profile
@@ -55,7 +147,10 @@ selected_symbol = (
 #
 
 if "selected_symbol" not in st.session_state:
-    st.session_state["selected_symbol"] = None
+
+    st.session_state[
+        "selected_symbol"
+    ] = None
 
 #
 # Main Tabs
@@ -72,20 +167,22 @@ tab1, tab2, tab3 = st.tabs(
 with tab1:
 
     render_watchlist(
-        profile_name=profile
+        profile
     )
 
 with tab2:
 
-    render_top_movers()
+    render_top_movers(
+        profile
+    )
 
 with tab3:
 
-    render_portfolio()
+    render_portfolio(
+        profile
+    )
 
 if selected_symbol:
-
-    st.divider()
 
     render_stock_detail(
         profile_name=profile,
