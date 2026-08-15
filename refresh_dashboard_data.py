@@ -1,26 +1,21 @@
-from stockmind.application.use_cases.run_analysis_use_case import ( RunAnalysisUseCase )
+from stockmind.application.use_cases.run_analysis_use_case import (
+    RunAnalysisUseCase
+)
 
-from stockmind.infrastructure.watchlists.watchlist_repository import WatchlistRepository
+from stockmind.infrastructure.watchlists.watchlist_repository import (
+    WatchlistRepository
+)
 
-def get_symbols():
-    return(
+
+def get_symbols() -> list[str]:
+
+    return (
         WatchlistRepository()
         .load_active_symbols()
     )
 
-def main():
 
-    symbols = [
-        "NVDA",
-        "AMD",
-        "MSFT",
-        "AAPL",
-        "GOOGL",
-        "AMZN",
-        "META",
-        "PLTR",
-        "TSLA"
-    ]
+def main():
 
     profiles = [
         "conservative",
@@ -28,15 +23,32 @@ def main():
         "aggressive"
     ]
 
-    for symbols in get_symbols:
+    symbols = (
+        get_symbols()
+    )
+
+    print(
+        f"Found {len(symbols)} stocks in watchlist."
+    )
+
+    for profile_name in profiles:
 
         print(
-            f"Refreshing {symbols}"
+            f"\nRefreshing profile: {profile_name}"
         )
 
-        RunAnalysisUseCase().execute(
-            symbols=symbols
-        )
+        for symbol in symbols:
 
-if __name__ == "__main__": 
+            print(
+                f"Refreshing {symbol}"
+            )
+
+            RunAnalysisUseCase().execute(
+                profile_name=profile_name,
+                symbol=symbol
+            )
+
+
+if __name__ == "__main__":
+
     main()
