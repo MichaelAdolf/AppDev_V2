@@ -1,89 +1,16 @@
-from stockmind.application.dashboard.models.watchlist_dashboard_result import (
-    WatchlistDashboardResult
-)
+@dataclass(frozen=True)
+class WatchlistDashboardStock:
 
-from stockmind.infrastructure.history.latest_analysis_repository import (
-    LatestAnalysisRepository
-)
+    symbol: str
 
-from stockmind.infrastructure.watchlists.watchlist_repository import (
-    WatchlistRepository
-)
+    company_name: str
 
+    opportunity_score: float
 
-class WatchlistDashboardUseCase:
+    confidence: float
 
-    def load(
-        self,
-        profile_name: str
-    ) -> WatchlistDashboardResult:
+    historical_success_rate: float
 
-        latest_results = (
-            LatestAnalysisRepository()
-            .load_all(
-                profile_name
-            )
-        )
+    risk_level: str
 
-        watchlist_entries = (
-            WatchlistRepository()
-            .load_all()
-        )
-
-        watchlist_symbols = {
-            entry.symbol.upper()
-            for entry in watchlist_entries
-            if entry.active
-        }
-
-        results = [
-            item
-            for item in latest_results
-            if item.symbol.upper()
-            in watchlist_symbols
-        ]
-
-        stock_count = len(
-            results
-        )
-
-        buy_count = len(
-            [
-                item
-                for item in results
-                if item.signal == "BUY"
-            ]
-        )
-
-        hold_count = len(
-            [
-                item
-                for item in results
-                if item.signal == "HOLD"
-            ]
-        )
-
-        sell_count = len(
-            [
-                item
-                for item in results
-                if item.signal == "SELL"
-            ]
-        )
-
-        hot_opportunities = len(
-            [
-                item
-                for item in results
-                if item.opportunity_score >= 80
-            ]
-        )
-
-        return WatchlistDashboardResult(
-            stock_count=stock_count,
-            buy_count=buy_count,
-            hold_count=hold_count,
-            sell_count=sell_count,
-            hot_opportunities=hot_opportunities,
-            stocks=results
-        )
+    signal: str
