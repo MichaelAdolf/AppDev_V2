@@ -1,24 +1,14 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_fundamental_data.py
-Refreshing fundamentals for NVDA
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 172, in <module>
-    main()
-    ~~~~^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 160, in main
-    repository.save(
-    ~~~~~~~~~~~~~~~^
-        entry
-        ^^^^^
+AttributeError: 'NoneType' object has no attribute 'fundamental_score'
+
+File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 90, in <module>
+    render_stock_detail(
+    ~~~~~~~~~~~~~~~~~~~^
+        profile_name=profile,
+        ^^^^^^^^^^^^^^^^^^^^^
+        symbol=selected_symbol
+        ^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\infrastructure\history\fundamental_data_repository.py", line 75, in save
-    cursor.execute(
-    ~~~~~~~~~~~~~~^
-        """
-        ^^^
-    ...<33 lines>...
-        )
-        ^
-    )
-    ^
-sqlite3.OperationalError: table fundamental_data has no column named current_price
+File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\stock_detail_view.py", line 438, in render
+    f"{fundamentals.fundamental_score:.0f}/100"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
