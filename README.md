@@ -1,20 +1,6 @@
-from stockmind.infrastructure.history.indicator_chart_data_repository import (
-    IndicatorChartDataRepository
-)
-
-points = (
-    IndicatorChartDataRepository()
-    .load_by_symbol(
-        "NVDA"
-    )
-)
-
-first = points[0]
-
-print(type(first))
-print(first)
-
-print("adx:", hasattr(first, "adx"))
-print("stoch_k:", hasattr(first, "stoch_k"))
-
-print(vars(first))
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_indicator_object.py       
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\test_indicator_object.py", line 5, in <module>
+    first = points[0]
+            ~~~~~~^^^
+IndexError: list index out of range
