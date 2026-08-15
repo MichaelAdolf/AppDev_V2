@@ -1,27 +1,40 @@
-from dataclasses import dataclass
+from stockmind.application.dashboard.models.fundamental_dashboard_result import (
+    FundamentalDashboardResult
+)
+
+from stockmind.infrastructure.history.fundamental_data_repository import (
+    FundamentalDataRepository
+)
 
 
-@dataclass(frozen=True)
-class FundamentalDashboardResult:
+class FundamentalDashboardUseCase:
 
-    symbol: str
+    def load(
+        self,
+        symbol: str
+    ) -> FundamentalDashboardResult | None:
 
-    company_name: str | None
+        entry = (
+            FundamentalDataRepository()
+            .load(
+                symbol
+            )
+        )
 
-    sector: str | None
+        if entry is None:
 
-    industry: str | None
+            return None
 
-    market_cap: float | None
-
-    trailing_pe: float | None
-
-    forward_pe: float | None
-
-    profit_margins: float | None
-
-    revenue_growth: float | None
-
-    recommendation_key: str | None
-
-    target_mean_price: float | None
+        return FundamentalDashboardResult(
+            symbol=entry.symbol,
+            company_name=entry.company_name,
+            sector=entry.sector,
+            industry=entry.industry,
+            market_cap=entry.market_cap,
+            trailing_pe=entry.trailing_pe,
+            forward_pe=entry.forward_pe,
+            profit_margins=entry.profit_margins,
+            revenue_growth=entry.revenue_growth,
+            recommendation_key=entry.recommendation_key,
+            target_mean_price=entry.target_mean_price
+        )
