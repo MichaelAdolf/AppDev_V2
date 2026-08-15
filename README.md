@@ -1,61 +1,15 @@
-from datetime import datetime
-
-import yfinance as yf
-
-from stockmind.domain.watchlist.watchlist_entry import (
-    WatchlistEntry
-)
-
 from stockmind.infrastructure.watchlist.watchlist_repository import (
     WatchlistRepository
 )
 
 
-class AddStockUseCase:
+class RemoveStockUseCase:
 
     def execute(
         self,
         symbol: str
     ):
 
-        symbol = (
-            symbol.upper()
-            .strip()
-        )
-
-        repository = (
-            WatchlistRepository()
-        )
-
-        if repository.exists(
+        WatchlistRepository().remove(
             symbol
-        ):
-
-            return False
-
-        info = (
-            yf.Ticker(
-                symbol
-            ).info
         )
-
-        company_name = (
-            info.get(
-                "longName"
-            )
-            or symbol
-        )
-
-        repository.add(
-            WatchlistEntry(
-                symbol=symbol,
-                company_name=company_name,
-                active=True,
-                created_at=(
-                    datetime.utcnow()
-                    .isoformat()
-                )
-            )
-        )
-
-        return True
