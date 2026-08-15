@@ -1,17 +1,24 @@
-PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> & d:/Users/Michael/Dokumente/16_AppDev/stockmind-platform/.venv/Scripts/Activate.ps1                              python scripts/refresh_fundamental_data.py                                          v\stockmind-platform> 
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_fundamental_data.py
 Refreshing fundamentals for NVDA
 Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 166, in <module>
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 172, in <module>
     main()
     ~~~~^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 150, in main
-    entry = build_entry(
-        symbol
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 160, in main
+    repository.save(
+    ~~~~~~~~~~~~~~~^
+        entry
+        ^^^^^
     )
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 73, in build_entry
-    return FundamentalDataEntry(
-        symbol=symbol,
-    ...<59 lines>...
+    ^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\infrastructure\history\fundamental_data_repository.py", line 75, in save
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<33 lines>...
         )
+        ^
     )
-TypeError: FundamentalDataEntry.__init__() missing 1 required positional argument: 'current_price'
+    ^
+sqlite3.OperationalError: table fundamental_data has no column named current_price
