@@ -1,12 +1,25 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_dashboard_data.py                                            
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 54, in <module>
-    main()
-    ~~~~^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 27, in main
-    get_symbols()
-    ~~~~~~~~~~~^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 14, in get_symbols
-    .load_active_symbols()
-     ^^^^^^^^^^^^^^^^^^^
-AttributeError: 'WatchlistRepository' object has no attribute 'load_active_symbols'
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class HistoricalSetupEntry:
+
+    symbol: str
+
+    profile_name: str
+
+    analysis_period: str
+
+    setup_date: str
+
+    entry_price: float
+
+    target_pct: float
+
+    success: bool
+
+    days_to_target: int | None
+
+    max_gain_pct: float
+
+    max_drawdown_pct: float
