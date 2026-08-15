@@ -1,450 +1,188 @@
-from dataclasses import asdict
-from dataclasses import is_dataclass
+import sqlite3
 
-from fastapi import FastAPI
-from fastapi import HTTPException
-from fastapi import Query
-
-from stockmind.application.dashboard.use_cases.watchlist_dashboard_use_case import (
-    WatchlistDashboardUseCase
-)
-
-from stockmind.application.dashboard.use_cases.alerts_dashboard_use_case import (
-    AlertsDashboardUseCase
-)
-
-from stockmind.application.dashboard.use_cases.stock_detail_dashboard_use_case import (
-    StockDetailDashboardUseCase
-)
-
-from stockmind.application.dashboard.use_cases.profile_comparison_dashboard_use_case import (
-    ProfileComparisonDashboardUseCase
-)
-
-from stockmind.application.dashboard.use_cases.fundamental_dashboard_use_case import (
-    FundamentalDashboardUseCase
-)
-
-from stockmind.application.dashboard.use_cases.buy_period_dashboard_use_case import (
-    BuyPeriodDashboardUseCase
-)
-
-from stockmind.infrastructure.history.latest_analysis_repository import (
-    LatestAnalysisRepository
+from stockmind.domain.watchlist.watchlist_entry import (
+    WatchlistEntry
 )
 
 
-app = FastAPI(
-    title="StockMind API",
-    version="0.1.0",
-    description=(
-        "Read-only API for StockMind dashboard data, "
-        "Home Assistant and Jarvis integrations."
-    )
-)
+class WatchlistRepository:
 
-
-def to_json(
-    value
-):
-
-    if is_dataclass(
-        value
+    def __init__(
+        self,
+        database_path: str = "stockmind.db"
     ):
 
-        return asdict(
-            value
+        self._database_path = database_path
+
+        self._initialize()
+
+    def _initialize(
+        self
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
         )
 
-    if isinstance(
-        value,
-        list
-    ):
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS watchlist (
+
+                symbol TEXT PRIMARY KEY,
+
+                company_name TEXT NOT NULL,
+
+                active INTEGER NOT NULL,
+
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.commit()
+
+        connection.close()
+
+    def load_all(
+        self
+    ) -> list[WatchlistEntry]:
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+
+                symbol,
+                company_name,
+                active,
+                created_at
+
+            FROM watchlist
+
+            ORDER BY symbol
+            """
+        )
+
+        rows = cursor.fetchall()
+
+        connection.close()
 
         return [
-            to_json(
-                item
+            WatchlistEntry(
+                symbol=row[0],
+                company_name=row[1],
+                active=bool(
+                    row[2]
+                ),
+                created_at=row[3]
             )
-            for item in value
+            for row in rows
         ]
 
-    if isinstance(
-        value,
-        dict
+    def exists(
+        self,
+        symbol: str
+    ) -> bool:
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+
+            FROM watchlist
+
+            WHERE symbol = ?
+            """,
+            (
+                symbol.upper(),
+            )
+        )
+
+        count = cursor.fetchone()[0]
+
+        connection.close()
+
+        return count > 0
+
+    def add(
+        self,
+        entry: WatchlistEntry
     ):
 
-        return {
-            key: to_json(
-                item
+        if self.exists(
+            entry.symbol
+        ):
+
+            return
+
+        connection = sqlite3.connect(
+            self._database_path
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO watchlist
+            (
+                symbol,
+                company_name,
+                active,
+                created_at
             )
-            for key, item in value.items()
-        }
-
-    return value
-
-
-@app.get(
-    "/health",
-    tags=[
-        "System"
-    ]
-)
-def health():
-
-    return {
-        "status": "ok",
-        "service": "stockmind-api"
-    }
-
-
-@app.get(
-    "/profiles",
-    tags=[
-        "System"
-    ]
-)
-def get_profiles():
-
-    return {
-        "profiles": [
-            "conservative",
-            "balanced",
-            "aggressive"
-        ]
-    }
-
-
-@app.get(
-    "/watchlist/{profile_name}",
-    tags=[
-        "Watchlist"
-    ]
-)
-def get_watchlist(
-    profile_name: str
-):
-
-    result = (
-        WatchlistDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    return to_json(
-        result
-    )
-
-
-@app.get(
-    "/top-opportunities/{profile_name}",
-    tags=[
-        "Watchlist"
-    ]
-)
-def get_top_opportunities(
-    profile_name: str,
-    limit: int = Query(
-        default=5,
-        ge=1,
-        le=50
-    )
-):
-
-    result = (
-        WatchlistDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    stocks = sorted(
-        result.stocks,
-        key=lambda item:
-            item.opportunity_score,
-        reverse=True
-    )
-
-    top_stocks = stocks[:limit]
-
-    return {
-        "profile_name": profile_name,
-        "limit": limit,
-        "stocks": to_json(
-            top_stocks
-        )
-    }
-
-
-@app.get(
-    "/alerts/{profile_name}",
-    tags=[
-        "Alerts"
-    ]
-)
-def get_alerts(
-    profile_name: str
-):
-
-    alerts = (
-        AlertsDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    return {
-        "profile_name": profile_name,
-        "alerts": to_json(
-            alerts
-        )
-    }
-
-
-@app.get(
-    "/stock/{symbol}",
-    tags=[
-        "Stock Detail"
-    ]
-)
-def get_stock_detail(
-    symbol: str,
-    profile_name: str = Query(
-        default="balanced"
-    )
-):
-
-    try:
-
-        result = (
-            StockDetailDashboardUseCase()
-            .load(
-                profile_name=profile_name,
-                symbol=symbol.upper()
+            VALUES
+            (
+                ?, ?, ?, ?
+            )
+            """,
+            (
+                entry.symbol,
+                entry.company_name,
+                int(
+                    entry.active
+                ),
+                entry.created_at
             )
         )
 
-        return to_json(
-            result
+        connection.commit()
+
+        connection.close()
+
+    def remove(
+        self,
+        symbol: str
+    ):
+
+        connection = sqlite3.connect(
+            self._database_path
         )
 
-    except ValueError as error:
+        cursor = connection.cursor()
 
-        raise HTTPException(
-            status_code=404,
-            detail=str(
-                error
+        cursor.execute(
+            """
+            DELETE FROM watchlist
+
+            WHERE symbol = ?
+            """,
+            (
+                symbol.upper(),
             )
         )
 
+        connection.commit()
 
-@app.get(
-    "/stock/{symbol}/summary",
-    tags=[
-        "Stock Detail"
-    ]
-)
-def get_stock_summary(
-    symbol: str,
-    profile_name: str = Query(
-        default="balanced"
-    )
-):
-
-    try:
-
-        result = (
-            StockDetailDashboardUseCase()
-            .load(
-                profile_name=profile_name,
-                symbol=symbol.upper()
-            )
-        )
-
-        return {
-            "symbol": result.symbol,
-            "profile_name": profile_name,
-            "score": result.score,
-            "confidence": result.confidence,
-            "historical_success_rate": (
-                result.historical_success_rate
-            ),
-            "risk_level": result.risk_level,
-            "signal": result.signal,
-            "summary": result.summary,
-            "strengths": result.strengths,
-            "weaknesses": result.weaknesses
-        }
-
-    except ValueError as error:
-
-        raise HTTPException(
-            status_code=404,
-            detail=str(
-                error
-            )
-        )
-
-
-@app.get(
-    "/stock/{symbol}/fundamentals",
-    tags=[
-        "Fundamentals"
-    ]
-)
-def get_stock_fundamentals(
-    symbol: str
-):
-
-    fundamentals = (
-        FundamentalDashboardUseCase()
-        .load(
-            symbol.upper()
-        )
-    )
-
-    if fundamentals is None:
-
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                f"No fundamental data found for "
-                f"{symbol.upper()}."
-            )
-        )
-
-    return to_json(
-        fundamentals
-    )
-
-
-@app.get(
-    "/stock/{symbol}/profile-comparison",
-    tags=[
-        "Stock Detail"
-    ]
-)
-def get_profile_comparison(
-    symbol: str
-):
-
-    result = (
-        ProfileComparisonDashboardUseCase()
-        .load(
-            symbol.upper()
-        )
-    )
-
-    return to_json(
-        result
-    )
-
-
-@app.get(
-    "/stock/{symbol}/buy-periods",
-    tags=[
-        "Stock Detail"
-    ]
-)
-def get_buy_periods(
-    symbol: str,
-    max_gap_days: int = Query(
-        default=3,
-        ge=1,
-        le=30
-    )
-):
-
-    result = (
-        BuyPeriodDashboardUseCase()
-        .load(
-            symbol=symbol.upper(),
-            max_gap_days=max_gap_days
-        )
-    )
-
-    return to_json(
-        result
-    )
-
-
-@app.get(
-    "/jarvis/daily-briefing",
-    tags=[
-        "Jarvis"
-    ]
-)
-def get_jarvis_daily_briefing(
-    profile_name: str = Query(
-        default="balanced"
-    ),
-    limit: int = Query(
-        default=3,
-        ge=1,
-        le=10
-    )
-):
-
-    dashboard = (
-        WatchlistDashboardUseCase()
-        .load(
-            profile_name
-        )
-    )
-
-    stocks = sorted(
-        dashboard.stocks,
-        key=lambda item:
-            item.opportunity_score,
-        reverse=True
-    )
-
-    top_stocks = stocks[:limit]
-
-    briefing_items = []
-
-    for stock in top_stocks:
-
-        briefing_items.append(
-            {
-                "symbol": stock.symbol,
-                "score": stock.opportunity_score,
-                "signal": stock.signal,
-                "confidence": stock.confidence,
-                "risk_level": stock.risk_level
-            }
-        )
-
-    return {
-        "profile_name": profile_name,
-        "message": (
-            "Hier sind die aktuell interessantesten "
-            "StockMind-Kandidaten."
-        ),
-        "top_stocks": briefing_items
-    }
-
-
-@app.get(
-    "/raw/latest-analysis/{profile_name}",
-    tags=[
-        "Raw"
-    ]
-)
-def get_raw_latest_analysis(
-    profile_name: str
-):
-
-    entries = (
-        LatestAnalysisRepository()
-        .load_all(
-            profile_name
-        )
-    )
-
-    return {
-        "profile_name": profile_name,
-        "entries": to_json(
-            entries
-        )
-    }
+        connection.close()
