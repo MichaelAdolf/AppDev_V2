@@ -1,20 +1,27 @@
-from stockmind.infrastructure.history.fundamental_data_repository import (
-    FundamentalDataRepository
-)
+from dataclasses import dataclass
 
 
-def main():
+@dataclass(frozen=True)
+class FundamentalDashboardResult:
 
-    entry = (
-        FundamentalDataRepository()
-        .load(
-            "NVDA"
-        )
-    )
+    symbol: str
 
-    print(entry)
+    company_name: str | None
 
+    sector: str | None
 
-if __name__ == "__main__":
-    main()
-``
+    industry: str | None
+
+    market_cap: float | None
+
+    trailing_pe: float | None
+
+    forward_pe: float | None
+
+    profit_margins: float | None
+
+    revenue_growth: float | None
+
+    recommendation_key: str | None
+
+    target_mean_price: float | None
