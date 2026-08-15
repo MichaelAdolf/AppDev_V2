@@ -1,61 +1,12 @@
-import streamlit as st
-
-from stockmind.infrastructure.watchlists.watchlist_repository import (
-    WatchlistRepository
-)
-
-
-def render(
-    profile_name: str
-):
-
-    st.subheader(
-        "🔍 Aktie auswählen"
-    )
-
-    watchlist_entries = (
-        WatchlistRepository()
-        .load_all()
-    )
-
-    active_entries = [
-        entry
-        for entry in watchlist_entries
-        if entry.active
-    ]
-
-    if not active_entries:
-
-        st.warning(
-            "Keine Aktien auf der Watchlist vorhanden."
-        )
-
-        return None
-
-    display_map = {
-
-        f"{entry.symbol} | {entry.company_name}":
-            entry.symbol
-
-        for entry in active_entries
-    }
-
-    selected_display = st.selectbox(
-        "Aktie",
-        list(
-            display_map.keys()
-        ),
-        index=0
-    )
-
-    selected_symbol = (
-        display_map[
-            selected_display
-        ]
-    )
-
-    st.session_state[
-        "selected_symbol"
-    ] = selected_symbol
-
-    return selected_symbol
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_dashboard_data.py                                            
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 54, in <module>
+    main()
+    ~~~~^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 27, in main
+    get_symbols()
+    ~~~~~~~~~~~^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_dashboard_data.py", line 14, in get_symbols
+    .load_active_symbols()
+     ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'WatchlistRepository' object has no attribute 'load_active_symbols'
