@@ -1,153 +1,187 @@
-import sqlite3
+import yfinance as yf
 
 from stockmind.domain.history.indicator_chart_point import (
     IndicatorChartPoint
 )
 
+from stockmind.infrastructure.history.indicator_chart_data_repository import (
+    IndicatorChartDataRepository
+)
 
-class IndicatorChartDataRepository:
 
-    def __init__(
-        self,
-        database_path: str = "stockmind.db"
-    ):
+SYMBOLS = [
+    "NVDA",
+    "AMD",
+    "MSFT",
+    "AAPL",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "PLTR",
+    "TSLA",
+]
 
-        self._database_path = database_path
 
-        self._initialize()
+def _to_optional_float(
+    value
+):
 
-    def _initialize(
-        self
-    ):
+    if value != value:
 
-        connection = sqlite3.connect(
-            self._database_path
+        return None
+
+    return float(
+        value
+    )
+
+
+def calculate_rsi(
+    data,
+    window: int = 14
+):
+
+    delta = data["Close"].diff()
+
+    gain = (
+        delta.where(
+            delta > 0,
+            0
         )
-
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS indicator_chart_data (
-
-                symbol TEXT NOT NULL,
-
-                trading_date TEXT NOT NULL,
-
-                rsi_14 REAL,
-
-                macd REAL,
-
-                macd_signal REAL,
-
-                macd_histogram REAL,
-
-                PRIMARY KEY (
-                    symbol,
-                    trading_date
-                )
-            )
-            """
+        .rolling(
+            window=window
         )
+        .mean()
+    )
 
-        connection.commit()
-
-        connection.close()
-
-    def replace_for_symbol(
-        self,
-        symbol: str,
-        points: list[IndicatorChartPoint]
-    ):
-
-        connection = sqlite3.connect(
-            self._database_path
+    loss = (
+        -delta.where(
+            delta < 0,
+            0
         )
-
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            DELETE FROM indicator_chart_data
-            WHERE symbol = ?
-            """,
-            (symbol,)
+        .rolling(
+            window=window
         )
+        .mean()
+    )
 
-        for point in points:
+    rs = gain / loss
 
-            cursor.execute(
-                """
-                INSERT OR REPLACE INTO indicator_chart_data
-                (
-                    symbol,
-                    trading_date,
-                    rsi_14,
-                    macd,
-                    macd_signal,
-                    macd_histogram
-                )
-                VALUES
-                (
-                    ?, ?, ?, ?, ?, ?
-                )
-                """,
-                (
-                    point.symbol,
-                    point.trading_date,
-                    point.rsi_14,
-                    point.macd,
-                    point.macd_signal,
-                    point.macd_histogram
-                )
-            )
+    rsi = 100 - (
+        100 / (1 + rs)
+    )
 
-        connection.commit()
+    return rsi
 
-        connection.close()
 
-    def load_by_symbol(
-        self,
-        symbol: str
-    ) -> list[IndicatorChartPoint]:
+def build_indicator_points(
+    symbol: str
+) -> list[IndicatorChartPoint]:
 
-        connection = sqlite3.connect(
-            self._database_path
+    ticker = yf.Ticker(
+        symbol
+    )
+
+    data = ticker.history(
+        period="1y"
+    )
+
+    data = data.copy()
+
+    data["RSI_14"] = calculate_rsi(
+        data
+    )
+
+    ema_12 = (
+        data["Close"]
+        .ewm(
+            span=12
         )
+        .mean()
+    )
 
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            SELECT
-                symbol,
-                trading_date,
-                rsi_14,
-                macd,
-                macd_signal,
-                macd_histogram
-
-            FROM indicator_chart_data
-
-            WHERE symbol = ?
-
-            ORDER BY trading_date
-            """,
-            (symbol,)
+    ema_26 = (
+        data["Close"]
+        .ewm(
+            span=26
         )
+        .mean()
+    )
 
-        rows = cursor.fetchall()
+    data["MACD"] = (
+        ema_12
+        - ema_26
+    )
 
-        connection.close()
+    data["MACD_Signal"] = (
+        data["MACD"]
+        .ewm(
+            span=9
+        )
+        .mean()
+    )
 
-        return [
+    data["MACD_Histogram"] = (
+        data["MACD"]
+        - data["MACD_Signal"]
+    )
+
+    points = []
+
+    for index, row in data.iterrows():
+
+        points.append(
             IndicatorChartPoint(
-                symbol=row[0],
-                trading_date=row[1],
-                rsi_14=row[2],
-                macd=row[3],
-                macd_signal=row[4],
-                macd_histogram=row[5]
+                symbol=symbol,
+
+                trading_date=(
+                    index.date()
+                    .isoformat()
+                ),
+
+                rsi_14=_to_optional_float(
+                    row["RSI_14"]
+                ),
+
+                macd=_to_optional_float(
+                    row["MACD"]
+                ),
+
+                macd_signal=_to_optional_float(
+                    row["MACD_Signal"]
+                ),
+
+                macd_histogram=_to_optional_float(
+                    row["MACD_Histogram"]
+                )
             )
-            for row in rows
-        ]
+        )
+
+    return points
+
+
+def main():
+
+    repository = IndicatorChartDataRepository()
+
+    for symbol in SYMBOLS:
+
+        print(
+            f"Refreshing indicator chart data for {symbol}"
+        )
+
+        points = build_indicator_points(
+            symbol
+        )
+
+        repository.replace_for_symbol(
+            symbol=symbol,
+            points=points
+        )
+
+    print(
+        "Indicator chart data refresh complete."
+    )
+
+
+if __name__ == "__main__":
+    main()
