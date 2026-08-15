@@ -1,17 +1,17 @@
-st.metric(
-    "Current Price",
-    (
-        f"{fundamentals.current_price:.2f}"
-        if fundamentals.current_price
-        else "-"
+PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> & d:/Users/Michael/Dokumente/16_AppDev/stockmind-platform/.venv/Scripts/Activate.ps1                              python scripts/refresh_fundamental_data.py                                          v\stockmind-platform> 
+Refreshing fundamentals for NVDA
+Traceback (most recent call last):
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 166, in <module>
+    main()
+    ~~~~^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 150, in main
+    entry = build_entry(
+        symbol
     )
-)
-
-st.metric(
-    "Target Upside",
-    (
-        f"{fundamentals.target_upside_pct:.1f}%"
-        if fundamentals.target_upside_pct is not None
-        else "-"
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\refresh_fundamental_data.py", line 73, in build_entry
+    return FundamentalDataEntry(
+        symbol=symbol,
+    ...<59 lines>...
+        )
     )
-)
+TypeError: FundamentalDataEntry.__init__() missing 1 required positional argument: 'current_price'
