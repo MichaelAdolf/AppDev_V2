@@ -1,167 +1,160 @@
-import sqlite3
+import yfinance as yf
 
 from stockmind.domain.history.fundamental_data_entry import (
     FundamentalDataEntry
 )
 
+from stockmind.infrastructure.history.fundamental_data_repository import (
+    FundamentalDataRepository
+)
 
-class FundamentalDataRepository:
 
-    def __init__(
-        self,
-        database_path: str = "stockmind.db"
-    ):
+SYMBOLS = [
+    "NVDA",
+    "AMD",
+    "MSFT",
+    "AAPL",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "PLTR",
+    "TSLA",
+]
 
-        self._database_path = database_path
 
-        self._initialize()
+def _to_optional_float(
+    value
+):
 
-    def _initialize(
-        self
-    ):
+    if value is None:
 
-        connection = sqlite3.connect(
-            self._database_path
+        return None
+
+    try:
+
+        return float(
+            value
         )
 
-        cursor = connection.cursor()
+    except Exception:
 
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS fundamental_data (
+        return None
 
-                symbol TEXT NOT NULL PRIMARY KEY,
 
-                company_name TEXT,
+def _to_optional_text(
+    value
+):
 
-                sector TEXT,
+    if value is None:
 
-                industry TEXT,
+        return None
 
-                market_cap REAL,
+    return str(
+        value
+    )
 
-                trailing_pe REAL,
 
-                forward_pe REAL,
+def build_entry(
+    symbol: str
+) -> FundamentalDataEntry:
 
-                profit_margins REAL,
+    ticker = yf.Ticker(
+        symbol
+    )
 
-                revenue_growth REAL,
+    info = ticker.info
 
-                recommendation_key TEXT,
+    return FundamentalDataEntry(
+        symbol=symbol,
 
-                target_mean_price REAL
+        company_name=_to_optional_text(
+            info.get(
+                "longName"
             )
-            """
-        )
+        ),
 
-        connection.commit()
-
-        connection.close()
-
-    def save(
-        self,
-        entry: FundamentalDataEntry
-    ):
-
-        connection = sqlite3.connect(
-            self._database_path
-        )
-
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            INSERT OR REPLACE INTO fundamental_data
-            (
-                symbol,
-                company_name,
-                sector,
-                industry,
-                market_cap,
-                trailing_pe,
-                forward_pe,
-                profit_margins,
-                revenue_growth,
-                recommendation_key,
-                target_mean_price
+        sector=_to_optional_text(
+            info.get(
+                "sector"
             )
-            VALUES
-            (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ),
+
+        industry=_to_optional_text(
+            info.get(
+                "industry"
             )
-            """,
-            (
-                entry.symbol,
-                entry.company_name,
-                entry.sector,
-                entry.industry,
-                entry.market_cap,
-                entry.trailing_pe,
-                entry.forward_pe,
-                entry.profit_margins,
-                entry.revenue_growth,
-                entry.recommendation_key,
-                entry.target_mean_price
+        ),
+
+        market_cap=_to_optional_float(
+            info.get(
+                "marketCap"
+            )
+        ),
+
+        trailing_pe=_to_optional_float(
+            info.get(
+                "trailingPE"
+            )
+        ),
+
+        forward_pe=_to_optional_float(
+            info.get(
+                "forwardPE"
+            )
+        ),
+
+        profit_margins=_to_optional_float(
+            info.get(
+                "profitMargins"
+            )
+        ),
+
+        revenue_growth=_to_optional_float(
+            info.get(
+                "revenueGrowth"
+            )
+        ),
+
+        recommendation_key=_to_optional_text(
+            info.get(
+                "recommendationKey"
+            )
+        ),
+
+        target_mean_price=_to_optional_float(
+            info.get(
+                "targetMeanPrice"
             )
         )
+    )
 
-        connection.commit()
 
-        connection.close()
+def main():
 
-    def load(
-        self,
-        symbol: str
-    ) -> FundamentalDataEntry | None:
+    repository = FundamentalDataRepository()
 
-        connection = sqlite3.connect(
-            self._database_path
+    count = 0
+
+    for symbol in SYMBOLS:
+
+        print(
+            f"Refreshing fundamentals for {symbol}"
         )
 
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            SELECT
-
-                symbol,
-                company_name,
-                sector,
-                industry,
-                market_cap,
-                trailing_pe,
-                forward_pe,
-                profit_margins,
-                revenue_growth,
-                recommendation_key,
-                target_mean_price
-
-            FROM fundamental_data
-
-            WHERE symbol = ?
-            """,
-            (symbol,)
+        entry = build_entry(
+            symbol
         )
 
-        row = cursor.fetchone()
-
-        connection.close()
-
-        if row is None:
-
-            return None
-
-        return FundamentalDataEntry(
-            symbol=row[0],
-            company_name=row[1],
-            sector=row[2],
-            industry=row[3],
-            market_cap=row[4],
-            trailing_pe=row[5],
-            forward_pe=row[6],
-            profit_margins=row[7],
-            revenue_growth=row[8],
-            recommendation_key=row[9],
-            target_mean_price=row[10]
+        repository.save(
+            entry
         )
+
+        count += 1
+
+    print(
+        f"Refreshed fundamentals for {count} symbols."
+    )
+
+
+if __name__ == "__main__":
+    main()
