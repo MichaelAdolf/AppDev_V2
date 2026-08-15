@@ -1,21 +1,24 @@
-AttributeError: 'IndicatorChartPoint' object has no attribute 'adx'
-Traceback:
+from stockmind.infrastructure.history.indicator_chart_data_repository import (
+    IndicatorChartDataRepository
+)
 
-File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 90, in <module>
-    render_stock_detail(
-    ~~~~~~~~~~~~~~~~~~~^
-        profile_name=profile,
-        ^^^^^^^^^^^^^^^^^^^^^
-        symbol=selected_symbol
-        ^^^^^^^^^^^^^^^^^^^^^^
+
+def main():
+
+    points = (
+        IndicatorChartDataRepository()
+        .load_by_symbol(
+            "NVDA"
+        )
     )
-    ^
-File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\stock_detail_view.py", line 362, in render
-    render_adx_chart(
-    ~~~~~~~~~~~~~~~~^
-        dashboard.symbol
-        ^^^^^^^^^^^^^^^^
-    )
-    ^
-File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\indicator_charts.py", line 183, in render_adx_chart
-    point.adx
+
+    first = points[0]
+
+    print(first)
+
+    print(hasattr(first, "adx"))
+    print(hasattr(first, "stoch_k"))
+
+
+if __name__ == "__main__":
+    main()
