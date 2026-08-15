@@ -1,18 +1,14 @@
-@app.post(
+@app.delete(
     "/watchlist/{symbol}"
 )
-def add_stock(
+def remove_stock(
     symbol: str
 ):
 
-    added = (
-        AddStockUseCase()
-        .execute(
-            symbol
-        )
+    RemoveStockUseCase().execute(
+        symbol
     )
 
     return {
-        "symbol": symbol,
-        "added": added
+        "removed": symbol
     }
