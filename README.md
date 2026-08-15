@@ -1,67 +1,26 @@
-from stockmind.application.history.historical_setup_replay_use_case import (
-    HistoricalSetupReplayUseCase
+from stockmind.infrastructure.history.historical_setup_repository import (
+    HistoricalSetupRepository
 )
-
-from stockmind.infrastructure.watchlists.watchlist_repository import (
-    WatchlistRepository
-)
-
-
-PROFILES = [
-    "conservative",
-    "balanced",
-    "aggressive"
-]
-
-
-PERIODS = [
-    "1m",
-    "6m",
-    "1y",
-    "3y",
-    "5y"
-]
 
 
 def main():
 
-    symbols = (
-        WatchlistRepository()
-        .load_active_symbols()
+    setups = (
+        HistoricalSetupRepository()
+        .load_by_symbol(
+            symbol="NVDA",
+            profile_name="balanced",
+            analysis_period="1y"
+        )
     )
 
     print(
-        f"Found {len(symbols)} symbols in watchlist."
+        f"Found {len(setups)} setups"
     )
 
-    use_case = (
-        HistoricalSetupReplayUseCase()
-    )
+    for setup in setups[:10]:
 
-    for symbol in symbols:
-
-        for profile in PROFILES:
-
-            for period in PERIODS:
-
-                print(
-                    f"Replaying setups: "
-                    f"{symbol} | {profile} | {period}"
-                )
-
-                entries = (
-                    use_case.execute(
-                        symbol=symbol,
-                        profile_name=profile,
-                        analysis_period=period,
-                        target_pct=0.08,
-                        lookahead_days=60
-                    )
-                )
-
-                print(
-                    f"  -> {len(entries)} setups"
-                )
+        print(setup)
 
 
 if __name__ == "__main__":
