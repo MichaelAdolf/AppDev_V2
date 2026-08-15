@@ -1,40 +1,29 @@
-st.divider()
+if rating == "strong_buy":
 
-st.subheader(
-    "📣 Analysten Dashboard"
-)
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-
-    st.metric(
-        "Current Price",
-        (
-            f"{fundamentals.current_price:.2f}"
-            if fundamentals.current_price is not None
-            else "-"
-        )
+    st.success(
+        "🟢 STRONG BUY"
     )
 
-with col2:
+elif rating == "buy":
 
-    st.metric(
-        "Target Mean",
-        (
-            f"{fundamentals.target_mean_price:.2f}"
-            if fundamentals.target_mean_price is not None
-            else "-"
-        )
+    st.success(
+        "🟢 BUY"
     )
 
-with col3:
+elif rating == "hold":
 
-    st.metric(
-        "Upside Potential",
-        (
-            f"{fundamentals.target_upside_pct:.1f}%"
-            if fundamentals.target_upside_pct is not None
-            else "-"
-        )
+    st.warning(
+        "🟡 HOLD"
+    )
+
+elif rating == "sell":
+
+    st.error(
+        "🔴 SELL"
+    )
+
+else:
+
+    st.info(
+        f"Rating: {rating}"
     )
