@@ -1,64 +1,19 @@
-from stockmind.application.dashboard.models.profile_comparison_result import (
-    ProfileComparisonResult,
-    ProfileComparisonEntry
-)
-
-from stockmind.infrastructure.history.latest_analysis_repository import (
-    LatestAnalysisRepository
+from stockmind.application.dashboard.use_cases.profile_comparison_dashboard_use_case import (
+    ProfileComparisonDashboardUseCase
 )
 
 
-class ProfileComparisonDashboardUseCase:
+def main():
 
-    def load(
-        self,
-        symbol: str
-    ) -> ProfileComparisonResult:
-
-        profiles = [
-            "conservative",
-            "balanced",
-            "aggressive"
-        ]
-
-        entries = []
-
-        repository = (
-            LatestAnalysisRepository()
+    result = (
+        ProfileComparisonDashboardUseCase()
+        .load(
+            symbol="NVDA"
         )
+    )
 
-        for profile in profiles:
+    print(result)
 
-            analyses = (
-                repository.load_all(
-                    profile
-                )
-            )
 
-            stock = next(
-                (
-                    item
-                    for item in analyses
-                    if item.symbol == symbol
-                ),
-                None
-            )
-
-            if stock is None:
-
-                continue
-
-            entries.append(
-                ProfileComparisonEntry(
-                    profile_name=profile,
-                    score=stock.opportunity_score,
-                    confidence=stock.confidence,
-                    signal=stock.signal,
-                    risk_level=stock.risk_level
-                )
-            )
-
-        return ProfileComparisonResult(
-            symbol=symbol,
-            entries=entries
-        )
+if __name__ == "__main__":
+    main()
