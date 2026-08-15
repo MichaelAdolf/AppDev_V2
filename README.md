@@ -1,22 +1,40 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_fundamental_data.py
-FUNDAMENTAL DB: D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\stockmind.db
-Refreshing fundamentals for NVDA
-Refreshing fundamentals for AMD
-Refreshing fundamentals for MSFT
-Refreshing fundamentals for AAPL
-Refreshing fundamentals for GOOGL
-Refreshing fundamentals for AMZN
-Refreshing fundamentals for META
-Refreshing fundamentals for PLTR
-Refreshing fundamentals for TSLA
-Refreshed fundamentals for 9 symbols.
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> Get-ChildItem -Recurse stockmind.db
+st.divider()
 
+st.subheader(
+    "📣 Analysten Dashboard"
+)
 
-    Verzeichnis: D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform
+col1, col2, col3 = st.columns(3)
 
+with col1:
 
-Mode                 LastWriteTime         Length Name                                                   
-----                 -------------         ------ ----                                                   
--a----        15.08.2026     16:23        1056768 stockmind.db                                           
+    st.metric(
+        "Current Price",
+        (
+            f"{fundamentals.current_price:.2f}"
+            if fundamentals.current_price is not None
+            else "-"
+        )
+    )
 
+with col2:
+
+    st.metric(
+        "Target Mean",
+        (
+            f"{fundamentals.target_mean_price:.2f}"
+            if fundamentals.target_mean_price is not None
+            else "-"
+        )
+    )
+
+with col3:
+
+    st.metric(
+        "Upside Potential",
+        (
+            f"{fundamentals.target_upside_pct:.1f}%"
+            if fundamentals.target_upside_pct is not None
+            else "-"
+        )
+    )
