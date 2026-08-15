@@ -1,15 +1,18 @@
-from stockmind.infrastructure.watchlist.watchlist_repository import (
-    WatchlistRepository
+@app.post(
+    "/watchlist/{symbol}"
 )
+def add_stock(
+    symbol: str
+):
 
-
-class RemoveStockUseCase:
-
-    def execute(
-        self,
-        symbol: str
-    ):
-
-        WatchlistRepository().remove(
+    added = (
+        AddStockUseCase()
+        .execute(
             symbol
         )
+    )
+
+    return {
+        "symbol": symbol,
+        "added": added
+    }
