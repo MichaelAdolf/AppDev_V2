@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 @dataclass(frozen=True)
 class WatchlistDashboardStock:
 
@@ -14,3 +17,19 @@ class WatchlistDashboardStock:
     risk_level: str
 
     signal: str
+
+
+@dataclass(frozen=True)
+class WatchlistDashboardResult:
+
+    stock_count: int
+
+    buy_count: int
+
+    hold_count: int
+
+    sell_count: int
+
+    hot_opportunities: int
+
+    stocks: list[WatchlistDashboardStock]
