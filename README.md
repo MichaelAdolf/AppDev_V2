@@ -1,35 +1,110 @@
-from dataclasses import dataclass
+from stockmind.application.dashboard.models.watchlist_dashboard_result import (
+    WatchlistDashboardResult,
+    WatchlistDashboardStock
+)
+
+from stockmind.infrastructure.history.latest_analysis_repository import (
+    LatestAnalysisRepository
+)
+
+from stockmind.infrastructure.watchlists.watchlist_repository import (
+    WatchlistRepository
+)
 
 
-@dataclass(frozen=True)
-class WatchlistDashboardStock:
+class WatchlistDashboardUseCase:
 
-    symbol: str
+    def load(
+        self,
+        profile_name: str
+    ) -> WatchlistDashboardResult:
 
-    company_name: str
+        latest_results = (
+            LatestAnalysisRepository()
+            .load_all(
+                profile_name
+            )
+        )
 
-    opportunity_score: float
+        watchlist_entries = (
+            WatchlistRepository()
+            .load_all()
+        )
 
-    confidence: float
+        latest_by_symbol = {
+            item.symbol.upper(): item
+            for item in latest_results
+        }
 
-    historical_success_rate: float
+        stocks = []
 
-    risk_level: str
+        for watchlist_entry in watchlist_entries:
 
-    signal: str
+            latest = (
+                latest_by_symbol.get(
+                    watchlist_entry.symbol.upper()
+                )
+            )
 
+            if latest is None:
 
-@dataclass(frozen=True)
-class WatchlistDashboardResult:
+                continue
 
-    stock_count: int
+            stocks.append(
+                WatchlistDashboardStock(
+                    symbol=latest.symbol,
+                    company_name=watchlist_entry.company_name,
+                    opportunity_score=latest.opportunity_score,
+                    confidence=latest.confidence,
+                    historical_success_rate=(
+                        latest.historical_success_rate
+                    ),
+                    risk_level=latest.risk_level,
+                    signal=latest.signal
+                )
+            )
 
-    buy_count: int
+        stock_count = len(
+            stocks
+        )
 
-    hold_count: int
+        buy_count = len(
+            [
+                item
+                for item in stocks
+                if item.signal == "BUY"
+            ]
+        )
 
-    sell_count: int
+        hold_count = len(
+            [
+                item
+                for item in stocks
+                if item.signal == "HOLD"
+            ]
+        )
 
-    hot_opportunities: int
+        sell_count = len(
+            [
+                item
+                for item in stocks
+                if item.signal == "SELL"
+            ]
+        )
 
-    stocks: list[WatchlistDashboardStock]
+        hot_opportunities = len(
+            [
+                item
+                for item in stocks
+                if item.opportunity_score >= 80
+            ]
+        )
+
+        return WatchlistDashboardResult(
+            stock_count=stock_count,
+            buy_count=buy_count,
+            hold_count=hold_count,
+            sell_count=sell_count,
+            hot_opportunities=hot_opportunities,
+            stocks=stocks
+        )
