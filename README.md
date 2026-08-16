@@ -1,59 +1,319 @@
-.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_historical_setup_dashboard.py
+from datetime import datetime
 
-=== HISTORICAL SETUP DASHBOARD ===
+from stockmind.application.dashboard.models.buy_period_dashboard_result import (
+    BuyPeriodDashboardResult,
+    BuyPeriodEntry
+)
 
-Setup Count: 0
-Successful: 0
-Failed: 0
-Success Rate: 0.0%
-Average Days: 0.0
-Average Gain: 0.0%
-Average Drawdown: 0.0%
+from stockmind.infrastructure.history.historical_setup_repository import (
+    HistoricalSetupRepository
+)
 
-First setups:
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/a.py                   
-Symbol=AAPL | Profile=aggressive | Period=1y | Count=11
-Symbol=AAPL | Profile=aggressive | Period=3y | Count=43
-Symbol=AAPL | Profile=aggressive | Period=5y | Count=77
-Symbol=AAPL | Profile=balanced | Period=1y | Count=4
-Symbol=AAPL | Profile=balanced | Period=3y | Count=12
-Symbol=AAPL | Profile=balanced | Period=5y | Count=23
-Symbol=AAPL | Profile=conservative | Period=1y | Count=1
-Symbol=AAPL | Profile=conservative | Period=3y | Count=5
-Symbol=AAPL | Profile=conservative | Period=5y | Count=8
-Symbol=AMD | Profile=aggressive | Period=1y | Count=9
-Symbol=AMD | Profile=aggressive | Period=3y | Count=48
-Symbol=AMD | Profile=aggressive | Period=5y | Count=95
-Symbol=AMD | Profile=balanced | Period=1y | Count=2
-Symbol=AMD | Profile=balanced | Period=3y | Count=15
-Symbol=AMD | Profile=balanced | Period=5y | Count=27
-Symbol=AMD | Profile=conservative | Period=3y | Count=2
-Symbol=AMD | Profile=conservative | Period=5y | Count=7
-Symbol=AMZN | Profile=aggressive | Period=1y | Count=9
-Symbol=AMZN | Profile=aggressive | Period=3y | Count=34
-Symbol=AMZN | Profile=aggressive | Period=5y | Count=77
-Symbol=AMZN | Profile=balanced | Period=1y | Count=2
-Symbol=AMZN | Profile=balanced | Period=3y | Count=9
-Symbol=AMZN | Profile=balanced | Period=5y | Count=19
-Symbol=AMZN | Profile=conservative | Period=1y | Count=1
-Symbol=AMZN | Profile=conservative | Period=3y | Count=4
-Symbol=AMZN | Profile=conservative | Period=5y | Count=11
-Symbol=NFLX | Profile=aggressive | Period=1y | Count=22
-Symbol=NFLX | Profile=aggressive | Period=3y | Count=44
-Symbol=NFLX | Profile=aggressive | Period=5y | Count=81
-Symbol=NFLX | Profile=aggressive | Period=6m | Count=4
-Symbol=NFLX | Profile=balanced | Period=1y | Count=8
-Symbol=NFLX | Profile=balanced | Period=3y | Count=16
-Symbol=NFLX | Profile=balanced | Period=5y | Count=23
-Symbol=NFLX | Profile=balanced | Period=6m | Count=2
-Symbol=NFLX | Profile=conservative | Period=1y | Count=1
-Symbol=NFLX | Profile=conservative | Period=3y | Count=3
-Symbol=NFLX | Profile=conservative | Period=5y | Count=7
-Symbol=NVDA | Profile=aggressive | Period=1y | Count=11
-Symbol=NVDA | Profile=aggressive | Period=3y | Count=38
-Symbol=NVDA | Profile=aggressive | Period=5y | Count=74
-Symbol=NVDA | Profile=aggressive | Period=6m | Count=1
-Symbol=NVDA | Profile=balanced | Period=3y | Count=5
-Symbol=NVDA | Profile=balanced | Period=5y | Count=15
-Symbol=NVDA | Profile=conservative | Period=3y | Count=2
-Symbol=NVDA | Profile=conservative | Period=5y | Count=6
+
+class BuyPeriodDashboardUseCase:
+
+    def load(
+        self,
+        symbol: str,
+        profile_name: str = "balanced",
+        analysis_period: str = "5y",
+        max_gap_days: int = 3
+    ) -> BuyPeriodDashboardResult:
+
+        setups = (
+            HistoricalSetupRepository()
+            .load_by_symbol(
+                symbol=symbol,
+                profile_name=profile_name,
+                analysis_period=analysis_period
+            )
+        )
+
+        if not setups:
+
+            return BuyPeriodDashboardResult(
+                symbol=symbol,
+                period_count=0,
+                successful_period_count=0,
+                failed_period_count=0,
+                mixed_period_count=0,
+                overall_success_rate=0.0,
+                average_days_to_target=0.0,
+                average_max_gain_pct=0.0,
+                average_max_drawdown_pct=0.0,
+                periods=[]
+            )
+
+        sorted_setups = sorted(
+            setups,
+            key=lambda item:
+                item.setup_date
+        )
+
+        clusters = (
+            self._cluster_setups(
+                sorted_setups=sorted_setups,
+                max_gap_days=max_gap_days
+            )
+        )
+
+        periods = [
+            self._build_period_entry(
+                cluster
+            )
+            for cluster in clusters
+        ]
+
+        successful_period_count = len(
+            [
+                period
+                for period in periods
+                if period.status == "SUCCESSFUL"
+            ]
+        )
+
+        failed_period_count = len(
+            [
+                period
+                for period in periods
+                if period.status == "FAILED"
+            ]
+        )
+
+        mixed_period_count = len(
+            [
+                period
+                for period in periods
+                if period.status == "MIXED"
+            ]
+        )
+
+        total_setups = sum(
+            period.setup_count
+            for period in periods
+        )
+
+        total_successful = sum(
+            period.successful_count
+            for period in periods
+        )
+
+        overall_success_rate = (
+            total_successful
+            / total_setups
+            * 100
+            if total_setups > 0
+            else 0.0
+        )
+
+        average_days_to_target = (
+            self._average(
+                [
+                    period.average_days_to_target
+                    for period in periods
+                    if period.average_days_to_target > 0
+                ]
+            )
+        )
+
+        average_max_gain_pct = (
+            self._average(
+                [
+                    period.max_gain_pct
+                    for period in periods
+                ]
+            )
+        )
+
+        average_max_drawdown_pct = (
+            self._average(
+                [
+                    period.max_drawdown_pct
+                    for period in periods
+                ]
+            )
+        )
+
+        return BuyPeriodDashboardResult(
+            symbol=symbol,
+            period_count=len(periods),
+            successful_period_count=successful_period_count,
+            failed_period_count=failed_period_count,
+            mixed_period_count=mixed_period_count,
+            overall_success_rate=overall_success_rate,
+            average_days_to_target=average_days_to_target,
+            average_max_gain_pct=average_max_gain_pct,
+            average_max_drawdown_pct=average_max_drawdown_pct,
+            periods=periods
+        )
+
+    def _cluster_setups(
+        self,
+        sorted_setups,
+        max_gap_days: int
+    ) -> list:
+
+        clusters = []
+
+        current_cluster = []
+
+        previous_date = None
+
+        for setup in sorted_setups:
+
+            setup_date = (
+                datetime
+                .fromisoformat(
+                    setup.setup_date
+                )
+                .date()
+            )
+
+            if previous_date is None:
+
+                current_cluster.append(
+                    setup
+                )
+
+            else:
+
+                gap = (
+                    setup_date
+                    - previous_date
+                ).days
+
+                if gap <= max_gap_days:
+
+                    current_cluster.append(
+                        setup
+                    )
+
+                else:
+
+                    clusters.append(
+                        current_cluster
+                    )
+
+                    current_cluster = [
+                        setup
+                    ]
+
+            previous_date = setup_date
+
+        if current_cluster:
+
+            clusters.append(
+                current_cluster
+            )
+
+        return clusters
+
+    def _build_period_entry(
+        self,
+        cluster
+    ) -> BuyPeriodEntry:
+
+        start_date = (
+            cluster[0]
+            .setup_date
+        )
+
+        end_date = (
+            cluster[-1]
+            .setup_date
+        )
+
+        setup_count = len(
+            cluster
+        )
+
+        successful_count = len(
+            [
+                setup
+                for setup in cluster
+                if setup.success
+            ]
+        )
+
+        failed_count = (
+            setup_count
+            - successful_count
+        )
+
+        success_rate = (
+            successful_count
+            / setup_count
+            * 100
+            if setup_count > 0
+            else 0.0
+        )
+
+        days_values = [
+            setup.days_to_target
+            for setup in cluster
+            if setup.days_to_target is not None
+        ]
+
+        average_days_to_target = (
+            self._average(
+                days_values
+            )
+        )
+
+        max_gain_pct = max(
+            [
+                setup.max_gain_pct
+                for setup in cluster
+            ]
+        )
+
+        max_drawdown_pct = min(
+            [
+                setup.max_drawdown_pct
+                for setup in cluster
+            ]
+        )
+
+        status = (
+            self._determine_status(
+                success_rate=success_rate
+            )
+        )
+
+        return BuyPeriodEntry(
+            start_date=start_date,
+            end_date=end_date,
+            setup_count=setup_count,
+            successful_count=successful_count,
+            failed_count=failed_count,
+            success_rate=success_rate,
+            average_days_to_target=average_days_to_target,
+            max_gain_pct=max_gain_pct,
+            max_drawdown_pct=max_drawdown_pct,
+            status=status
+        )
+
+    def _determine_status(
+        self,
+        success_rate: float
+    ) -> str:
+
+        if success_rate >= 50:
+
+            return "SUCCESSFUL"
+
+        return "FAILED"
+
+    def _average(
+        self,
+        values
+    ) -> float:
+
+        if not values:
+
+            return 0.0
+
+        return (
+            sum(values)
+            / len(values)
+        )
