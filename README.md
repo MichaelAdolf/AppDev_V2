@@ -1,98 +1,60 @@
-from stockmind.application.dashboard.models.historical_setup_dashboard_result import (
-    HistoricalSetupDashboardResult
-)
-
-from stockmind.infrastructure.history.historical_setup_repository import (
-    HistoricalSetupRepository
+from stockmind.application.dashboard.use_cases.historical_setup_dashboard_use_case import (
+    HistoricalSetupDashboardUseCase
 )
 
 
-class HistoricalSetupDashboardUseCase:
+def main():
 
-    def load(
-        self,
-        symbol: str,
-        profile_name: str = "balanced",
-        analysis_period: str = "1y"
-    ) -> HistoricalSetupDashboardResult:
-
-        setups = (
-            HistoricalSetupRepository()
-            .load_by_symbol(
-                symbol=symbol,
-                profile_name=profile_name,
-                analysis_period=analysis_period
-            )
+    result = (
+        HistoricalSetupDashboardUseCase()
+        .load(
+            symbol="NVDA",
+            profile_name="balanced",
+            analysis_period="1y"
         )
+    )
 
-        if not setups:
+    print(
+        "\n=== HISTORICAL SETUP DASHBOARD ===\n"
+    )
 
-            return HistoricalSetupDashboardResult(
-                setup_count=0,
-                successful_count=0,
-                failed_count=0,
-                success_rate=0.0,
-                average_days=0.0,
-                average_gain=0.0,
-                average_drawdown=0.0,
-                setups=[]
-            )
+    print(
+        f"Setup Count: {result.setup_count}"
+    )
 
-        successful_count = len(
-            [
-                setup
-                for setup in setups
-                if setup.success
-            ]
-        )
+    print(
+        f"Successful: {result.successful_count}"
+    )
 
-        failed_count = (
-            len(setups)
-            - successful_count
-        )
+    print(
+        f"Failed: {result.failed_count}"
+    )
 
-        success_rate = (
-            successful_count
-            / len(setups)
-            * 100
-        )
+    print(
+        f"Success Rate: {result.success_rate:.1f}%"
+    )
 
-        valid_days = [
-            setup.days_to_target
-            for setup in setups
-            if setup.days_to_target is not None
-        ]
+    print(
+        f"Average Days: {result.average_days:.1f}"
+    )
 
-        average_days = (
-            sum(valid_days)
-            / len(valid_days)
-            if valid_days
-            else 0.0
-        )
+    print(
+        f"Average Gain: {result.average_gain:.1f}%"
+    )
 
-        average_gain = (
-            sum(
-                setup.max_gain_pct
-                for setup in setups
-            )
-            / len(setups)
-        )
+    print(
+        f"Average Drawdown: {result.average_drawdown:.1f}%"
+    )
 
-        average_drawdown = (
-            sum(
-                setup.max_drawdown_pct
-                for setup in setups
-            )
-            / len(setups)
-        )
+    print(
+        "\nFirst setups:"
+    )
 
-        return HistoricalSetupDashboardResult(
-            setup_count=len(setups),
-            successful_count=successful_count,
-            failed_count=failed_count,
-            success_rate=success_rate,
-            average_days=average_days,
-            average_gain=average_gain,
-            average_drawdown=average_drawdown,
-            setups=setups
-        )
+    for setup in result.setups[:5]:
+
+        print(setup)
+
+
+if __name__ == "__main__":
+
+    main()
