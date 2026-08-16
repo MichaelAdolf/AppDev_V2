@@ -1,58 +1,45 @@
-from stockmind.application.dashboard.use_cases.historical_setup_dashboard_use_case import (
-    HistoricalSetupDashboardUseCase
-)
+import sqlite3
 
 
 def main():
 
-    result = (
-        HistoricalSetupDashboardUseCase()
-        .load(
-            symbol="NVDA",
-            profile_name="balanced",
-            analysis_period="1y"
+    connection = sqlite3.connect(
+        "stockmind.db"
+    )
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            symbol,
+            profile_name,
+            analysis_period,
+            COUNT(1)
+        FROM historical_setups
+        GROUP BY
+            symbol,
+            profile_name,
+            analysis_period
+        ORDER BY
+            symbol,
+            profile_name,
+            analysis_period
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    for row in rows:
+
+        print(
+            f"Symbol={row[0]} | "
+            f"Profile={row[1]} | "
+            f"Period={row[2]} | "
+            f"Count={row[3]}"
         )
-    )
 
-    print(
-        "\n=== HISTORICAL SETUP DASHBOARD ===\n"
-    )
-
-    print(
-        f"Setup Count: {result.setup_count}"
-    )
-
-    print(
-        f"Successful: {result.successful_count}"
-    )
-
-    print(
-        f"Failed: {result.failed_count}"
-    )
-
-    print(
-        f"Success Rate: {result.success_rate:.1f}%"
-    )
-
-    print(
-        f"Average Days: {result.average_days:.1f}"
-    )
-
-    print(
-        f"Average Gain: {result.average_gain:.1f}%"
-    )
-
-    print(
-        f"Average Drawdown: {result.average_drawdown:.1f}%"
-    )
-
-    print(
-        "\nFirst setups:"
-    )
-
-    for setup in result.setups[:5]:
-
-        print(setup)
+    connection.close()
 
 
 if __name__ == "__main__":
