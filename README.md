@@ -1,34 +1,65 @@
-from stockmind.application.models.analysis_run_result import (
-    AnalysisRunResult
+from scripts.refresh_dashboard_data import (
+    main as refresh_dashboard
 )
 
-from stockmind.application.use_cases.analyze_stock_use_case import (
-    AnalyzeStockUseCase
+from scripts.refresh_chart_data import (
+    main as refresh_charts
+)
+
+from scripts.refresh_indicator_chart_data import (
+    main as refresh_indicators
+)
+
+from scripts.refresh_fundamental_data import (
+    main as refresh_fundamentals
+)
+
+from scripts.refresh_historical_setups import (
+    main as refresh_historical
 )
 
 
-class RunAnalysisUseCase:
+def main():
 
-    def execute(
-        self,
-        symbol: str,
-        profile_name: str
-    ) -> AnalysisRunResult:
+    print(
+        "\n=== STOCKMIND DAILY REFRESH ===\n"
+    )
 
-        analyze_use_case = (
-            AnalyzeStockUseCase()
-        )
+    print(
+        "\n[1/5] Dashboard Analysen"
+    )
 
-        result = (
-            analyze_use_case.execute(
-                symbol=symbol,
-                profile_name=profile_name
-            )
-        )
+    refresh_dashboard()
 
-        return AnalysisRunResult(
-            profile_name=profile_name,
-            stock_results=[
-                result
-            ]
-        )
+    print(
+        "\n[2/5] Kursdaten"
+    )
+
+    refresh_charts()
+
+    print(
+        "\n[3/5] Indikatoren"
+    )
+
+    refresh_indicators()
+
+    print(
+        "\n[4/5] Fundamentaldaten"
+    )
+
+    refresh_fundamentals()
+
+    print(
+        "\n[5/5] Historische Setups"
+    )
+
+    refresh_historical()
+
+    print(
+        "\n✅ Daily Refresh erfolgreich abgeschlossen."
+    )
+
+
+if __name__ == "__main__":
+
+    main()
