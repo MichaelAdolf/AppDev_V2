@@ -22,41 +22,57 @@ from scripts.refresh_historical_setups import (
 def main():
 
     print(
-        "\n=== STOCKMIND DAILY REFRESH ===\n"
+        "\n================================="
     )
 
     print(
-        "\n[1/5] Dashboard Analysen"
+        " STOCKMIND DAILY REFRESH START"
+    )
+
+    print(
+        "=================================\n"
+    )
+
+    print(
+        "[1/5] Refresh Dashboard Analysen"
     )
 
     refresh_dashboard()
 
     print(
-        "\n[2/5] Kursdaten"
+        "\n[2/5] Refresh Chart Daten"
     )
 
     refresh_charts()
 
     print(
-        "\n[3/5] Indikatoren"
+        "\n[3/5] Refresh Indikatoren"
     )
 
     refresh_indicators()
 
     print(
-        "\n[4/5] Fundamentaldaten"
+        "\n[4/5] Refresh Fundamentaldaten"
     )
 
     refresh_fundamentals()
 
     print(
-        "\n[5/5] Historische Setups"
+        "\n[5/5] Refresh Historical Setups"
     )
 
     refresh_historical()
 
     print(
-        "\n✅ Daily Refresh erfolgreich abgeschlossen."
+        "\n================================="
+    )
+
+    print(
+        " STOCKMIND DAILY REFRESH DONE"
+    )
+
+    print(
+        "=================================\n"
     )
 
 
