@@ -1,13 +1,33 @@
-FROM python:3.11-slim
+# StockMind Deployment auf Raspberry Pi 5 mit Home Assistant OS
 
-WORKDIR /app
+## 1. Ziel dieses Dokuments
 
-COPY requirements.txt .
+Dieses Dokument beschreibt, wie StockMind auf einem Raspberry Pi 5 vorbereitet und später produktiv betrieben werden soll.
 
-RUN pip install --no-cache-dir -r requirements.txt
+StockMind besteht aktuell aus:
 
-COPY . .
+- FastAPI Backend
+- Streamlit Dashboard
+- SQLite Datenbank
+- Daily Refresh Skripten
+- GitHub Repository
+- Dockerfile zur Containerisierung
 
-EXPOSE 8000
+Ziel ist es, StockMind später auf dem Raspberry Pi neben Home Assistant, Node-RED, Piper und Whisper zu betreiben.
 
-CMD ["uvicorn", "api.stockmind_api:app", "--host", "0.0.0.0", "--port", "8000"]
+Langfristiges Zielbild:
+
+```text
+Raspberry Pi 5
+│
+├── Home Assistant OS
+├── Home Assistant
+├── Node-RED
+├── Piper
+├── Whisper
+└── StockMind
+     │
+     ├── FastAPI
+     ├── SQLite
+     └── Daily Refresh
+``
