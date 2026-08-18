@@ -1,81 +1,13 @@
-from scripts.refresh_dashboard_data import (
-    main as refresh_dashboard
-)
+FROM python:3.11-slim
 
-from scripts.refresh_chart_data import (
-    main as refresh_charts
-)
+WORKDIR /app
 
-from scripts.refresh_indicator_chart_data import (
-    main as refresh_indicators
-)
+COPY requirements.txt .
 
-from scripts.refresh_fundamental_data import (
-    main as refresh_fundamentals
-)
+RUN pip install --no-cache-dir -r requirements.txt
 
-from scripts.refresh_historical_setups import (
-    main as refresh_historical
-)
+COPY . .
 
+EXPOSE 8000
 
-def main():
-
-    print(
-        "\n================================="
-    )
-
-    print(
-        " STOCKMIND DAILY REFRESH START"
-    )
-
-    print(
-        "=================================\n"
-    )
-
-    print(
-        "[1/5] Refresh Dashboard Analysen"
-    )
-
-    refresh_dashboard()
-
-    print(
-        "\n[2/5] Refresh Chart Daten"
-    )
-
-    refresh_charts()
-
-    print(
-        "\n[3/5] Refresh Indikatoren"
-    )
-
-    refresh_indicators()
-
-    print(
-        "\n[4/5] Refresh Fundamentaldaten"
-    )
-
-    refresh_fundamentals()
-
-    print(
-        "\n[5/5] Refresh Historical Setups"
-    )
-
-    refresh_historical()
-
-    print(
-        "\n================================="
-    )
-
-    print(
-        " STOCKMIND DAILY REFRESH DONE"
-    )
-
-    print(
-        "=================================\n"
-    )
-
-
-if __name__ == "__main__":
-
-    main()
+CMD ["uvicorn", "api.stockmind_api:app", "--host", "0.0.0.0", "--port", "8000"]
