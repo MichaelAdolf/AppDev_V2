@@ -1,11 +1,20 @@
-#!/usr/bin/env bash
-set -e
+name: "StockMind"
+description: "StockMind stock analysis API"
+version: "1.0.0"
+slug: "stockmind"
+init: false
+startup: services
+boot: auto
 
-mkdir -p /share/stockmind
+arch:
+  - aarch64
 
-echo "Starting StockMind"
-echo "Database path: ${STOCKMIND_DB_PATH}"
+ports:
+  8000/tcp: 8000
 
-exec uvicorn api.stockmind_api:app \
-    --host 0.0.0.0 \
-    --port 8000
+ports_description:
+  8000/tcp: "StockMind FastAPI"
+
+map:
+  - type: share
+    read_only: false
