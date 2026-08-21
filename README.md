@@ -1,20 +1,25 @@
-name: "StockMind"
-description: "StockMind stock analysis API"
-version: "1.0.0"
-slug: "stockmind"
-init: false
-startup: services
-boot: auto
+@app.post("/refresh")
+def trigger_refresh():
+    try:
+        script_path = Path("scripts/run_daily_refresh.py")
 
-arch:
-  - aarch64
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
 
-ports:
-  8000/tcp: 8000
+        return {
+            "status": "success",
+            "message": "Daily refresh completed",
+            "output": result.stdout,
+        }
 
-ports_description:
-  8000/tcp: "StockMind FastAPI"
-
-map:
-  - type: share
-    read_only: false
+    except subprocess.CalledProcessError as exc:
+        return {
+            "status": "error",
+            "message": str(exc),
+            "output": exc.stdout,
+            "error": exc.stderr,
+        }
