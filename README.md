@@ -1,117 +1,73 @@
 [
   {
-    "id": "stockmind_tab",
-    "type": "tab",
-    "label": "StockMind",
-    "disabled": false,
-    "info": ""
-  },
-  {
-    "id": "stockmind_daily_trigger",
-    "type": "inject",
-    "z": "stockmind_tab",
-    "name": "Täglicher Refresh 00:30",
-    "props": [
+    "id": "subflow_jarvis_stockmind",
+    "type": "subflow",
+    "name": "Jarvis Subflow - StockMind",
+    "info": "Abruf der StockMind Watchlist",
+    "category": "Jarvis",
+    "in": [
       {
-        "p": "payload"
+        "x": 60,
+        "y": 100,
+        "wires": [
+          {
+            "id": "stockmind_watchlist_request"
+          }
+        ]
       }
     ],
-    "repeat": "",
-    "crontab": "30 0 * * *",
-    "once": false,
-    "onceDelay": 0.1,
-    "topic": "",
-    "payload": "",
-    "payloadType": "date",
-    "x": 220,
-    "y": 120,
-    "wires": [
-      [
-        "stockmind_refresh_request"
-      ]
-    ]
-  },
-  {
-    "id": "stockmind_manual_trigger",
-    "type": "inject",
-    "z": "stockmind_tab",
-    "name": "Manueller Refresh",
-    "props": [
+    "out": [
       {
-        "p": "payload"
+        "x": 780,
+        "y": 100,
+        "wires": [
+          {
+            "id": "stockmind_response_mapper",
+            "port": 0
+          }
+        ]
       }
     ],
-    "repeat": "",
-    "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
-    "topic": "",
-    "payload": "",
-    "payloadType": "date",
-    "x": 200,
-    "y": 180,
-    "wires": [
-      [
-        "stockmind_refresh_request"
-      ]
-    ]
+    "env": [],
+    "meta": {},
+    "color": "#90CAF9"
   },
   {
-    "id": "stockmind_refresh_request",
+    "id": "stockmind_watchlist_request",
     "type": "http request",
-    "z": "stockmind_tab",
-    "name": "POST /refresh",
-    "method": "POST",
+    "z": "subflow_jarvis_stockmind",
+    "name": "GET Watchlist",
+    "method": "GET",
     "ret": "obj",
     "paytoqs": "ignore",
-    "url": "http://192.168.178.47:8000/refresh",
+    "url": "http://192.168.178.47:8000/watchlist",
     "persist": false,
+    "proxy": "",
     "authType": "",
-    "senderr": true,
+    "senderr": false,
     "headers": [],
-    "x": 500,
-    "y": 150,
+    "x": 250,
+    "y": 100,
     "wires": [
       [
-        "stockmind_refresh_debug",
-        "stockmind_refresh_notification"
+        "stockmind_response_mapper"
       ]
     ]
   },
   {
-    "id": "stockmind_refresh_debug",
-    "type": "debug",
-    "z": "stockmind_tab",
-    "name": "Refresh Response",
-    "active": true,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": true,
-    "complete": "payload",
-    "targetType": "msg",
-    "x": 760,
+    "id": "stockmind_response_mapper",
+    "type": "function",
+    "z": "subflow_jarvis_stockmind",
+    "name": "Build Response",
+    "func": "const count = Array.isArray(msg.payload) ? msg.payload.length : 0;\n\nmsg.payload = {\n    success: true,\n    intent: 'stockmind',\n    entity: 'watchlist',\n    state: 'read',\n    message: `Deine Watchlist enthält aktuell ${count} Aktien.`,\n    data: msg.payload,\n    audioUrl: null,\n    ttsProfile: 'jarvis'\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
     "y": 100,
-    "wires": []
-  },
-  {
-    "id": "stockmind_refresh_notification",
-    "type": "api-call-service",
-    "z": "stockmind_tab",
-    "name": "HA Notification",
-    "server": "daf816ed.cff788",
-    "version": 7,
-    "debugenabled": false,
-    "action": "persistent_notification.create",
-    "data": "{\"title\":\"StockMind\",\"message\":\"Daily Refresh erfolgreich abgeschlossen\"}",
-    "dataType": "json",
-    "mergeContext": "",
-    "mustacheAltTags": false,
-    "queue": "none",
-    "blockInputOverrides": true,
-    "domain": "persistent_notification",
-    "service": "create",
-    "x": 760,
-    "y": 200,
     "wires": [
       []
     ]
