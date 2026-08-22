@@ -1,0 +1,27 @@
+name: "StockMind"
+description: "StockMind stock analysis API"
+version: "1.0.0"
+slug: "stockmind"
+init: false
+startup: services
+boot: auto
+
+arch:
+  - aarch64
+
+ports:
+  8000/tcp: 8000
+  8501/tcp: 8501
+
+ports_description:
+  8000/tcp: "StockMind FastAPI"
+  8501/tcp: "Streamlit Dashboard"
+
+map:
+  - type: share
+    read_only: false
+
+rest_command:
+  stockmind_refresh:
+    url: "http://192.168.178.47:8000/refresh"
+    method: POST
