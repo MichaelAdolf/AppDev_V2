@@ -1,0 +1,26 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+intent_script:
+  NodeRedRouter:
+    speech:
+      text: "Ich leite deine Anfrage an Node-RED weiter"
+    action:
+      - event: assist_to_nodered
+        event_data:
+          text: "{{ sentence }}"
+
+
+rest_command:
+  stockmind_refresh:
+    url: "http://192.168.178.47:8000/refresh"
+    method: POST
