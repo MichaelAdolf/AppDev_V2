@@ -1,1 +1,24 @@
-d542b8a69180b2d70b1f7148ddedf072bd33300c_de-de_db0e2e9c25_tts.piper_2
+const path =
+    (msg.payload || '').trim();
+
+if (!path) {
+    msg.payload =
+        msg.originalPayload;
+
+    msg.payload.audioUrl =
+        null;
+
+    return msg;
+}
+
+const filename =
+    path.split('/').pop();
+
+msg.payload =
+    msg.originalPayload;
+
+msg.payload.audioUrl =
+    "http://192.168.178.47:8123/local/tts/" +
+    filename;
+
+return msg;
