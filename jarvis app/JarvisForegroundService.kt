@@ -13,7 +13,6 @@ import android.os.IBinder
 import android.os.Looper 
 import android.os.PowerManager 
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -25,7 +24,6 @@ import okhttp3.Response
 import okhttp3.WebSocket 
 import okhttp3.WebSocketListener 
 import java.util.concurrent.TimeUnit
-import java.util.Locale
 import org.json.JSONObject
 
 class JarvisForegroundService : Service() {
@@ -47,7 +45,6 @@ private val mainHandler =
     Handler(Looper.getMainLooper())
 
 private var webSocket: WebSocket? = null
-private var tts: TextToSpeech? = null
 
 private var speechRecognizer: SpeechRecognizer? = null
 private var wakewordActive: Boolean = false
@@ -74,25 +71,6 @@ override fun onCreate() {
 
     createNotificationChannel()
     startAsForegroundService()
-
-    tts = TextToSpeech(
-        applicationContext
-    ){ status ->
-
-        if (status == TextToSpeech.SUCCESS) {
-            tts?.language =
-                Locale.GERMAN
-            tts?.setSpeechRate(
-                1.0f
-            )
-
-            Log.d(
-                "JARVIS_TTS",
-                "Android TTS bereit"
-            )
-        }
-
-    }
 
     connectWebSocket()
     startWakewordListener()
@@ -127,10 +105,6 @@ override fun onDestroy() {
     )
 
     webSocket = null
-
-    tts?.stop()
-    tts?.shutdown()
-    tts = null
 
     speechRecognizer?.destroy()
     speechRecognizer = null
@@ -325,46 +299,6 @@ private fun handleNodeRedEvent(
         payload
     )
 }
-
-private fun speakMessage( 
-    payload: String 
-) {
-    try {
-
-        val json =
-            JSONObject(payload)
-
-        val message =
-            json.optString(
-                "message",
-                ""
-            )
-
-        if (message.isBlank()) {
-            return
-        }
-
-        Log.d(
-            "JARVIS_TTS",
-            "Sprache: $message"
-        )
-
-        tts?.speak(
-            message,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "jarvis_event"
-        )
-
-    } catch (e: Exception) {
-
-        Log.d(
-            "JARVIS_TTS",
-            "Fehler: ${e.message}"
-        )
-    }
-}
-
 
 
 @Suppress("DEPRECATION")
@@ -676,7 +610,6 @@ private fun restartWakewordListener() {
 }
 
 private fun onWakewordDetected() {
-    
     val now = System.currentTimeMillis()
 
     if (
@@ -699,28 +632,7 @@ private fun onWakewordDetected() {
 
     wakeDeviceBriefly()
 
-    speakWakewordAck()
-
     MainActivity.sendWakewordToFlutter()
 
 }
-
-private fun speakWakewordAck() {
-
-try {
-    tts?.speak(
-        "Ja?",
-        android.speech.tts.TextToSpeech.QUEUE_FLUSH,
-        null,
-        "jarvis_wakeword_ack"
-    )
-} catch (e: Exception) {
-    Log.d(
-        "JARVIS_WAKEWORD",
-        "TTS Fehler: ${e.message}"
-    )
-}
-
-}
-
 }
