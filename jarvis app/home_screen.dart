@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:meta/meta.dart';
 import 'dart:async';
 
-import '../../../core/constants.dart';
 import '../../../core/jarvis_event.dart';
 import '../../../core/jarvis_state.dart';
-import '../../../services/audio_service.dart';
+import '../../../core/ha_response.dart';
 import '../logic/jarvis_controller.dart';
 import '../widgets/jarvis_circle.dart';
 import '../../../services/voice_service.dart';
@@ -18,8 +16,8 @@ import '../widgets/ambient_connections.dart';
 import '../../../services/jarvis_wakeword_bus.dart';
 import '../../../services/jarvis_wakeword_control.dart';
 import 'package:flutter/widgets.dart';
-import '../../../core/audio_output_mode.dart';
-
+import '../../../core/speech_output_mode.dart';
+import '../../../services/speech_output_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final JarvisController controller;
@@ -38,10 +36,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
   bool _isSpeaking = false;
   bool _wakewordEnabled = true;
-  AudioOutputMode _audioMode = AudioOutputMode.local;
+  SpeechOutputMode _speechOutputMode = SpeechOutputMode.appTts;
 
   late final JarvisController controller;
   late final VoidCallback _controllerListener;
+  late final SpeechOutputService _speechOutput;
   
   final VoiceService _voice = VoiceService();
 
@@ -52,91 +51,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     WidgetsBinding.instance.addObserver(this);
 
     controller = widget.controller;
+
+    _speechOutput = SpeechOutputService(
+      initialMode: _speechOutputMode,
+    );
     
-    _controllerListener = () {
-      if (!mounted) return;
-
-      //Audio hier triggern, NICHT im Controller
-      if (
-        controller.state == JarvisState.speaking &&
-        !_isSpeaking &&
-        controller.responseText.isNotEmpty) {
-
-      _isSpeaking = true;
-
-      debugPrint( '[JARVIS] MODE=$_audioMode', );
-
-      debugPrint( '[JARVIS] RESPONSE=${controller.lastResponse}', );
-
-      debugPrint( '[JARVIS] AUDIOURL=${controller.lastResponse?.audioUrl}', );
-
-      if (_audioMode == AudioOutputMode.local) {
-
-        AudioService.speak(
-          controller.responseText,
-          onComplete: () async {
-            _isSpeaking = false;
-            controller.onSpeechFinished();
-
-            if (_wakewordEnabled) {
-              await JarvisWakewordControl.start();
-            }
-          },
-        );
-
-      } else {
-
-        final audioUrl =
-            controller.lastResponse?.audioUrl;
-
-        if (
-            audioUrl != null &&
-            audioUrl.isNotEmpty) {
-
-          debugPrint(
-            '[JARVIS] REMOTE Audio: $audioUrl',
-          );
-
-          debugPrint( '[JARVIS] Remotebranch enter', );
-
-          AudioService.playRemoteUrl(
-            audioUrl,
-            onComplete: () async {
-
-              _isSpeaking = false;
-
-              controller.onSpeechFinished();
-
-              if (_wakewordEnabled) {
-                await JarvisWakewordControl.start();
-              }
-            },
-          );
-
-        } else {
-
-          debugPrint(
-            '[JARVIS] Keine audioUrl vorhanden -> Fallback',
-          );
-
-          AudioService.speak(
-            controller.responseText,
-            onComplete: () async {
-
-              _isSpeaking = false;
-
-              controller.onSpeechFinished();
-
-              if (_wakewordEnabled) {
-                await JarvisWakewordControl.start();
-              }
-            },
-          );
-        }
-      }
-    }
-    setState(() {});
-  };
+    _controllerListener = _handleControllerChanged;
     
     controller.addListener(_controllerListener);
     controller.initialize();
@@ -176,8 +96,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
   @override
   void dispose() {
     _wakewordSubscription?.cancel();
+    
     controller.removeListener(_controllerListener);
+    
     WidgetsBinding.instance.removeObserver(this);
+
+    unawaited(_speechOutput.stop());
+    unawaited(_voice.stopListening());
+
     super.dispose();
   }
 
@@ -197,8 +123,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
         );
 
         await _voice.stopListening();
+        await _speechOutput.stop();
         await controller.interrupt();
         await JarvisWakewordControl.stop();
+
+        _isSpeaking = false;
       }
 
     if (
@@ -263,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             );
 
             await _voice.stopListening();
+            await _speechOutput.stop();
 
             controller.clearLiveTranscript();
 
@@ -286,11 +216,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
 
   void _onMicPressed() async {
     if (controller.state == JarvisState.speaking) {
+      await _speechOutput.stop();
+
       _isSpeaking = false;
 
       await controller.interrupt();
-
       await _startVoiceInput();
+
       return;
     }
 
@@ -323,20 +255,98 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
     } 
   }
 
-  void _toggleAudioMode() {
+  void _toggleSpeechOutputMode() {
+    final newMode = 
+      _speechOutputMode == SpeechOutputMode.appTts
+        ? SpeechOutputMode.nodeRedAudio
+        : SpeechOutputMode.appTts;
 
     setState(() {
+      _speechOutputMode = newMode;
+      }
+    );
 
-      _audioMode =
-        _audioMode ==
-          AudioOutputMode.local
-        ? AudioOutputMode.remote
-        : AudioOutputMode.local;
-    });
+    _speechOutput.setMode(newMode);
 
     debugPrint(
-      '[JARVIS] Audio Mode: $_audioMode',
+      '[JARVIS] Speech Output Mode: ${newMode.name}'
     );
+  }
+
+  void _handleControllerChanged() {
+    if (!mounted) {
+      return;
+    }
+
+    final response = controller.lastResponse;
+
+    final shouldStartSpeech =
+        controller.state == JarvisState.speaking &&
+        !_isSpeaking &&
+        response != null &&
+        response.message.trim().isNotEmpty;
+
+    if (shouldStartSpeech) {
+      unawaited(
+        _playCurrentResponse(response),
+      );
+    }
+
+    setState(() {});
+  }
+
+
+  Future<void> _playCurrentResponse(
+    HaResponse response,
+  ) async {
+    if (_isSpeaking) {
+      return;
+    }
+
+    _isSpeaking = true;
+
+    debugPrint(
+      '[JARVIS] Speech Mode: ${_speechOutput.mode.name}',
+    );
+
+    debugPrint(
+      '[JARVIS] Response Text: ${response.message}',
+    );
+
+    debugPrint(
+      '[JARVIS] Audio URL: ${response.audioUrl}',
+    );
+
+    await JarvisWakewordControl.stop();
+
+    try {
+      final completed = await _speechOutput.output(
+        response,
+      );
+
+      if (!mounted || !completed) {
+        return;
+      }
+
+      controller.onSpeechFinished();
+    } catch (error) {
+      debugPrint(
+        '[JARVIS] Sprachausgabe fehlgeschlagen: $error',
+      );
+
+      if (mounted) {
+        controller.onSpeechFinished();
+      }
+    } finally {
+      _isSpeaking = false;
+
+      if (
+          mounted &&
+          _wakewordEnabled &&
+          controller.state == JarvisState.idle) {
+        await JarvisWakewordControl.start();
+      }
+    }
   }
 
   Color _voiceHudColor() {
@@ -406,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
               lines: [
                 'LANG : de-DE',
                 'STATE : ${controller.state.name.toUpperCase()}',
-                'AUDIO : ${_audioMode.name.toUpperCase()}',
+                'AUDIO : ${_speechOutputMode.displayName}',
                 controller.state == JarvisState.listening
                     ? 'INPUT : ACTIVE'
                     : 'INPUT : READY',
@@ -525,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
             left: 20,
             top: 180,
             child: GestureDetector(
-              onTap: _toggleAudioMode,
+              onTap: _toggleSpeechOutputMode,
               child: AnimatedContainer(
                 duration: const Duration(
                   milliseconds: 250,
@@ -534,14 +544,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _audioMode == AudioOutputMode.remote
+                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
                     ? const Color(0xFF002D72)
                     : Colors.black,
                   border: Border.all(
                     color: Colors.cyanAccent,
                     width: 2,
                     ),
-                  boxShadow: _audioMode == AudioOutputMode.remote
+                  boxShadow: _speechOutputMode == SpeechOutputMode.nodeRedAudio
                     ? [
                       BoxShadow(
                         color: Colors.blueAccent
@@ -554,7 +564,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver{
                 ),
                 child: Icon(
                   Icons.volume_up,
-                  color: _audioMode == AudioOutputMode.remote
+                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
                     ? Colors.cyanAccent
                     : Colors.grey,
                   size: 30,
