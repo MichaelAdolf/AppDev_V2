@@ -1,184 +1,88 @@
-import 'package:flutter/foundation.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+Future<void> _startVoiceInput() async {
+  await JarvisWakewordControl.stop();
 
-class VoiceService {
-  final SpeechToText _speech = SpeechToText();
+  debugPrint(
+    '[JARVIS] Wakeword-Stop angefordert',
+  );
 
-  bool _initialized = false;
-  bool _isStarting = false;
+  await Future<void>.delayed(
+    const Duration(milliseconds: 1200),
+  );
 
-  bool get isListening => _speech.isListening;
+  debugPrint(
+    '[JARVIS] Mikrofon wird an Flutter übergeben',
+  );
 
-  Future<bool> initialize() async {
-    if (_initialized) {
-      return true;
+  final started = await _voice.startListening(
+    onPartialResult: (text) {
+      debugPrint(
+        '[JARVIS] Partial STT: $text',
+      );
+
+      controller.updateLiveTranscript(text);
+    },
+    onFinalResult: (text) async {
+      debugPrint(
+        '[JARVIS] Final STT: $text',
+      );
+
+      await _voice.stopListening();
+
+      controller.handleEvent(
+        JarvisEvent.voiceStopped,
+      );
+
+      controller.handleTextInput(text);
+    },
+  );
+
+  debugPrint(
+    '[JARVIS] VoiceService gestartet: $started',
+  );
+
+  if (!started) {
+    debugPrint(
+      '[JARVIS] STT konnte nicht gestartet werden',
+    );
+
+    await controller.interrupt();
+
+    if (_wakewordEnabled) {
+      await JarvisWakewordControl.start();
     }
 
-    try {
-      final available = await _speech.initialize(
-        debugLogging: true,
-        onStatus: (status) {
-          debugPrint(
-            '[VOICE] Status: $status',
-          );
-        },
-        onError: (error) {
-          debugPrint(
-            '[VOICE] Fehler: '
-            '${error.errorMsg}, '
-            'permanent=${error.permanent}',
-          );
-        },
-      );
-
-      _initialized = available;
-
-      debugPrint(
-        '[VOICE] Initialisierung: '
-        'available=$available',
-      );
-
-      return available;
-    } catch (error) {
-      debugPrint(
-        '[VOICE] Initialisierung fehlgeschlagen: $error',
-      );
-
-      _initialized = false;
-      return false;
-    }
+    return;
   }
 
-  Future<bool> startListening({
-    required void Function(String text) onFinalResult,
-    void Function(String text)? onPartialResult,
-  }) async {
-    if (_isStarting) {
-      debugPrint(
-        '[VOICE] Start bereits in Bearbeitung',
-      );
+  controller.handleEvent(
+    JarvisEvent.voiceStarted,
+  );
 
-      return false;
-    }
-
-    _isStarting = true;
-
-    try {
-      debugPrint(
-        '[VOICE] startListening angefordert',
-      );
-
-      final available = await initialize();
-
-      if (!available) {
-        debugPrint(
-          '[VOICE] SpeechToText nicht verfügbar',
-        );
-
-        return false;
+  Future<void>.delayed(
+    const Duration(seconds: 12),
+    () async {
+      if (!mounted) {
+        return;
       }
 
-      if (_speech.isListening) {
-        debugPrint(
-          '[VOICE] Bestehendes Listening wird gestoppt',
-        );
-
-        await _speech.stop();
-
-        await Future<void>.delayed(
-          const Duration(milliseconds: 250),
-        );
-      }
-
-      await _speech.listen(
-        localeId: 'de_DE',
-        partialResults: true,
-        cancelOnError: true,
-        listenMode: ListenMode.dictation,
-        listenFor: const Duration(seconds: 10),
-        pauseFor: const Duration(seconds: 3),
-        onSoundLevelChange: (level) {
-          debugPrint(
-            '[VOICE] Sound-Level: '
-            '${level.toStringAsFixed(2)}',
-          );
-        },
-        onResult: (result) {
-          final text =
-              result.recognizedWords.trim();
-
-          debugPrint(
-            '[VOICE] Ergebnis: "$text" '
-            '| final=${result.finalResult}',
-          );
-
-          if (text.isEmpty) {
-            return;
-          }
-
-          if (result.finalResult) {
-            onFinalResult(text);
-          } else {
-            onPartialResult?.call(text);
-          }
-        },
-      );
-
-      final listening = _speech.isListening;
-
-      debugPrint(
-        '[VOICE] listen() abgeschlossen, '
-        'isListening=$listening',
-      );
-
-      return listening;
-    } catch (error, stackTrace) {
-      debugPrint(
-        '[VOICE] Listening konnte nicht '
-        'gestartet werden: $error',
-      );
-
-      debugPrint(
-        '[VOICE] StackTrace: $stackTrace',
-      );
-
-      return false;
-    } finally {
-      _isStarting = false;
-    }
-  }
-
-  Future<void> stopListening() async {
-    try {
-      if (_speech.isListening) {
-        debugPrint(
-          '[VOICE] Listening wird gestoppt',
-        );
-
-        await _speech.stop();
+      if (controller.state != JarvisState.listening) {
+        return;
       }
 
       debugPrint(
-        '[VOICE] Listening gestoppt',
+        '[JARVIS] Listening Timeout',
       );
-    } catch (error) {
-      debugPrint(
-        '[VOICE] Stop fehlgeschlagen: $error',
-      );
-    }
-  }
 
-  Future<void> cancelListening() async {
-    try {
-      await _speech.cancel();
+      await _voice.cancelListening();
+      await _speechOutput.stop();
 
-      debugPrint(
-        '[VOICE] Listening abgebrochen',
-      );
-    } catch (error) {
-      debugPrint(
-        '[VOICE] Cancel fehlgeschlagen: $error',
-      );
-    }
-  }
+      controller.clearLiveTranscript();
+
+      await controller.interrupt();
+
+      if (_wakewordEnabled) {
+        await JarvisWakewordControl.start();
+      }
+    },
+  );
 }
