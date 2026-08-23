@@ -1,52 +1,36 @@
-Future<void> _playCurrentResponse(
-  HaResponse response,
-) async {
-  if (_isSpeaking) {
-    return;
-  }
+void handleEvent(JarvisEvent event, {String? input}) {
+    switch (event) {
+      case JarvisEvent.voiceStarted:
+        if (!isBusy) {
+          _setState(JarvisState.listening);
+        }
+        // später: Mic aktiv, UI Feedback
+        break;
 
-  _isSpeaking = true;
+      case JarvisEvent.voiceStopped:
+        if (state == JarvisState.listening) {
+          _setState(JarvisState.thinking);
+        }
+        // später: Speech-to-text finalize
+        break;
 
-  debugPrint(
-    '[JARVIS] Speech Mode: ${_speechOutput.mode.name}',
-  );
+      case JarvisEvent.intentReceived:
+        // optional Logging / Debug
+        break;
 
-  debugPrint(
-    '[JARVIS] Response Text: ${response.message}',
-  );
+      case JarvisEvent.commandReceived:
+        // später: HA Input verarbeitet
+        break;
 
-  debugPrint(
-    '[JARVIS] Audio URL: ${response.audioUrl}',
-  );
+      case JarvisEvent.commandExecuted:
+        _setState(JarvisState.speaking);
+        // später: Erfolg / Feedback
+        break;
 
-  await JarvisWakewordControl.stop();
-
-  try {
-    final completed = await _speechOutput.output(
-      response,
-    );
-
-    if (!mounted || !completed) {
-      return;
-    }
-
-    controller.onSpeechFinished();
-  } catch (error) {
-    debugPrint(
-      '[JARVIS] Sprachausgabe fehlgeschlagen: $error',
-    );
-
-    if (mounted) {
-      controller.onSpeechFinished();
-    }
-  } finally {
-    _isSpeaking = false;
-
-    if (
-        mounted &&
-        _wakewordEnabled &&
-        controller.state == JarvisState.idle) {
-      await JarvisWakewordControl.start();
+      case JarvisEvent.error:
+        _responseText = input ?? 'Ein unbekannter Fehler ist aufgetreten';
+        _setState(JarvisState.error);
+        // später: UI Error State
+        break;
     }
   }
-}
