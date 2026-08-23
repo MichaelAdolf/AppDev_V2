@@ -1,0 +1,4 @@
+enum AudioOutputMode {
+  local,
+  remote,
+}
