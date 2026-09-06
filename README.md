@@ -1,23 +1,20 @@
-void _handleRequestTimeout(int interactionId) {
+void _handleRequestError({
+  required int interactionId,
+  required Object error,
+}) {
   if (!_isInteractionCurrent(interactionId)) {
     return;
   }
 
   _finishInteraction(interactionId);
 
-  lastUserText = lastUserText;
-
-  // Verwende hier deinen bereits vorhandenen Mechanismus
-  // für eine lokale Fehlerantwort.
+  // Hier deinen bisherigen Catch-Fehlerpfad verwenden.
   //
-  // Falls HaResponse einen passenden Konstruktor besitzt:
-  //
+  // Beispiel:
   // lastResponse = HaResponse(
   //   success: false,
-  //   message: 'Die Verarbeitung hat zu lange gedauert.',
+  //   message: 'Die Anfrage konnte nicht verarbeitet werden.',
   // );
-  //
-  // Passe den Konstruktor an dein tatsächliches Modell an.
 
   _setState(JarvisState.error);
 }
