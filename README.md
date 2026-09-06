@@ -1,102 +1,43 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
+int _beginInteraction() {
+  _interactionSequence += 1;
+  _activeInteractionId = _interactionSequence;
 
-typedef ThinkingFeedbackCallback = Future<void> Function();
+  debugPrint(
+    'JarvisController: '
+    'Interaktion $_activeInteractionId gestartet',
+  );
 
-class ThinkingFeedbackService {
-  Timer? _delayTimer;
+  return _interactionSequence;
+}
 
-  int? _scheduledInteractionId;
-  int? _playingInteractionId;
+bool _isInteractionCurrent(int interactionId) {
+  return !_isDisposed &&
+      _activeInteractionId == interactionId;
+}
 
-  bool _isDisposed = false;
-
-  bool get isScheduled => _delayTimer?.isActive ?? false;
-
-  bool get isPlaying => _playingInteractionId != null;
-
-  int? get scheduledInteractionId => _scheduledInteractionId;
-
-  int? get playingInteractionId => _playingInteractionId;
-
-  /// Plant das Thinking-Feedback für eine konkrete Interaktion.
-  ///
-  /// Sprint 1:
-  /// [onPlay] enthält später den eigentlichen Start der lokalen Audiodatei.
-  /// Aktuell kann dort zunächst nur Logging erfolgen.
-  void schedule({
-    required int interactionId,
-    required Duration delay,
-    required ThinkingFeedbackCallback onPlay,
-  }) {
-    if (_isDisposed) {
-      return;
-    }
-
-    cancel();
-
-    _scheduledInteractionId = interactionId;
-
-    _delayTimer = Timer(delay, () async {
-      if (_isDisposed) {
-        return;
-      }
-
-      if (_scheduledInteractionId != interactionId) {
-        return;
-      }
-
-      _delayTimer = null;
-      _scheduledInteractionId = null;
-      _playingInteractionId = interactionId;
-
-      try {
-        await onPlay();
-      } catch (error, stackTrace) {
-        debugPrint(
-          'ThinkingFeedbackService: '
-          'Thinking-Feedback konnte nicht gestartet werden: $error',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-      } finally {
-        if (_playingInteractionId == interactionId) {
-          _playingInteractionId = null;
-        }
-      }
-    });
+void _finishInteraction(int interactionId) {
+  if (_activeInteractionId != interactionId) {
+    return;
   }
 
-  /// Bricht eine geplante oder laufende Thinking-Rückmeldung logisch ab.
-  ///
-  /// Die tatsächliche Audiowiedergabe wird in Sprint 2 über einen eigenen
-  /// AudioPlayer zusätzlich gestoppt.
-  void cancel() {
-    _delayTimer?.cancel();
-    _delayTimer = null;
+  debugPrint(
+    'JarvisController: '
+    'Interaktion $interactionId abgeschlossen',
+  );
 
-    _scheduledInteractionId = null;
-    _playingInteractionId = null;
-  }
+  _activeInteractionId = null;
+}
 
-  /// Bricht nur ab, wenn die angegebene Interaktion noch aktiv ist.
-  void cancelForInteraction(int interactionId) {
-    final matchesScheduled =
-        _scheduledInteractionId == interactionId;
+void _invalidateActiveInteraction() {
+  final previousInteractionId = _activeInteractionId;
 
-    final matchesPlaying =
-        _playingInteractionId == interactionId;
+  _interactionSequence += 1;
+  _activeInteractionId = null;
 
-    if (matchesScheduled || matchesPlaying) {
-      cancel();
-    }
-  }
-
-  void dispose() {
-    if (_isDisposed) {
-      return;
-    }
-
-    _isDisposed = true;
-    cancel();
+  if (previousInteractionId != null) {
+    debugPrint(
+      'JarvisController: '
+      'Interaktion $previousInteractionId ungültig gemacht',
+    );
   }
 }
