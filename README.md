@@ -1,43 +1,69 @@
-int _beginInteraction() {
-  _interactionSequence += 1;
-  _activeInteractionId = _interactionSequence;
+Future<void> _handleIntent(/* dein bestehender Intent-Typ */ intent) async {
+  final interactionId = _beginInteraction();
 
-  debugPrint(
-    'JarvisController: '
-    'Interaktion $_activeInteractionId gestartet',
-  );
+  _setState(JarvisState.thinking);
 
-  return _interactionSequence;
-}
+  try {
+    final response = await _conversation
+        .execute(intent)
+        .timeout(_defaultRequestTimeout);
 
-bool _isInteractionCurrent(int interactionId) {
-  return !_isDisposed &&
-      _activeInteractionId == interactionId;
-}
+    if (!_isInteractionCurrent(interactionId)) {
+      debugPrint(
+        'JarvisController: '
+        'Response für veraltete Interaktion '
+        '$interactionId wird verworfen',
+      );
+      return;
+    }
 
-void _finishInteraction(int interactionId) {
-  if (_activeInteractionId != interactionId) {
-    return;
-  }
+    // Ab hier deinen bereits vorhandenen Erfolgsablauf beibehalten.
+    //
+    // Beispiel:
+    //
+    // lastResponse = response;
+    // history.add(...);
+    //
+    // if (response.success) {
+    //   _setState(JarvisState.speaking);
+    // } else {
+    //   _setState(JarvisState.error);
+    // }
 
-  debugPrint(
-    'JarvisController: '
-    'Interaktion $interactionId abgeschlossen',
-  );
+    _processCurrentResponse(
+      interactionId: interactionId,
+      response: response,
+    );
+  } on TimeoutException {
+    if (!_isInteractionCurrent(interactionId)) {
+      return;
+    }
 
-  _activeInteractionId = null;
-}
-
-void _invalidateActiveInteraction() {
-  final previousInteractionId = _activeInteractionId;
-
-  _interactionSequence += 1;
-  _activeInteractionId = null;
-
-  if (previousInteractionId != null) {
     debugPrint(
       'JarvisController: '
-      'Interaktion $previousInteractionId ungültig gemacht',
+      'Timeout für Interaktion $interactionId',
+    );
+
+    _handleRequestTimeout(interactionId);
+  } catch (error, stackTrace) {
+    if (!_isInteractionCurrent(interactionId)) {
+      debugPrint(
+        'JarvisController: '
+        'Fehler einer veralteten Interaktion '
+        '$interactionId wird ignoriert: $error',
+      );
+      return;
+    }
+
+    debugPrint(
+      'JarvisController: '
+      'Fehler in Interaktion $interactionId: $error',
+    );
+    debugPrintStack(stackTrace: stackTrace);
+
+    _handleRequestError(
+      interactionId: interactionId,
+      error: error,
     );
   }
 }
