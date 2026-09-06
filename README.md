@@ -1,34 +1,8 @@
-Future<void> _handleSpeakingState() async {
+Future<void> _handleErrorState() async {
   _thinkingFeedbackService.cancel();
+  await _speechOutputService.stop();
 
-  final response = _controller.lastResponse;
-
-  if (response == null) {
-    _controller.interrupt();
-    return;
-  }
-
-  try {
-    await _speechOutputService.output(response);
-
-    if (!mounted) {
-      return;
-    }
-
-    if (_controller.state == JarvisState.speaking) {
-      _controller.completeSpeaking();
-
-      if (_wakewordEnabled) {
-        await _startNativeWakewordSafely();
-      }
-    }
-  } catch (error, stackTrace) {
-    debugPrint(
-      'HomeScreen: '
-      'Fehler bei der Sprachausgabe: $error',
-    );
-    debugPrintStack(stackTrace: stackTrace);
-
-    await _interruptCurrentInteraction();
+  if (_wakewordEnabled) {
+    await _startNativeWakewordSafely();
   }
 }
