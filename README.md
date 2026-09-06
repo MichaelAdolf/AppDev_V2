@@ -1,28 +1,45 @@
-Future<void> _startNativeWakewordSafely() async {
-  if (!_wakewordEnabled) {
+void _onControllerChanged() {
+  if (!mounted) {
     return;
   }
 
-  if (_isStartingNativeWakeword) {
+  final currentState = _controller.state;
+  final currentInteractionId = _controller.activeInteractionId;
+
+  final stateChanged =
+      currentState != _previousJarvisState;
+
+  final interactionChanged =
+      currentInteractionId != _observedInteractionId;
+
+  if (!stateChanged && !interactionChanged) {
     return;
   }
 
-  _isStartingNativeWakeword = true;
+  _previousJarvisState = currentState;
+  _observedInteractionId = currentInteractionId;
 
-  try {
-    // Hier deinen vorhandenen MethodChannel-Aufruf verwenden.
-    //
-    // Beispiel:
-    // await _platform.invokeMethod('startWakeword');
+  switch (currentState) {
+    case JarvisState.thinking:
+      _handleThinkingState(currentInteractionId);
+      break;
 
-    await _startNativeWakeword();
-  } catch (error, stackTrace) {
-    debugPrint(
-      'HomeScreen: '
-      'Native Wakeword konnte nicht gestartet werden: $error',
-    );
-    debugPrintStack(stackTrace: stackTrace);
-  } finally {
-    _isStartingNativeWakeword = false;
+    case JarvisState.speaking:
+      _handleSpeakingState();
+      break;
+
+    case JarvisState.error:
+      _handleErrorState();
+      break;
+
+    case JarvisState.idle:
+      _handleIdleState();
+      break;
+
+    case JarvisState.listening:
+      _thinkingFeedbackService.cancel();
+      break;
   }
+
+  setState(() {});
 }
