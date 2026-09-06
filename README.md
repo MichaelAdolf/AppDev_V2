@@ -1,20 +1,19 @@
-void _handleRequestError({
-  required int interactionId,
-  required Object error,
+void interrupt({
+  bool clearLastResponse = true,
 }) {
-  if (!_isInteractionCurrent(interactionId)) {
-    return;
+  _invalidateActiveInteraction();
+
+  if (clearLastResponse) {
+    lastResponse = null;
   }
 
-  _finishInteraction(interactionId);
+  partialText = '';
+  finalText = '';
 
-  // Hier deinen bisherigen Catch-Fehlerpfad verwenden.
-  //
-  // Beispiel:
-  // lastResponse = HaResponse(
-  //   success: false,
-  //   message: 'Die Anfrage konnte nicht verarbeitet werden.',
-  // );
+  _setState(JarvisState.idle);
 
-  _setState(JarvisState.error);
+  debugPrint(
+    'JarvisController: '
+    'Aktuelle Verarbeitung wurde unterbrochen',
+  );
 }
