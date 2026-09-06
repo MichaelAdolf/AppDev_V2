@@ -1,70 +1,99 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
-typedef ThinkingFeedbackCallback = Future<void> Function();
+import '../core/ha_response.dart';
+import '../core/speech_output_mode.dart';
+import 'audio_service.dart';
 
-class ThinkingFeedbackService {
-  Timer? _delayTimer;
-  int? _scheduledInteractionId;
-  int? _playingInteractionId;
-  bool _isDisposed = false;
+class SpeechOutputService {
+  SpeechOutputMode _mode;
+  int _requestId = 0;
 
-  bool get isScheduled => _delayTimer?.isActive ?? false;
-  bool get isPlaying => _playingInteractionId != null;
-  int? get scheduledInteractionId => _scheduledInteractionId;
-  int? get playingInteractionId => _playingInteractionId;
+  SpeechOutputService({
+    SpeechOutputMode initialMode = SpeechOutputMode.appTts,
+  }) : _mode = initialMode;
 
-  void schedule({
-    required int interactionId,
-    required Duration delay,
-    required ThinkingFeedbackCallback onPlay,
-  }) {
-    if (_isDisposed) return;
+  SpeechOutputMode get mode => _mode;
 
-    cancel();
-    _scheduledInteractionId = interactionId;
+  void setMode(SpeechOutputMode mode) {
+    if (_mode == mode) return;
+    _mode = mode;
+    debugPrint('[SPEECH OUTPUT] Modus geändert: ${_mode.name}');
+  }
 
-    _delayTimer = Timer(delay, () async {
-      if (_isDisposed || _scheduledInteractionId != interactionId) return;
+  Future<bool> output(HaResponse response) async {
+    final requestId = ++_requestId;
 
-      _delayTimer = null;
-      _scheduledInteractionId = null;
-      _playingInteractionId = interactionId;
+    await AudioService.stop();
+    if (!_isCurrentRequest(requestId)) return false;
 
-      try {
-        await onPlay();
-      } catch (error, stackTrace) {
-        debugPrint(
-          'ThinkingFeedbackService: Feedback konnte nicht gestartet werden: '
-          '$error',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-      } finally {
-        if (_playingInteractionId == interactionId) {
-          _playingInteractionId = null;
-        }
+    try {
+      switch (_mode) {
+        case SpeechOutputMode.appTts:
+          await _speakWithAppTts(response, requestId);
+          break;
+        case SpeechOutputMode.nodeRedAudio:
+          await _playNodeRedAudio(response, requestId);
+          break;
       }
-    });
-  }
-
-  void cancel() {
-    _delayTimer?.cancel();
-    _delayTimer = null;
-    _scheduledInteractionId = null;
-    _playingInteractionId = null;
-  }
-
-  void cancelForInteraction(int interactionId) {
-    if (_scheduledInteractionId == interactionId ||
-        _playingInteractionId == interactionId) {
-      cancel();
+      return _isCurrentRequest(requestId);
+    } catch (error, stackTrace) {
+      if (_isCurrentRequest(requestId)) {
+        debugPrint('[SPEECH OUTPUT] Ausgabe fehlgeschlagen: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+      return false;
     }
   }
 
-  void dispose() {
-    if (_isDisposed) return;
-    _isDisposed = true;
-    cancel();
+  Future<void> _speakWithAppTts(
+    HaResponse response,
+    int requestId,
+  ) async {
+    if (!_isCurrentRequest(requestId)) return;
+
+    final message = response.message.trim();
+    if (message.isEmpty) {
+      debugPrint('[SPEECH OUTPUT] Keine Textnachricht vorhanden');
+      return;
+    }
+
+    debugPrint('[SPEECH OUTPUT] Ausgabe über App-TTS');
+    await AudioService.speakText(message);
   }
+
+  Future<void> _playNodeRedAudio(
+    HaResponse response,
+    int requestId,
+  ) async {
+    if (!_isCurrentRequest(requestId)) return;
+
+    final audioUrl = response.audioUrl?.trim();
+    if (audioUrl == null || audioUrl.isEmpty) {
+      debugPrint(
+        '[SPEECH OUTPUT] Keine audioUrl vorhanden. Fallback auf App-TTS.',
+      );
+      await _speakWithAppTts(response, requestId);
+      return;
+    }
+
+    debugPrint('[SPEECH OUTPUT] Ausgabe über Node-RED-Audio');
+    try {
+      await AudioService.playRemoteUrl(audioUrl);
+    } catch (error) {
+      if (!_isCurrentRequest(requestId)) return;
+      debugPrint(
+        '[SPEECH OUTPUT] Node-RED-Audio nicht abspielbar. '
+        'Fallback auf App-TTS: $error',
+      );
+      await _speakWithAppTts(response, requestId);
+    }
+  }
+
+  Future<void> stop() async {
+    _requestId += 1;
+    await AudioService.stop();
+    debugPrint('[SPEECH OUTPUT] Ausgabe gestoppt');
+  }
+
+  bool _isCurrentRequest(int requestId) => requestId == _requestId;
 }
