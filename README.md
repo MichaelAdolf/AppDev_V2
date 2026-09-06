@@ -1,505 +1,107 @@
-import 'dart:async';
+PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter analyze
+Analyzing jarvis_app...                                                 
 
-import 'package:flutter/material.dart';
-
-import '../../../core/ha_response.dart';
-import '../../../core/jarvis_event.dart';
-import '../../../core/jarvis_state.dart';
-import '../../../core/speech_output_mode.dart';
-import '../../../services/jarvis_wakeword_bus.dart';
-import '../../../services/jarvis_wakeword_control.dart';
-import '../../../services/speech_output_service.dart';
-import '../../../services/voice_service.dart';
-import '../logic/jarvis_controller.dart';
-import '../services/thinking_feedback_service.dart';
-import '../widgets/ambient_connections.dart';
-import '../widgets/ambient_particles.dart';
-import '../widgets/background_grid.dart';
-import '../widgets/conversation_timeline.dart';
-import '../widgets/hud_overlay.dart';
-import '../widgets/hud_panel.dart';
-import '../widgets/jarvis_circle.dart';
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({
-    super.key,
-    required this.controller,
-  });
-
-  final JarvisController controller;
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen>
-    with WidgetsBindingObserver {
-  final VoiceService _voice = VoiceService();
-  final ThinkingFeedbackService _thinkingFeedbackService =
-      ThinkingFeedbackService();
-
-  StreamSubscription? _wakewordSubscription;
-  late final JarvisController controller;
-  late final VoidCallback _controllerListener;
-  late final SpeechOutputService _speechOutput;
-
-  JarvisState? _previousJarvisState;
-  int? _observedInteractionId;
-  bool _isSpeaking = false;
-  bool _wakewordEnabled = true;
-  bool _isInterrupting = false;
-  bool _isStartingNativeWakeword = false;
-  SpeechOutputMode _speechOutputMode = SpeechOutputMode.appTts;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-
-    controller = widget.controller;
-    _speechOutput = SpeechOutputService(initialMode: _speechOutputMode);
-    _controllerListener = _handleControllerChanged;
-    controller.addListener(_controllerListener);
-
-    unawaited(controller.initialize());
-    unawaited(_voice.initialize());
-
-    _wakewordSubscription = JarvisWakewordBus.stream.listen((_) async {
-      if (!_wakewordEnabled) return;
-
-      debugPrint('[JARVIS] Wakeword Trigger empfangen');
-      if (controller.isBusy) {
-        debugPrint('[JARVIS] Wakeword ignoriert - Controller Busy');
-        return;
-      }
-      await _startVoiceInput();
-    });
-  }
-
-  @override
-  void dispose() {
-    unawaited(_thinkingFeedbackService.dispose());
-    _wakewordSubscription?.cancel();
-    controller.removeListener(_controllerListener);
-    WidgetsBinding.instance.removeObserver(this);
-    unawaited(_speechOutput.stop());
-    unawaited(_voice.stopListening());
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    unawaited(_handleLifecycleChange(state));
-  }
-
-  Future<void> _handleLifecycleChange(AppLifecycleState state) async {
-    debugPrint('[JARVIS] Lifecycle: $state');
-
-    if (state == AppLifecycleState.paused) {
-      await _thinkingFeedbackService.forceStop();
-      await _voice.stopListening();
-      await _speechOutput.stop();
-      await controller.interrupt();
-      await JarvisWakewordControl.stop();
-      _isSpeaking = false;
-      return;
-    }
-
-    if (state == AppLifecycleState.resumed) {
-      await _voice.stopListening();
-      await _voice.initialize();
-      await _startNativeWakewordSafely();
-    }
-  }
-
-  Future<void> _startVoiceInput() async {
-    await JarvisWakewordControl.stop();
-    debugPrint('[JARVIS] Wakeword-Stop angefordert');
-
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-
-    final started = await _voice.startListening(
-      onPartialResult: controller.updateLiveTranscript,
-      onFinalResult: (text) async {
-        await _voice.stopListening();
-        controller.handleEvent(JarvisEvent.voiceStopped);
-        controller.handleTextInput(text);
-      },
-    );
-
-    if (!started) {
-      debugPrint('[JARVIS] STT konnte nicht gestartet werden');
-      await controller.interrupt();
-      await _startNativeWakewordSafely();
-      return;
-    }
-
-    controller.handleEvent(JarvisEvent.voiceStarted);
-    unawaited(_handleListeningTimeout());
-  }
-
-  Future<void> _handleListeningTimeout() async {
-    await Future<void>.delayed(const Duration(seconds: 12));
-    if (!mounted || controller.state != JarvisState.listening) return;
-
-    debugPrint('[JARVIS] Listening Timeout');
-    await _voice.cancelListening();
-    await _speechOutput.stop();
-    controller.clearLiveTranscript();
-    await controller.interrupt();
-    await _startNativeWakewordSafely();
-  }
-
-  Future<void> _onMicPressed() async {
-    final state = controller.state;
-
-    if (state == JarvisState.listening) {
-      await _voice.stopListening();
-      await controller.interrupt();
-      await _startNativeWakewordSafely();
-      return;
-    }
-
-    if (state == JarvisState.thinking ||
-        state == JarvisState.speaking ||
-        state == JarvisState.error) {
-      await _interruptCurrentInteraction(restartWakeword: false);
-    }
-
-    await _startVoiceInput();
-  }
-
-  Future<void> _interruptCurrentInteraction({
-    bool restartWakeword = true,
-  }) async {
-    if (_isInterrupting) return;
-    _isInterrupting = true;
-
-    try {
-      final activeThinking = _thinkingSequence;
-      if (activeThinking != null) {
-        await activeThinking;
-      }
-      await _speechOutput.stop();
-      await _voice.stopListening();
-      await controller.interrupt();
-      _isSpeaking = false;
-
-      if (restartWakeword) await _startNativeWakewordSafely();
-    } catch (error, stackTrace) {
-      debugPrint('HomeScreen: Fehler beim Unterbrechen: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      _isInterrupting = false;
-    }
-  }
-
-  Future<void> _startNativeWakewordSafely() async {
-    if (!_wakewordEnabled || _isStartingNativeWakeword) return;
-    _isStartingNativeWakeword = true;
-
-    try {
-      await JarvisWakewordControl.start();
-    } catch (error, stackTrace) {
-      debugPrint('HomeScreen: Wakeword konnte nicht gestartet werden: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      _isStartingNativeWakeword = false;
-    }
-  }
-
-  Future<void> _toggleWakeword() async {
-    setState(() => _wakewordEnabled = !_wakewordEnabled);
-    if (_wakewordEnabled) {
-      await _startNativeWakewordSafely();
-    } else {
-      await JarvisWakewordControl.stop();
-    }
-  }
-
-  void _toggleSpeechOutputMode() {
-    final newMode = _speechOutputMode == SpeechOutputMode.appTts
-        ? SpeechOutputMode.nodeRedAudio
-        : SpeechOutputMode.appTts;
-    setState(() => _speechOutputMode = newMode);
-    _speechOutput.setMode(newMode);
-  }
-
-  Future<void>? _thinkingSequence;
-
-  void _handleControllerChanged() {
-    if (!mounted) return;
-
-    final currentState = controller.state;
-    final currentInteractionId = controller.activeInteractionId;
-    final stateChanged = currentState != _previousJarvisState;
-    final interactionChanged = currentInteractionId != _observedInteractionId;
-
-    _previousJarvisState = currentState;
-    _observedInteractionId = currentInteractionId;
-
-    if (currentState == JarvisState.thinking &&
-        currentInteractionId != null &&
-        (stateChanged || interactionChanged || controller.responseReady)) {
-      _startThinkingSequence(currentInteractionId);
-    } else if (currentState == JarvisState.speaking) {
-      final response = controller.lastResponse;
-      if (!_isSpeaking && response != null && response.message.trim().isNotEmpty) {
-        unawaited(_playCurrentResponse(response));
-      }
-    } else if (currentState == JarvisState.error) {
-      unawaited(_handleErrorState());
-    }
-
-    setState(() {});
-  }
-
-  void _startThinkingSequence(int interactionId) {
-    if (_thinkingSequence != null ||
-        _thinkingFeedbackService.activeInteractionId == interactionId) {
-      return;
-    }
-
-    final selectedMode = _speechOutputMode;
-    _thinkingSequence = _runThinkingSequence(
-      interactionId,
-      selectedMode,
-    ).whenComplete(() => _thinkingSequence = null);
-  }
-
-  Future<void> _runThinkingSequence(
-    int interactionId,
-    SpeechOutputMode selectedMode,
-  ) async {
-    await JarvisWakewordControl.stop();
-    await _thinkingFeedbackService.play(
-      interactionId: interactionId,
-      mode: selectedMode,
-    );
-
-    if (!mounted || controller.activeInteractionId != interactionId) return;
-
-    // Falls die Berechnung länger als die Phrase dauert, warten wir hier auf
-    // responseReady. Der Controller bleibt dabei korrekt im State thinking.
-    while (mounted &&
-        controller.activeInteractionId == interactionId &&
-        !controller.responseReady) {
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-    }
-
-    if (!mounted || controller.activeInteractionId != interactionId) return;
-    controller.releasePendingTransition(interactionId);
-  }
-
-  Future<void> _handleErrorState() async {
-    await _speechOutput.stop();
-    await _startNativeWakewordSafely();
-  }
-
-  Future<void> _playCurrentResponse(HaResponse response) async {
-    if (_isSpeaking) return;
-    _isSpeaking = true;
-    await JarvisWakewordControl.stop();
-
-    try {
-      final completed = await _speechOutput.output(response);
-      if (!mounted || !completed) return;
-      controller.completeSpeaking();
-    } catch (error, stackTrace) {
-      debugPrint('[JARVIS] Sprachausgabe fehlgeschlagen: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      if (mounted) await controller.interrupt(clearLastResponse: false);
-    } finally {
-      _isSpeaking = false;
-      if (mounted && controller.state == JarvisState.idle) {
-        await _startNativeWakewordSafely();
-      }
-    }
-  }
-
-  Color _voiceHudColor() {
-    switch (controller.state) {
-      case JarvisState.idle:
-        return Colors.cyanAccent;
-      case JarvisState.listening:
-        return Colors.greenAccent;
-      case JarvisState.thinking:
-        return Colors.yellowAccent;
-      case JarvisState.speaking:
-        return Colors.greenAccent;
-      case JarvisState.error:
-        return Colors.redAccent;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: BackgroundGrid()),
-          const Positioned.fill(
-            child: IgnorePointer(child: AmbientParticles()),
-          ),
-          const Positioned.fill(child: AmbientConnections()),
-          const Positioned.fill(child: HudOverlay()),
-          Positioned(
-            left: 20,
-            top: 60,
-            child: HudPanel(
-              title: 'SYSTEM',
-              indicatorColor:
-                  controller.haConnected ? Colors.greenAccent : Colors.redAccent,
-              lines: [
-                controller.haConnected ? 'HA ONLINE' : 'HA OFFLINE',
-                'NODE-RED ONLINE',
-                'STATE ${controller.state.name.toUpperCase()}',
-              ],
-            ),
-          ),
-          Positioned(
-            right: 20,
-            top: 60,
-            child: HudPanel(
-              title: 'VOICE',
-              indicatorColor: _voiceHudColor(),
-              lines: [
-                'LANG : de-DE',
-                'STATE : ${controller.state.name.toUpperCase()}',
-                'AUDIO : ${_speechOutputMode.displayName}',
-                controller.state == JarvisState.listening
-                    ? 'INPUT : ACTIVE'
-                    : 'INPUT : READY',
-              ],
-            ),
-          ),
-          Positioned(
-            left: 20,
-            bottom: 170,
-            child: HudPanel(
-              title: 'COMMAND',
-              lines: [
-                controller.liveTranscript.isEmpty
-                    ? 'WAITING...'
-                    : controller.liveTranscript,
-              ],
-            ),
-          ),
-          Positioned(
-            right: 20,
-            bottom: 170,
-            child: HudPanel(
-              title: 'ENTITY',
-              lines: [
-                controller.lastResponse?.entity ?? '-',
-                controller.lastResponse?.state ?? '-',
-              ],
-            ),
-          ),
-          Align(
-            alignment: const Alignment(0, -0.3),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: _onMicPressed,
-                  child: JarvisCircle(state: controller.state),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'J.A.R.V.I.S',
-                  style: TextStyle(
-                    color: Colors.cyanAccent,
-                    fontSize: 32,
-                    letterSpacing: 8,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                if (controller.liveTranscript.isNotEmpty &&
-                    controller.state != JarvisState.speaking)
-                  const SizedBox(height: 18),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 20,
-            top: 200,
-            child: GestureDetector(
-              onTap: _toggleWakeword,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _wakewordEnabled
-                      ? const Color(0xFF002D72)
-                      : Colors.black,
-                  border: Border.all(color: Colors.cyanAccent, width: 2),
-                  boxShadow: _wakewordEnabled
-                      ? [
-                          BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.7),
-                            blurRadius: 20,
-                            spreadRadius: 3,
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Icon(
-                  Icons.mic,
-                  color: _wakewordEnabled ? Colors.cyanAccent : Colors.grey,
-                  size: 34,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 24,
-            child: ConversationTimeline(entries: controller.history),
-          ),
-          Positioned(
-            left: 20,
-            top: 180,
-            child: GestureDetector(
-              onTap: _toggleSpeechOutputMode,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
-                      ? const Color(0xFF002D72)
-                      : Colors.black,
-                  border: Border.all(color: Colors.cyanAccent, width: 2),
-                  boxShadow:
-                      _speechOutputMode == SpeechOutputMode.nodeRedAudio
-                          ? [
-                              BoxShadow(
-                                color: Colors.blueAccent.withOpacity(0.7),
-                                blurRadius: 20,
-                                spreadRadius: 3,
-                              ),
-                            ]
-                          : [],
-                ),
-                child: Icon(
-                  Icons.volume_up,
-                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
-                      ? Colors.cyanAccent
-                      : Colors.grey,
-                  size: 30,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss.
+          Try replacing the use of the deprecated member with the replacement -
+          lib\features\jarvis\ui\home_screen.dart:444:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss.
+          Try replacing the use of the deprecated member with the replacement -
+          lib\features\jarvis\ui\home_screen.dart:484:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss.
+          Try replacing the use of the deprecated member with the replacement -
+          lib\features\jarvis\widgets\background_grid.dart:19:35 - deprecated_member_use
+warning - The declaration '_glow' isn't referenced. Try removing the declaration of '_glow' -
+       lib\features\jarvis\widgets\jarvis_circle.dart:114:10 - unused_element
+   info - Don't invoke 'print' in production code. Try using a logging framework - lib\main.dart:43:7 -
+          avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework - lib\main.dart:61:9 -
+          avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework - lib\main.dart:67:9 -
+          avoid_print
+  error - Target of URI doesn't exist: 'package:flutter_tts/flutter_tts.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\audio_service.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:just_audio/just_audio.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\audio_service.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'FlutterTts'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'FlutterTts' - lib\services\audio_service.dart:6:16 -
+         undefined_class
+  error - The method 'FlutterTts' isn't defined for the type 'AudioService'. Try correcting the name to
+         the name of an existing method, or defining a method named 'FlutterTts' -
+         lib\services\audio_service.dart:6:34 - undefined_method
+  error - Undefined class 'AudioPlayer'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'AudioPlayer' - lib\services\audio_service.dart:7:16 -
+         undefined_class
+  error - The method 'AudioPlayer' isn't defined for the type 'AudioService'. Try correcting the name to
+         the name of an existing method, or defining a method named 'AudioPlayer' -
+         lib\services\audio_service.dart:7:38 - undefined_method
+  error - Target of URI doesn't exist: 'package:wakelock_plus/wakelock_plus.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\device_wake_service.dart:1:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:screen_brightness/screen_brightness.dart'. Try creating
+         the file referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\device_wake_service.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'WakelockPlus'. Try correcting the name to one that is defined, or defining the
+         name - lib\services\device_wake_service.dart:7:13 - undefined_identifier
+  error - The method 'ScreenBrightness' isn't defined for the type 'DeviceWakeService'. Try correcting
+         the name to the name of an existing method, or defining a method named 'ScreenBrightness' -
+         lib\services\device_wake_service.dart:8:13 - undefined_method
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\services\jarvis_background_bridge.dart:15:9 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\services\jarvis_background_bridge.dart:19:5 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\services\jarvis_background_bridge.dart:32:7 - avoid_print
+  error - Target of URI doesn't exist: 'package:web_socket_channel/web_socket_channel.dart'. Try creating
+         the file referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\jarvis_external_trigger_service.dart:5:8 - uri_does_not_exist
+  error - Undefined class 'WebSocketChannel'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'WebSocketChannel' -
+         lib\services\jarvis_external_trigger_service.dart:14:3 - undefined_class
+  error - Undefined name 'WebSocketChannel'. Try correcting the name to one that is defined, or defining
+         the name - lib\services\jarvis_external_trigger_service.dart:36:18 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:flutter_tts/flutter_tts.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\thinking_feedback_service.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:just_audio/just_audio.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\thinking_feedback_service.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../core/speech_output_mode.dart'. Try creating the file
+         referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\thinking_feedback_service.dart:8:8 - uri_does_not_exist
+  error - Undefined class 'FlutterTts'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'FlutterTts' - lib\services\thinking_feedback_service.dart:25:9 -
+         undefined_class
+  error - The method 'FlutterTts' isn't defined for the type 'ThinkingFeedbackService'. Try correcting
+         the name to the name of an existing method, or defining a method named 'FlutterTts' -
+         lib\services\thinking_feedback_service.dart:25:27 - undefined_method
+  error - Undefined class 'AudioPlayer'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'AudioPlayer' - lib\services\thinking_feedback_service.dart:26:9
+         - undefined_class
+  error - The method 'AudioPlayer' isn't defined for the type 'ThinkingFeedbackService'. Try correcting
+         the name to the name of an existing method, or defining a method named 'AudioPlayer' -
+         lib\services\thinking_feedback_service.dart:26:31 - undefined_method
+  error - Undefined class 'SpeechOutputMode'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'SpeechOutputMode' -
+         lib\services\thinking_feedback_service.dart:52:14 - undefined_class
+  error - Undefined class 'SpeechOutputMode'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'SpeechOutputMode' -
+         lib\services\thinking_feedback_service.dart:81:5 - undefined_class
+  error - Undefined name 'SpeechOutputMode'. Try correcting the name to one that is defined, or defining
+         the name - lib\services\thinking_feedback_service.dart:88:12 - undefined_identifier
+  error - Undefined name 'SpeechOutputMode'. Try correcting the name to one that is defined, or defining
+         the name - lib\services\thinking_feedback_service.dart:91:12 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:speech_to_text/speech_to_text.dart'. Try creating the
+         file referenced by the URI, or try using a URI for a file that does exist -
+         lib\services\voice_service.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'SpeechToText'. Try changing the name to the name of an existing class, or
+         creating a class with the name 'SpeechToText' - lib\services\voice_service.dart:5:9 -
+         undefined_class
+  error - The method 'SpeechToText' isn't defined for the type 'VoiceService'. Try correcting the name to
+         the name of an existing method, or defining a method named 'SpeechToText' -
+         lib\services\voice_service.dart:5:32 - undefined_method
+  error - Undefined name 'ListenMode'. Try correcting the name to one that is defined, or defining the
+         name - lib\services\voice_service.dart:99:21 - undefined_identifier
+  error - The name 'MyApp' isn't a class. Try correcting the name to match an existing class -
+         test\widget_test.dart:16:35 - creation_with_non_type
