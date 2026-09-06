@@ -1,33 +1,28 @@
-Future<void> _interruptCurrentInteraction({
-  bool restartWakeword = true,
-}) async {
-  if (_isInterrupting) {
+Future<void> _startNativeWakewordSafely() async {
+  if (!_wakewordEnabled) {
     return;
   }
 
-  _isInterrupting = true;
+  if (_isStartingNativeWakeword) {
+    return;
+  }
+
+  _isStartingNativeWakeword = true;
 
   try {
-    _thinkingFeedbackService.cancel();
+    // Hier deinen vorhandenen MethodChannel-Aufruf verwenden.
+    //
+    // Beispiel:
+    // await _platform.invokeMethod('startWakeword');
 
-    await _speechOutputService.stop();
-
-    // Falls dein Voice-Service stopListening() statt stop() verwendet,
-    // hier den tatsächlichen Methodennamen einsetzen.
-    await _voiceService.stopListening();
-
-    _controller.interrupt();
-
-    if (restartWakeword && _wakewordEnabled) {
-      await _startNativeWakewordSafely();
-    }
+    await _startNativeWakeword();
   } catch (error, stackTrace) {
     debugPrint(
       'HomeScreen: '
-      'Fehler beim Unterbrechen der Interaktion: $error',
+      'Native Wakeword konnte nicht gestartet werden: $error',
     );
     debugPrintStack(stackTrace: stackTrace);
   } finally {
-    _isInterrupting = false;
+    _isStartingNativeWakeword = false;
   }
 }
