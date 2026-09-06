@@ -1,26 +1,23 @@
-void _processCurrentResponse({
-  required int interactionId,
-  required HaResponse response,
-}) {
+void _handleRequestTimeout(int interactionId) {
   if (!_isInteractionCurrent(interactionId)) {
     return;
   }
 
-  lastResponse = response;
-
-  // Hier deinen bestehenden History-Eintrag beibehalten.
-  //
-  // Beispiel:
-  // _conversationHistory.add(
-  //   ConversationEntry.assistant(response.message),
-  // );
-
-  if (response.success) {
-    _setState(JarvisState.speaking);
-    return;
-  }
-
   _finishInteraction(interactionId);
+
+  lastUserText = lastUserText;
+
+  // Verwende hier deinen bereits vorhandenen Mechanismus
+  // für eine lokale Fehlerantwort.
+  //
+  // Falls HaResponse einen passenden Konstruktor besitzt:
+  //
+  // lastResponse = HaResponse(
+  //   success: false,
+  //   message: 'Die Verarbeitung hat zu lange gedauert.',
+  // );
+  //
+  // Passe den Konstruktor an dein tatsächliches Modell an.
+
   _setState(JarvisState.error);
 }
-``
