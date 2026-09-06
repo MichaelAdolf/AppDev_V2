@@ -1,45 +1,28 @@
-void _onControllerChanged() {
-  if (!mounted) {
+void _handleThinkingState(int? interactionId) {
+  if (interactionId == null) {
     return;
   }
 
-  final currentState = _controller.state;
-  final currentInteractionId = _controller.activeInteractionId;
+  _thinkingFeedbackService.schedule(
+    interactionId: interactionId,
+    delay: const Duration(milliseconds: 350),
+    onPlay: () async {
+      if (_controller.state != JarvisState.thinking) {
+        return;
+      }
 
-  final stateChanged =
-      currentState != _previousJarvisState;
+      if (_controller.activeInteractionId != interactionId) {
+        return;
+      }
 
-  final interactionChanged =
-      currentInteractionId != _observedInteractionId;
+      debugPrint(
+        'HomeScreen: '
+        'Thinking-Feedback wäre jetzt für '
+        'Interaktion $interactionId gestartet',
+      );
 
-  if (!stateChanged && !interactionChanged) {
-    return;
-  }
-
-  _previousJarvisState = currentState;
-  _observedInteractionId = currentInteractionId;
-
-  switch (currentState) {
-    case JarvisState.thinking:
-      _handleThinkingState(currentInteractionId);
-      break;
-
-    case JarvisState.speaking:
-      _handleSpeakingState();
-      break;
-
-    case JarvisState.error:
-      _handleErrorState();
-      break;
-
-    case JarvisState.idle:
-      _handleIdleState();
-      break;
-
-    case JarvisState.listening:
-      _thinkingFeedbackService.cancel();
-      break;
-  }
-
-  setState(() {});
+      // Sprint 2:
+      // Hier wird später "Ich prüfe das" abgespielt.
+    },
+  );
 }
