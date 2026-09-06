@@ -1,19 +1,13 @@
-void interrupt({
-  bool clearLastResponse = true,
-}) {
-  _invalidateActiveInteraction();
+void completeSpeaking() {
+  final interactionId = _activeInteractionId;
 
-  if (clearLastResponse) {
-    lastResponse = null;
+  if (interactionId != null) {
+    _finishInteraction(interactionId);
   }
 
-  partialText = '';
-  finalText = '';
+  if (_isDisposed) {
+    return;
+  }
 
   _setState(JarvisState.idle);
-
-  debugPrint(
-    'JarvisController: '
-    'Aktuelle Verarbeitung wurde unterbrochen',
-  );
 }
