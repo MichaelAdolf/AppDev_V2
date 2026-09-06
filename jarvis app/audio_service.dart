@@ -1,91 +1,105 @@
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 
 class AudioService {
   static final FlutterTts _tts = FlutterTts();
   static final AudioPlayer _player = AudioPlayer();
-  
+
   static bool _initialized = false;
   static bool _isSpeaking = false;
 
+  static bool get isSpeaking => _isSpeaking;
+
   static Future<void> init() async {
-    if (_initialized) return;
+    if (_initialized) {
+      return;
+    }
 
     await _tts.setLanguage('de-DE');
     await _tts.setSpeechRate(0.45);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.0);
 
-      _initialized = true;
+    // Dadurch wartet _tts.speak(), bis die Ausgabe beendet ist.
+    await _tts.awaitSpeakCompletion(true);
+
+    _initialized = true;
+
+    debugPrint('[AUDIO] AudioService initialisiert');
   }
 
-  static Future<void> speak(String text, {VoidCallback? onComplete}) async {
+  static Future<void> speakText(String text) async {
+    final normalizedText = text.trim();
+
+    if (normalizedText.isEmpty) {
+      return;
+    }
+
     await init();
+    await stop();
 
-    if (text.isEmpty) return;
-    
-    await _tts.stop();
+    _isSpeaking = true;
 
-    _tts.setCompletionHandler(() {
+    try {
+      debugPrint('[AUDIO] App-TTS startet: $normalizedText');
 
+      await _tts.speak(normalizedText);
+
+      debugPrint('[AUDIO] App-TTS beendet');
+    } catch (error) {
+      debugPrint('[AUDIO] App-TTS Fehler: $error');
+      rethrow;
+    } finally {
       _isSpeaking = false;
+    }
+  }
 
-      if (onComplete != null){
-        onComplete();
-      }
-    });
-    
-    _tts.setErrorHandler((msg) {
-      if (onComplete != null) {
-        onComplete();
-      }
-    });
-    _isSpeaking = false;
-    await _tts.speak(text);
+  static Future<void> playRemoteUrl(String url) async {
+    final normalizedUrl = url.trim();
+
+    if (normalizedUrl.isEmpty) {
+      throw ArgumentError('Die Audio-URL darf nicht leer sein.');
+    }
+
+    await init();
+    await stop();
+
+    _isSpeaking = true;
+
+    try {
+      debugPrint('[AUDIO] Node-RED-Audio startet: $normalizedUrl');
+
+      await _player.setUrl(normalizedUrl);
+      await _player.play();
+
+      debugPrint('[AUDIO] Node-RED-Audio beendet');
+    } catch (error) {
+      debugPrint('[AUDIO] Node-RED-Audio Fehler: $error');
+      rethrow;
+    } finally {
+      _isSpeaking = false;
+    }
   }
 
   static Future<void> stop() async {
-    await _tts.stop();
-  }
-  
-  static bool get isSpeaking => _isSpeaking;
-
-
-  static Future<void> playRemoteUrl( 
-    String url, { 
-    VoidCallback? onComplete, 
-  }) async {
+    try {
+      await _tts.stop();
+    } catch (error) {
+      debugPrint('[AUDIO] App-TTS konnte nicht gestoppt werden: $error');
+    }
 
     try {
-
       await _player.stop();
-
-      await _player.setUrl(url);
-
-      await _player.play();
-
-      _player.playerStateStream.listen(
-        (state) {
-
-          if (
-            state.processingState ==
-                ProcessingState.completed
-          ) {
-
-            onComplete?.call();
-          }
-        },
-      );
-
-    } catch (e) {
-
-      debugPrint(
-        '[AUDIO] Remote Fehler: $e',
-      );
-
-      rethrow;
-
+    } catch (error) {
+      debugPrint('[AUDIO] Remote-Audio konnte nicht gestoppt werden: $error');
     }
+
+    _isSpeaking = false;
+  }
+
+  static Future<void> dispose() async {
+    await stop();
+    await _player.dispose();
   }
 }
