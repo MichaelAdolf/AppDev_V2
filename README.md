@@ -2,277 +2,504 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/conversation_entry.dart';
 import '../../../core/ha_response.dart';
 import '../../../core/jarvis_event.dart';
-import '../../../core/jarvis_intent.dart';
-import '../../../core/jarvis_intent_parser.dart';
 import '../../../core/jarvis_state.dart';
-import '../../../services/conversation_service.dart';
-import '../../../services/home_assistant_service.dart';
+import '../../../core/speech_output_mode.dart';
+import '../../../services/jarvis_wakeword_bus.dart';
+import '../../../services/jarvis_wakeword_control.dart';
+import '../../../services/speech_output_service.dart';
+import '../../../services/voice_service.dart';
+import '../logic/jarvis_controller.dart';
+import '../services/thinking_feedback_service.dart';
+import '../widgets/ambient_connections.dart';
+import '../widgets/ambient_particles.dart';
+import '../widgets/background_grid.dart';
+import '../widgets/conversation_timeline.dart';
+import '../widgets/hud_overlay.dart';
+import '../widgets/hud_panel.dart';
+import '../widgets/jarvis_circle.dart';
 
-class JarvisController extends ChangeNotifier {
-  JarvisController({
-    required HomeAssistantService homeAssistantService,
-    JarvisIntentParser? parser,
-  })  : _ha = homeAssistantService,
-        _conversation = ConversationService(ha: homeAssistantService);
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({
+    super.key,
+    required this.controller,
+  });
 
-  final HomeAssistantService _ha;
-  final ConversationService _conversation;
+  final JarvisController controller;
 
-  JarvisState _state = JarvisState.idle;
-  String _responseText = '';
-  String _liveTranscript = '';
-  bool _haConnected = false;
-  HaResponse? _lastResponse;
-  final List<ConversationEntry> _history = <ConversationEntry>[];
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-  int _interactionSequence = 0;
-  int? _activeInteractionId;
-  bool _responseReady = false;
-  bool _isDisposed = false;
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver {
+  final VoiceService _voice = VoiceService();
+  final ThinkingFeedbackService _thinkingFeedbackService =
+      ThinkingFeedbackService();
 
-  static const Duration _defaultRequestTimeout = Duration(seconds: 15);
+  StreamSubscription? _wakewordSubscription;
+  late final JarvisController controller;
+  late final VoidCallback _controllerListener;
+  late final SpeechOutputService _speechOutput;
 
-  JarvisState get state => _state;
-  String get responseText => _responseText;
-  String get liveTranscript => _liveTranscript;
-  bool get haConnected => _haConnected;
-  HaResponse? get lastResponse => _lastResponse;
-  List<ConversationEntry> get history => List.unmodifiable(_history);
-  int? get activeInteractionId => _activeInteractionId;
-  bool get hasActiveInteraction => _activeInteractionId != null;
-  bool get responseReady => _responseReady;
+  JarvisState? _previousJarvisState;
+  int? _observedInteractionId;
+  bool _isSpeaking = false;
+  bool _wakewordEnabled = true;
+  bool _isInterrupting = false;
+  bool _isStartingNativeWakeword = false;
+  SpeechOutputMode _speechOutputMode = SpeechOutputMode.appTts;
 
-  bool get isBusy =>
-      _state == JarvisState.listening ||
-      _state == JarvisState.thinking ||
-      _state == JarvisState.speaking;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
-  String get stateLabel => _state.name.toUpperCase();
-  String get haStatusText =>
-      _haConnected ? 'Home Assistant Online' : 'Home Assistant Offline';
+    controller = widget.controller;
+    _speechOutput = SpeechOutputService(initialMode: _speechOutputMode);
+    _controllerListener = _handleControllerChanged;
+    controller.addListener(_controllerListener);
 
-  Future<void> initialize() async {
-    if (_isDisposed) return;
-    _haConnected = await _ha.ping();
-    _notifySafely();
-  }
+    unawaited(controller.initialize());
+    unawaited(_voice.initialize());
 
-  Future<void> interrupt({bool clearLastResponse = true}) async {
-    _invalidateActiveInteraction();
-    _responseReady = false;
-    _responseText = '';
-    _liveTranscript = '';
-    if (clearLastResponse) _lastResponse = null;
-    _setState(JarvisState.idle);
-  }
+    _wakewordSubscription = JarvisWakewordBus.stream.listen((_) async {
+      if (!_wakewordEnabled) return;
 
-  void updateLiveTranscript(String text) {
-    if (_isDisposed) return;
-    _liveTranscript = text;
-    _notifySafely();
-  }
-
-  void clearLiveTranscript() {
-    if (_isDisposed) return;
-    _liveTranscript = '';
-    _notifySafely();
-  }
-
-  void handleTextInput(String input) {
-    if (_isDisposed) return;
-    final text = input.trim();
-    if (text.isEmpty) return;
-
-    if (_state == JarvisState.thinking || _state == JarvisState.speaking) {
-      _invalidateActiveInteraction();
-    }
-
-    _responseReady = false;
-    _lastResponse = null;
-    _liveTranscript = text;
-    _addHistoryEntry(text: text, isUser: true);
-
-    final intent = JarvisIntent(type: IntentType.unknown, rawText: text);
-    unawaited(_handleIntent(intent));
-  }
-
-  void handleEvent(JarvisEvent event, {String? input}) {
-    if (_isDisposed) return;
-    switch (event) {
-      case JarvisEvent.userTapped:
-        if (input != null && input.trim().isNotEmpty) handleTextInput(input);
-        break;
-      case JarvisEvent.voiceStarted:
-        if (!isBusy) _setState(JarvisState.listening);
-        break;
-      case JarvisEvent.voiceStopped:
-        if (_state == JarvisState.listening) {
-          debugPrint('JarvisController: Spracheingabe beendet');
-        }
-        break;
-      case JarvisEvent.intentReceived:
-      case JarvisEvent.commandReceived:
-      case JarvisEvent.commandExecuted:
-        break;
-      case JarvisEvent.error:
-        _invalidateActiveInteraction();
-        _responseReady = false;
-        _responseText = input ?? 'Ein unbekannter Fehler ist aufgetreten';
-        _setState(JarvisState.error);
-        break;
-    }
-  }
-
-  Future<void> handleExternalResponse(
-    HaResponse result, {
-    String source = 'external',
-  }) async {
-    if (_isDisposed) return;
-    _invalidateActiveInteraction();
-    _beginInteraction();
-    _lastResponse = result;
-    _responseText = result.message;
-    _liveTranscript = 'EXTERNAL TRIGGER: ${source.toUpperCase()}';
-    _responseReady = true;
-    _addHistoryEntry(text: result.message, isUser: false);
-    _setState(JarvisState.thinking);
-    _notifySafely();
-  }
-
-  Future<void> _handleIntent(JarvisIntent intent) async {
-    final interactionId = _beginInteraction();
-    _setState(JarvisState.thinking);
-
-    try {
-      final response = await _conversation
-          .execute(intent)
-          .timeout(_defaultRequestTimeout);
-
-      if (!_isInteractionCurrent(interactionId)) {
-        debugPrint(
-          'JarvisController: Response für veraltete Interaktion '
-          '$interactionId wird verworfen',
-        );
+      debugPrint('[JARVIS] Wakeword Trigger empfangen');
+      if (controller.isBusy) {
+        debugPrint('[JARVIS] Wakeword ignoriert - Controller Busy');
         return;
       }
-      _storePendingResponse(interactionId, response);
-    } on TimeoutException {
-      if (!_isInteractionCurrent(interactionId)) return;
-      _storePendingResponse(
-        interactionId,
-        const HaResponse(
-          success: false,
-          intent: 'timeout',
-          entity: '',
-          state: 'timeout',
-          message:
-              'Die Verarbeitung hat zu lange gedauert. Bitte versuche es erneut.',
-        ),
-      );
-    } catch (error, stackTrace) {
-      if (!_isInteractionCurrent(interactionId)) return;
-      debugPrint('JarvisController: Fehler in Interaktion $interactionId: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      _storePendingResponse(
-        interactionId,
-        const HaResponse(
-          success: false,
-          intent: 'error',
-          entity: '',
-          state: 'error',
-          message: 'Die Anfrage konnte nicht verarbeitet werden.',
-        ),
-      );
-    }
-  }
-
-  void _storePendingResponse(int interactionId, HaResponse response) {
-    if (!_isInteractionCurrent(interactionId)) return;
-    _lastResponse = response;
-    _responseText = response.message;
-    _responseReady = true;
-    _addHistoryEntry(text: response.message, isUser: false);
-    _notifySafely();
-  }
-
-  /// Darf erst nach vollständig beendeter Thinking-Phrase aufgerufen werden.
-  void releasePendingTransition(int interactionId) {
-    if (!_isInteractionCurrent(interactionId) || !_responseReady) return;
-    final response = _lastResponse;
-    if (response == null) return;
-
-    _responseReady = false;
-    if (response.success) {
-      _setState(JarvisState.speaking);
-    } else {
-      _finishInteraction(interactionId);
-      _setState(JarvisState.error);
-    }
-  }
-
-  void completeSpeaking() {
-    final interactionId = _activeInteractionId;
-    if (interactionId != null) _finishInteraction(interactionId);
-    if (_isDisposed) return;
-    _responseText = '';
-    _liveTranscript = '';
-    _responseReady = false;
-    _setState(JarvisState.idle);
-  }
-
-  void onSpeechFinished() => completeSpeaking();
-
-  void _addHistoryEntry({required String text, required bool isUser}) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty || _isDisposed) return;
-    _history.add(ConversationEntry(text: trimmed, isUser: isUser));
-    if (_history.length > 6) _history.removeAt(0);
-    _notifySafely();
-  }
-
-  int _beginInteraction() {
-    _interactionSequence += 1;
-    _activeInteractionId = _interactionSequence;
-    debugPrint('JarvisController: Interaktion $_activeInteractionId gestartet');
-    return _interactionSequence;
-  }
-
-  bool _isInteractionCurrent(int id) =>
-      !_isDisposed && _activeInteractionId == id;
-
-  void _finishInteraction(int id) {
-    if (_activeInteractionId != id) return;
-    _activeInteractionId = null;
-    debugPrint('JarvisController: Interaktion $id abgeschlossen');
-  }
-
-  void _invalidateActiveInteraction() {
-    final previous = _activeInteractionId;
-    _interactionSequence += 1;
-    _activeInteractionId = null;
-    if (previous != null) {
-      debugPrint('JarvisController: Interaktion $previous ungültig gemacht');
-    }
-  }
-
-  void _setState(JarvisState state) {
-    if (_isDisposed || _state == state) return;
-    _state = state;
-    _notifySafely();
-  }
-
-  void _notifySafely() {
-    if (!_isDisposed) notifyListeners();
+      await _startVoiceInput();
+    });
   }
 
   @override
   void dispose() {
-    if (_isDisposed) return;
-    _invalidateActiveInteraction();
-    _isDisposed = true;
+    unawaited(_thinkingFeedbackService.dispose());
+    _wakewordSubscription?.cancel();
+    controller.removeListener(_controllerListener);
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_speechOutput.stop());
+    unawaited(_voice.stopListening());
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    unawaited(_handleLifecycleChange(state));
+  }
+
+  Future<void> _handleLifecycleChange(AppLifecycleState state) async {
+    debugPrint('[JARVIS] Lifecycle: $state');
+
+    if (state == AppLifecycleState.paused) {
+      await _thinkingFeedbackService.forceStop();
+      await _voice.stopListening();
+      await _speechOutput.stop();
+      await controller.interrupt();
+      await JarvisWakewordControl.stop();
+      _isSpeaking = false;
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      await _voice.stopListening();
+      await _voice.initialize();
+      await _startNativeWakewordSafely();
+    }
+  }
+
+  Future<void> _startVoiceInput() async {
+    await JarvisWakewordControl.stop();
+    debugPrint('[JARVIS] Wakeword-Stop angefordert');
+
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
+
+    final started = await _voice.startListening(
+      onPartialResult: controller.updateLiveTranscript,
+      onFinalResult: (text) async {
+        await _voice.stopListening();
+        controller.handleEvent(JarvisEvent.voiceStopped);
+        controller.handleTextInput(text);
+      },
+    );
+
+    if (!started) {
+      debugPrint('[JARVIS] STT konnte nicht gestartet werden');
+      await controller.interrupt();
+      await _startNativeWakewordSafely();
+      return;
+    }
+
+    controller.handleEvent(JarvisEvent.voiceStarted);
+    unawaited(_handleListeningTimeout());
+  }
+
+  Future<void> _handleListeningTimeout() async {
+    await Future<void>.delayed(const Duration(seconds: 12));
+    if (!mounted || controller.state != JarvisState.listening) return;
+
+    debugPrint('[JARVIS] Listening Timeout');
+    await _voice.cancelListening();
+    await _speechOutput.stop();
+    controller.clearLiveTranscript();
+    await controller.interrupt();
+    await _startNativeWakewordSafely();
+  }
+
+  Future<void> _onMicPressed() async {
+    final state = controller.state;
+
+    if (state == JarvisState.listening) {
+      await _voice.stopListening();
+      await controller.interrupt();
+      await _startNativeWakewordSafely();
+      return;
+    }
+
+    if (state == JarvisState.thinking ||
+        state == JarvisState.speaking ||
+        state == JarvisState.error) {
+      await _interruptCurrentInteraction(restartWakeword: false);
+    }
+
+    await _startVoiceInput();
+  }
+
+  Future<void> _interruptCurrentInteraction({
+    bool restartWakeword = true,
+  }) async {
+    if (_isInterrupting) return;
+    _isInterrupting = true;
+
+    try {
+      final activeThinking = _thinkingSequence;
+      if (activeThinking != null) {
+        await activeThinking;
+      }
+      await _speechOutput.stop();
+      await _voice.stopListening();
+      await controller.interrupt();
+      _isSpeaking = false;
+
+      if (restartWakeword) await _startNativeWakewordSafely();
+    } catch (error, stackTrace) {
+      debugPrint('HomeScreen: Fehler beim Unterbrechen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _isInterrupting = false;
+    }
+  }
+
+  Future<void> _startNativeWakewordSafely() async {
+    if (!_wakewordEnabled || _isStartingNativeWakeword) return;
+    _isStartingNativeWakeword = true;
+
+    try {
+      await JarvisWakewordControl.start();
+    } catch (error, stackTrace) {
+      debugPrint('HomeScreen: Wakeword konnte nicht gestartet werden: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _isStartingNativeWakeword = false;
+    }
+  }
+
+  Future<void> _toggleWakeword() async {
+    setState(() => _wakewordEnabled = !_wakewordEnabled);
+    if (_wakewordEnabled) {
+      await _startNativeWakewordSafely();
+    } else {
+      await JarvisWakewordControl.stop();
+    }
+  }
+
+  void _toggleSpeechOutputMode() {
+    final newMode = _speechOutputMode == SpeechOutputMode.appTts
+        ? SpeechOutputMode.nodeRedAudio
+        : SpeechOutputMode.appTts;
+    setState(() => _speechOutputMode = newMode);
+    _speechOutput.setMode(newMode);
+  }
+
+  Future<void>? _thinkingSequence;
+
+  void _handleControllerChanged() {
+    if (!mounted) return;
+
+    final currentState = controller.state;
+    final currentInteractionId = controller.activeInteractionId;
+    final stateChanged = currentState != _previousJarvisState;
+    final interactionChanged = currentInteractionId != _observedInteractionId;
+
+    _previousJarvisState = currentState;
+    _observedInteractionId = currentInteractionId;
+
+    if (currentState == JarvisState.thinking &&
+        currentInteractionId != null &&
+        (stateChanged || interactionChanged || controller.responseReady)) {
+      _startThinkingSequence(currentInteractionId);
+    } else if (currentState == JarvisState.speaking) {
+      final response = controller.lastResponse;
+      if (!_isSpeaking && response != null && response.message.trim().isNotEmpty) {
+        unawaited(_playCurrentResponse(response));
+      }
+    } else if (currentState == JarvisState.error) {
+      unawaited(_handleErrorState());
+    }
+
+    setState(() {});
+  }
+
+  void _startThinkingSequence(int interactionId) {
+    if (_thinkingSequence != null ||
+        _thinkingFeedbackService.activeInteractionId == interactionId) {
+      return;
+    }
+
+    final selectedMode = _speechOutputMode;
+    _thinkingSequence = _runThinkingSequence(
+      interactionId,
+      selectedMode,
+    ).whenComplete(() => _thinkingSequence = null);
+  }
+
+  Future<void> _runThinkingSequence(
+    int interactionId,
+    SpeechOutputMode selectedMode,
+  ) async {
+    await JarvisWakewordControl.stop();
+    await _thinkingFeedbackService.play(
+      interactionId: interactionId,
+      mode: selectedMode,
+    );
+
+    if (!mounted || controller.activeInteractionId != interactionId) return;
+
+    // Falls die Berechnung länger als die Phrase dauert, warten wir hier auf
+    // responseReady. Der Controller bleibt dabei korrekt im State thinking.
+    while (mounted &&
+        controller.activeInteractionId == interactionId &&
+        !controller.responseReady) {
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+    }
+
+    if (!mounted || controller.activeInteractionId != interactionId) return;
+    controller.releasePendingTransition(interactionId);
+  }
+
+  Future<void> _handleErrorState() async {
+    await _speechOutput.stop();
+    await _startNativeWakewordSafely();
+  }
+
+  Future<void> _playCurrentResponse(HaResponse response) async {
+    if (_isSpeaking) return;
+    _isSpeaking = true;
+    await JarvisWakewordControl.stop();
+
+    try {
+      final completed = await _speechOutput.output(response);
+      if (!mounted || !completed) return;
+      controller.completeSpeaking();
+    } catch (error, stackTrace) {
+      debugPrint('[JARVIS] Sprachausgabe fehlgeschlagen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) await controller.interrupt(clearLastResponse: false);
+    } finally {
+      _isSpeaking = false;
+      if (mounted && controller.state == JarvisState.idle) {
+        await _startNativeWakewordSafely();
+      }
+    }
+  }
+
+  Color _voiceHudColor() {
+    switch (controller.state) {
+      case JarvisState.idle:
+        return Colors.cyanAccent;
+      case JarvisState.listening:
+        return Colors.greenAccent;
+      case JarvisState.thinking:
+        return Colors.yellowAccent;
+      case JarvisState.speaking:
+        return Colors.greenAccent;
+      case JarvisState.error:
+        return Colors.redAccent;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: BackgroundGrid()),
+          const Positioned.fill(
+            child: IgnorePointer(child: AmbientParticles()),
+          ),
+          const Positioned.fill(child: AmbientConnections()),
+          const Positioned.fill(child: HudOverlay()),
+          Positioned(
+            left: 20,
+            top: 60,
+            child: HudPanel(
+              title: 'SYSTEM',
+              indicatorColor:
+                  controller.haConnected ? Colors.greenAccent : Colors.redAccent,
+              lines: [
+                controller.haConnected ? 'HA ONLINE' : 'HA OFFLINE',
+                'NODE-RED ONLINE',
+                'STATE ${controller.state.name.toUpperCase()}',
+              ],
+            ),
+          ),
+          Positioned(
+            right: 20,
+            top: 60,
+            child: HudPanel(
+              title: 'VOICE',
+              indicatorColor: _voiceHudColor(),
+              lines: [
+                'LANG : de-DE',
+                'STATE : ${controller.state.name.toUpperCase()}',
+                'AUDIO : ${_speechOutputMode.displayName}',
+                controller.state == JarvisState.listening
+                    ? 'INPUT : ACTIVE'
+                    : 'INPUT : READY',
+              ],
+            ),
+          ),
+          Positioned(
+            left: 20,
+            bottom: 170,
+            child: HudPanel(
+              title: 'COMMAND',
+              lines: [
+                controller.liveTranscript.isEmpty
+                    ? 'WAITING...'
+                    : controller.liveTranscript,
+              ],
+            ),
+          ),
+          Positioned(
+            right: 20,
+            bottom: 170,
+            child: HudPanel(
+              title: 'ENTITY',
+              lines: [
+                controller.lastResponse?.entity ?? '-',
+                controller.lastResponse?.state ?? '-',
+              ],
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0, -0.3),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: _onMicPressed,
+                  child: JarvisCircle(state: controller.state),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'J.A.R.V.I.S',
+                  style: TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 32,
+                    letterSpacing: 8,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (controller.liveTranscript.isNotEmpty &&
+                    controller.state != JarvisState.speaking)
+                  const SizedBox(height: 18),
+              ],
+            ),
+          ),
+          Positioned(
+            right: 20,
+            top: 200,
+            child: GestureDetector(
+              onTap: _toggleWakeword,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _wakewordEnabled
+                      ? const Color(0xFF002D72)
+                      : Colors.black,
+                  border: Border.all(color: Colors.cyanAccent, width: 2),
+                  boxShadow: _wakewordEnabled
+                      ? [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.7),
+                            blurRadius: 20,
+                            spreadRadius: 3,
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Icon(
+                  Icons.mic,
+                  color: _wakewordEnabled ? Colors.cyanAccent : Colors.grey,
+                  size: 34,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 24,
+            child: ConversationTimeline(entries: controller.history),
+          ),
+          Positioned(
+            left: 20,
+            top: 180,
+            child: GestureDetector(
+              onTap: _toggleSpeechOutputMode,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
+                      ? const Color(0xFF002D72)
+                      : Colors.black,
+                  border: Border.all(color: Colors.cyanAccent, width: 2),
+                  boxShadow:
+                      _speechOutputMode == SpeechOutputMode.nodeRedAudio
+                          ? [
+                              BoxShadow(
+                                color: Colors.blueAccent.withOpacity(0.7),
+                                blurRadius: 20,
+                                spreadRadius: 3,
+                              ),
+                            ]
+                          : [],
+                ),
+                child: Icon(
+                  Icons.volume_up,
+                  color: _speechOutputMode == SpeechOutputMode.nodeRedAudio
+                      ? Colors.cyanAccent
+                      : Colors.grey,
+                  size: 30,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
