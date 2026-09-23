@@ -1,78 +1,239 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python tests/test_historical_outcomes.py                                            
-F...F.
-======================================================================
-FAIL: test_below_target (__main__.HistoricalOutcomeTest.test_below_target)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_historical_outcomes.py", line 55, in test_below_target
-    self.assertEqual(result.outcome, HistoricalOutcome.BELOW_TARGET)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: <HistoricalOutcome.FLAT: 'FLAT'> != <HistoricalOutcome.BELOW_TARGET: 'BELOW_TARGET'>
+import unittest
+from datetime import datetime, timedelta
 
-======================================================================
-FAIL: test_negative (__main__.HistoricalOutcomeTest.test_negative)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_historical_outcomes.py", line 71, in test_negative
-    self.assertEqual(result.outcome, HistoricalOutcome.NEGATIVE)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: <HistoricalOutcome.FLAT: 'FLAT'> != <HistoricalOutcome.NEGATIVE: 'NEGATIVE'>
+import pandas as pd
 
-----------------------------------------------------------------------
-Ran 6 tests in 0.020s
-
-FAILED (failures=2)
-
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/test_historical_success_engine.py
-
-==============================
-PROFILE: CONSERVATIVE
-==============================
-Setups:            24
-Complete:          24
-Target hit:        17
-Below target:      2
-Flat:              1
-Negative:          4
-Incomplete:        0
-Target-hit rate:   70.83%
-Below-target rate: 8.33%
-Flat rate:         4.17%
-Negative rate:     16.67%
-Sample quality:    MEDIUM
-
-==============================
-PROFILE: BALANCED
-==============================
-Setups:            57
-Complete:          57
-Target hit:        43
-Below target:      4
-Flat:              1
-Negative:          9
-Incomplete:        0
-Target-hit rate:   75.44%
-Below-target rate: 7.02%
-Flat rate:         1.75%
-Negative rate:     15.79%
-Sample quality:    HIGH
-
-==============================
-PROFILE: AGGRESSIVE
-==============================
-Setups:            125
-Complete:          125
-Target hit:        98
-Below target:      7
-Flat:              3
-Negative:          17
-Incomplete:        0
-Target-hit rate:   78.40%
-Below-target rate: 5.60%
-Flat rate:         2.40%
-Negative rate:     13.60%
-Sample quality:    HIGH
+from stockmind.domain.history.historical_outcome import (
+    HistoricalOutcome,
+    evaluate_price_window,
+)
 
 
+class HistoricalOutcomeTest(unittest.TestCase):
+
+    SETUP_DATE = datetime(2026, 1, 1)
+    LOOKAHEAD_DAYS = 60
+
+    def _data(
+        self,
+        final_return_pct: float,
+        target_hit: bool = False,
+        total_calendar_days: int = 70,
+    ) -> pd.DataFrame:
+
+        end_date = (
+            self.SETUP_DATE
+            + timedelta(days=total_calendar_days)
+        )
+
+        dates = pd.bdate_range(
+            start=self.SETUP_DATE,
+            end=end_date,
+        )
+
+        data = pd.DataFrame(
+            {
+                "High": [101.0] * len(dates),
+                "Low": [99.0] * len(dates),
+                "Close": [100.0] * len(dates),
+            },
+            index=dates,
+        )
+
+        window_end = (
+            self.SETUP_DATE
+            + timedelta(days=self.LOOKAHEAD_DAYS)
+        )
+
+        rows_inside_window = data.index[
+            data.index <= window_end
+        ]
+
+        if len(rows_inside_window) > 0:
+
+            last_trading_day_in_window = (
+                rows_inside_window[-1]
+            )
+
+            final_close = (
+                100.0
+                * (
+                    1
+                    + final_return_pct / 100
+                )
+            )
+
+            data.loc[
+                last_trading_day_in_window,
+                "Close",
+            ] = final_close
+
+        if target_hit:
+
+            target_candidates = data.index[
+                (
+                    data.index
+                    > self.SETUP_DATE
+                    + timedelta(days=5)
+                )
+                & (
+                    data.index
+                    <= window_end
+                )
+            ]
+
+            if len(target_candidates) > 0:
+
+                target_date = target_candidates[0]
+
+                data.loc[
+                    target_date,
+                    "High",
+                ] = 108.5
+
+        return data
+
+    def test_target_hit(self):
+
+        result = evaluate_price_window(
+            self._data(
+                final_return_pct=2.0,
+                target_hit=True,
+            ),
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.TARGET_HIT,
+        )
+
+        self.assertTrue(
+            result.target_hit
+        )
+
+        self.assertTrue(
+            result.is_complete
+        )
+
+    def test_below_target(self):
+
+        result = evaluate_price_window(
+            self._data(
+                final_return_pct=4.0,
+            ),
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.BELOW_TARGET,
+        )
+
+        self.assertAlmostEqual(
+            result.window_end_return_pct,
+            4.0,
+            places=5,
+        )
+
+    def test_flat(self):
+
+        result = evaluate_price_window(
+            self._data(
+                final_return_pct=0.5,
+            ),
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.FLAT,
+        )
+
+        self.assertAlmostEqual(
+            result.window_end_return_pct,
+            0.5,
+            places=5,
+        )
+
+    def test_negative(self):
+
+        result = evaluate_price_window(
+            self._data(
+                final_return_pct=-3.0,
+            ),
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.NEGATIVE,
+        )
+
+        self.assertAlmostEqual(
+            result.window_end_return_pct,
+            -3.0,
+            places=5,
+        )
+
+    def test_incomplete_window(self):
+
+        result = evaluate_price_window(
+            self._data(
+                final_return_pct=2.0,
+                total_calendar_days=20,
+            ),
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.INCOMPLETE_WINDOW,
+        )
+
+        self.assertFalse(
+            result.is_complete
+        )
+
+    def test_days_to_target_are_calendar_days(self):
+
+        data = self._data(
+            final_return_pct=2.0,
+            target_hit=False,
+        )
+
+        target_date = datetime(
+            2026,
+            1,
+            14,
+        )
+
+        data.loc[
+            pd.Timestamp(target_date),
+            "High",
+        ] = 108.5
+
+        result = evaluate_price_window(
+            data,
+            setup_date=self.SETUP_DATE,
+            entry_price=100.0,
+        )
+
+        self.assertEqual(
+            result.outcome,
+            HistoricalOutcome.TARGET_HIT,
+        )
+
+        self.assertEqual(
+            result.days_to_target,
+            13,
+        )
 
 
+if __name__ == "__main__":
+    unittest.main()
