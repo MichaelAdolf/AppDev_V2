@@ -1,5 +1,5 @@
 (.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> streamlit run ui/streamlit_app.py
-2026-09-24 17:39:04.426 Uvicorn server started on :::8501
+2026-09-24 17:50:26.623 Uvicorn server started on :::8501
 
   You can now view your Streamlit app in your browser.
 
@@ -9,22 +9,49 @@
   Help agents write better Streamlit apps?
   Install the official Streamlit skills by running streamlit skills in your terminal.
 
-2026-09-24 17:39:06.807 Please replace `use_container_width` with `width`.
+2026-09-24 17:50:28.392 Please replace `use_container_width` with `width`.
 
 `use_container_width` will be removed after 2025-12-31.
 
 For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-2026-09-24 17:39:08.958 Please replace `use_container_width` with `width`.
+2026-09-24 17:50:29.098 Please replace `use_container_width` with `width`.
 
 `use_container_width` will be removed after 2025-12-31.
 
 For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-2026-09-24 17:39:08.967 Please replace `use_container_width` with `width`.
+2026-09-24 17:50:29.105 Please replace `use_container_width` with `width`.
 
 `use_container_width` will be removed after 2025-12-31.
 
 For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-2026-09-24 17:39:09.093 Uncaught app execution
+2026-09-24 17:50:29.496 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-24 17:50:29.545 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-24 17:50:29.620 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-24 17:50:29.662 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-24 17:50:29.684 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+FUNDAMENTAL DB: D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\config\stockmind\stockmind.db
+INITIALIZE FUNDAMENTAL REPOSITORY
+2026-09-24 17:50:29.707 Uncaught app execution
 Traceback (most recent call last):
   File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 136, in exec_func_with_error_handling
     result = func()
@@ -40,14 +67,7 @@ Traceback (most recent call last):
         ^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\stock_detail_view.py", line 345, in render
-    render_price_chart(
-    ~~~~~~~~~~~~~~~~~~^
-        dashboard.symbol
-        ^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\price_chart.py", line 172, in render
-    if period.status =="SUCCESSFULL":
-       ^^^^^^^^^^^^^
-AttributeError: 'BuyPeriodEntry' object has no attribute 'status'
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\stock_detail_view.py", line 672, in render
+    f"{buy_periods.overall_success_rate:.1f}%"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'BuyPeriodDashboardResult' object has no attribute 'overall_success_rate'
