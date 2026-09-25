@@ -1,41 +1,165 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> streamlit run ui/streamlit_app.py                            
-2026-09-25 09:42:40.098 Uvicorn server started on :::8501
+from stockmind.application.dashboard.models.alert_result import (
+    AlertResult
+)
 
-  You can now view your Streamlit app in your browser.
+from stockmind.infrastructure.history.latest_analysis_repository import (
+    LatestAnalysisRepository
+)
 
-  Local URL: http://localhost:8501
-  Network URL: http://192.168.178.32:8501
 
-  Help agents write better Streamlit apps?
-  Install the official Streamlit skills by running streamlit skills in your terminal.
+class AlertsDashboardUseCase:
 
-2026-09-25 09:42:56.937 Please replace `use_container_width` with `width`.
+    def load(
+        self,
+        profile_name: str
+    ) -> list[AlertResult]:
 
-`use_container_width` will be removed after 2025-12-31.
+        results = (
+            LatestAnalysisRepository()
+            .load_all(
+                profile_name
+            )
+        )
 
-For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-FUNDAMENTAL DB: D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\config\stockmind\stockmind.db
-INITIALIZE FUNDAMENTAL REPOSITORY
-2026-09-25 09:47:24.611 Uncaught app execution
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 136, in exec_func_with_error_handling
-    result = func()
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 816, in code_to_exec
-    exec(code, module.__dict__)  # noqa: S102
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 146, in <module>
-    render_watchlist(profile)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\components\watchlist_view.py", line 54, in render
-    alerts = AlertsDashboardUseCase().load(profile_name)
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\dashboard\use_cases\alerts_dashboard_use_case.py", line 59, in load
-    AlertResult(
-    ~~~~~~~~~~~^
-        title="Hohe Confidence",
-        ^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<4 lines>...
-        severity="success"
-        ^^^^^^^^^^^^^^^^^^
-    )
-    ^
-TypeError: AlertResult.__init__() missing 3 required positional arguments: 'symbol', 'profile_name', and 'reason'
+        alerts = []
+
+        for item in results:
+
+            #
+            # Hot Opportunity
+            #
+
+            if item.opportunity_score >= 85:
+
+                alerts.append(
+                    AlertResult(
+                        title="Hot Opportunity",
+
+                        message=(
+                            f"{item.symbol} erreicht einen "
+                            f"Opportunity Score von "
+                            f"{item.opportunity_score:.1f}."
+                        ),
+
+                        severity="success",
+
+                        symbol=item.symbol,
+
+                        profile_name=profile_name,
+
+                        reason=(
+                            "Opportunity Score mindestens 85"
+                        )
+                    )
+                )
+
+            #
+            # Interessantes Setup
+            #
+
+            elif item.opportunity_score >= 75:
+
+                alerts.append(
+                    AlertResult(
+                        title="Interessantes Setup",
+
+                        message=(
+                            f"{item.symbol} ist mit einem "
+                            f"Opportunity Score von "
+                            f"{item.opportunity_score:.1f} "
+                            f"beobachtenswert."
+                        ),
+
+                        severity="info",
+
+                        symbol=item.symbol,
+
+                        profile_name=profile_name,
+
+                        reason=(
+                            "Opportunity Score mindestens 75"
+                        )
+                    )
+                )
+
+            #
+            # Hohe Confidence
+            #
+
+            if item.confidence >= 0.75:
+
+                alerts.append(
+                    AlertResult(
+                        title="Hohe Confidence",
+
+                        message=(
+                            f"{item.symbol} besitzt eine "
+                            f"Confidence von "
+                            f"{item.confidence:.1%}."
+                        ),
+
+                        severity="success",
+
+                        symbol=item.symbol,
+
+                        profile_name=profile_name,
+
+                        reason=(
+                            "Confidence mindestens 75 %"
+                        )
+                    )
+                )
+
+            #
+            # Erhöhtes Risiko
+            #
+
+            if item.risk_level == "HIGH":
+
+                alerts.append(
+                    AlertResult(
+                        title="Erhöhtes Risiko",
+
+                        message=(
+                            f"{item.symbol} besitzt aktuell "
+                            f"ein hohes Risikoniveau."
+                        ),
+
+                        severity="warning",
+
+                        symbol=item.symbol,
+
+                        profile_name=profile_name,
+
+                        reason="Risk Level HIGH"
+                    )
+                )
+
+            #
+            # BUY-Signal
+            #
+
+            if item.signal == "BUY":
+
+                alerts.append(
+                    AlertResult(
+                        title="BUY-Signal",
+
+                        message=(
+                            f"{item.symbol} besitzt aktuell "
+                            f"ein BUY-Signal."
+                        ),
+
+                        severity="success",
+
+                        symbol=item.symbol,
+
+                        profile_name=profile_name,
+
+                        reason=(
+                            "Signal Engine liefert BUY"
+                        )
+                    )
+                )
+
+        return alerts
