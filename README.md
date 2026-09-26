@@ -1,21 +1,61 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> streamlit run ui/streamlit_app.py
-2026-09-26 18:30:46.865 Uvicorn server started on :::8501
+import streamlit as st
 
-  You can now view your Streamlit app in your browser.
+from stockmind.infrastructure.watchlists.watchlist_repository import (
+    WatchlistRepository
+)
 
-  Local URL: http://localhost:8501
-  Network URL: http://192.168.178.32:8501
 
-  Help agents write better Streamlit apps?
-  Install the official Streamlit skills by running streamlit skills in your terminal.
+def render(
+    profile_name: str,
+    show_heading: bool = True,
+):
 
-2026-09-26 18:30:48.892 Uncaught app execution
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 136, in exec_func_with_error_handling
-    result = func()
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\.venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 816, in code_to_exec
-    exec(code, module.__dict__)  # noqa: S102
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\ui\streamlit_app.py", line 157, in <module>
-    selected_symbol = render_stock_selector(profile, show_heading=False)
-TypeError: render() got an unexpected keyword argument 'show_heading'
+    if show_heading:
+        st.subheader(
+            "🔍 Aktie auswählen"
+        )
+
+    watchlist_entries = (
+        WatchlistRepository()
+        .load_all()
+    )
+
+    active_entries = [
+        entry
+        for entry in watchlist_entries
+        if entry.active
+    ]
+
+    if not active_entries:
+
+        st.warning(
+            "Keine Aktien auf der Watchlist vorhanden."
+        )
+
+        return None
+
+    display_map = {
+        f"{entry.symbol} | {entry.company_name}":
+            entry.symbol
+        for entry in active_entries
+    }
+
+    selected_display = st.selectbox(
+        "Aktie",
+        list(
+            display_map.keys()
+        ),
+        index=0
+    )
+
+    selected_symbol = (
+        display_map[
+            selected_display
+        ]
+    )
+
+    st.session_state[
+        "selected_symbol"
+    ] = selected_symbol
+
+    return selected_symbol
