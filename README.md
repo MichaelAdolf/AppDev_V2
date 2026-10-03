@@ -1,23 +1,56 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_true_incremental_repositories
-.
-----------------------------------------------------------------------
-Ran 1 test in 0.026s
+def _changes(self, changes):
 
-OK
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_refresh_coordinator          
-.
-----------------------------------------------------------------------
-Ran 1 test in 0.003s
+    if not changes:
+        return (
+            "<p>"
+            "Keine wesentlichen Veränderungen "
+            "zum vorherigen Handelstag."
+            "</p>"
+        )
 
-OK
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/run_daily_refresh.py                                                 
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\scripts\run_daily_refresh.py", line 2, in <module>
-    from stockmind.application.refresh.refresh_coordinator import RefreshCoordinator
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\refresh\refresh_coordinator.py", line 2, in <module>
-    from stockmind.application.refresh.bootstrap_stock_use_case import BootstrapStockUseCase
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\refresh\bootstrap_stock_use_case.py", line 4, in <module>
-    from stockmind.application.refresh.incremental_market_refresh import refresh_symbol
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\refresh\incremental_market_refresh.py", line 2, in <module>
-    from scripts.refresh_chart_data import build_chart_points
-ModuleNotFoundError: No module named 'scripts'
+    rows = "".join(
+        (
+            f"<tr>"
+            f"<td style='{self._td()}'>"
+            f"<b>{escape(item['company_name'])}</b> "
+            f"({escape(item['symbol'])})"
+            f"</td>"
+            f"<td style='{self._td()}'>"
+            f"{escape(item['type'])}"
+            f"</td>"
+            f"<td style='{self._td()}'>"
+            f"{escape(item['detail'])}"
+            f"</td>"
+            f"</tr>"
+        )
+        for item in changes
+    )
+
+    return (
+        "<table "
+        "style='border-collapse:collapse;"
+        "width:100%;"
+        "font-size:14px'>"
+
+        "<thead>"
+        "<tr>"
+
+        f"<th style='{self._th()}'>"
+        "Aktie"
+        "</th>"
+
+        f"<th style='{self._th()}'>"
+        "Änderung"
+        "</th>"
+
+        f"<th style='{self._th()}'>"
+        "Details"
+        "</th>"
+
+        "</tr>"
+        "</thead>"
+
+        f"<tbody>{rows}</tbody>"
+
+        "</table>"
+    )
