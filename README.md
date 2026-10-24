@@ -1,97 +1,70 @@
-PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter analyze
-Analyzing jarvis_app...                                                 
+PS D:\Users\Michael\Dokumente\16_AppDev\jarvis_app> flutter run    
+Launching lib\main.dart on 25028RN03Y in debug mode...
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): flutter_tts, speech_to_text, wakelock_plus
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
 
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
-          precision loss. Try replacing the use of the deprecated member with the replacement
-          - lib\features\jarvis\ui\home_screen.dart:444:54 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
-          precision loss. Try replacing the use of the deprecated member with the replacement
-          - lib\features\jarvis\ui\home_screen.dart:484:58 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
-          precision loss. Try replacing the use of the deprecated member with the replacement
-          - lib\features\jarvis\widgets\background_grid.dart:19:35 - deprecated_member_use
-warning - The declaration '_glow' isn't referenced. Try removing the declaration of '_glow' -
-       lib\features\jarvis\widgets\jarvis_circle.dart:114:10 - unused_element
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\main.dart:43:7 - avoid_print
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\main.dart:61:9 - avoid_print
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\main.dart:67:9 - avoid_print
-  error - Target of URI doesn't exist: 'package:flutter_tts/flutter_tts.dart'. Try creating
-         the file referenced by the URI, or try using a URI for a file that does exist -
-         lib\services\audio_service.dart:2:8 - uri_does_not_exist
-  error - Target of URI doesn't exist: 'package:just_audio/just_audio.dart'. Try creating the
-         file referenced by the URI, or try using a URI for a file that does exist -
-         lib\services\audio_service.dart:3:8 - uri_does_not_exist
-  error - Undefined class 'FlutterTts'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'FlutterTts' -
-         lib\services\audio_service.dart:6:16 - undefined_class
-  error - The method 'FlutterTts' isn't defined for the type 'AudioService'. Try correcting
-         the name to the name of an existing method, or defining a method named 'FlutterTts' -
-         lib\services\audio_service.dart:6:34 - undefined_method
-  error - Undefined class 'AudioPlayer'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'AudioPlayer' -
-         lib\services\audio_service.dart:7:16 - undefined_class
-  error - The method 'AudioPlayer' isn't defined for the type 'AudioService'. Try correcting
-         the name to the name of an existing method, or defining a method named 'AudioPlayer'
-         - lib\services\audio_service.dart:7:38 - undefined_method
-  error - Target of URI doesn't exist: 'package:wakelock_plus/wakelock_plus.dart'. Try
-         creating the file referenced by the URI, or try using a URI for a file that does
-         exist - lib\services\device_wake_service.dart:1:8 - uri_does_not_exist
-  error - Target of URI doesn't exist: 'package:screen_brightness/screen_brightness.dart'. Try
-         creating the file referenced by the URI, or try using a URI for a file that does
-         exist - lib\services\device_wake_service.dart:2:8 - uri_does_not_exist
-  error - Undefined name 'WakelockPlus'. Try correcting the name to one that is defined, or
-         defining the name - lib\services\device_wake_service.dart:7:13 - undefined_identifier
-  error - The method 'ScreenBrightness' isn't defined for the type 'DeviceWakeService'. Try
-         correcting the name to the name of an existing method, or defining a method named
-         'ScreenBrightness' - lib\services\device_wake_service.dart:8:13 - undefined_method
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\services\jarvis_background_bridge.dart:15:9 - avoid_print
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\services\jarvis_background_bridge.dart:19:5 - avoid_print
-   info - Don't invoke 'print' in production code. Try using a logging framework -
-          lib\services\jarvis_background_bridge.dart:32:7 - avoid_print
-  error - Target of URI doesn't exist: 'package:web_socket_channel/web_socket_channel.dart'.
-         Try creating the file referenced by the URI, or try using a URI for a file that does
-         exist - lib\services\jarvis_external_trigger_service.dart:5:8 - uri_does_not_exist
-  error - Undefined class 'WebSocketChannel'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'WebSocketChannel' -
-         lib\services\jarvis_external_trigger_service.dart:14:3 - undefined_class
-  error - Undefined name 'WebSocketChannel'. Try correcting the name to one that is defined,
-         or defining the name - lib\services\jarvis_external_trigger_service.dart:36:18 -
-         undefined_identifier
-  error - Target of URI doesn't exist: 'package:flutter_tts/flutter_tts.dart'. Try creating
-         the file referenced by the URI, or try using a URI for a file that does exist -
-         lib\services\thinking_feedback_service.dart:5:8 - uri_does_not_exist
-  error - Target of URI doesn't exist: 'package:just_audio/just_audio.dart'. Try creating the
-         file referenced by the URI, or try using a URI for a file that does exist -
-         lib\services\thinking_feedback_service.dart:6:8 - uri_does_not_exist
-  error - Undefined class 'FlutterTts'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'FlutterTts' -
-         lib\services\thinking_feedback_service.dart:25:9 - undefined_class
-  error - The method 'FlutterTts' isn't defined for the type 'ThinkingFeedbackService'. Try
-         correcting the name to the name of an existing method, or defining a method named
-         'FlutterTts' - lib\services\thinking_feedback_service.dart:25:27 - undefined_method
-  error - Undefined class 'AudioPlayer'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'AudioPlayer' -
-         lib\services\thinking_feedback_service.dart:26:9 - undefined_class
-  error - The method 'AudioPlayer' isn't defined for the type 'ThinkingFeedbackService'. Try
-         correcting the name to the name of an existing method, or defining a method named
-         'AudioPlayer' - lib\services\thinking_feedback_service.dart:26:31 - undefined_method
-  error - Target of URI doesn't exist: 'package:speech_to_text/speech_to_text.dart'. Try
-         creating the file referenced by the URI, or try using a URI for a file that does
-         exist - lib\services\voice_service.dart:2:8 - uri_does_not_exist
-  error - Undefined class 'SpeechToText'. Try changing the name to the name of an existing
-         class, or creating a class with the name 'SpeechToText' -
-         lib\services\voice_service.dart:5:9 - undefined_class
-  error - The method 'SpeechToText' isn't defined for the type 'VoiceService'. Try correcting
-         the name to the name of an existing method, or defining a method named 'SpeechToText'
-         - lib\services\voice_service.dart:5:32 - undefined_method
-  error - Undefined name 'ListenMode'. Try correcting the name to one that is defined, or
-         defining the name - lib\services\voice_service.dart:99:21 - undefined_identifier
-  error - The name 'MyApp' isn't a class. Try correcting the name to match an existing class -
-         test\widget_test.dart:16:35 - creation_with_non_type
+Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
+If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing 
+an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
 
-34 issues found. (ran in 15.4s)
+If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+lib/features/jarvis/ui/home_screen.dart:410:11: Error: No named parameter with the name 'height'.
+          height: layout.conversationHeight,
+          ^^^^^^
+lib/features/jarvis/widgets/conversation_timeline.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const ConversationTimeline({
+        ^^^^^^^^^^^^^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:460:11: Error: No named parameter with the name 'height'.
+          height: layout.conversationHeight,
+          ^^^^^^
+lib/features/jarvis/widgets/conversation_timeline.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const ConversationTimeline({
+        ^^^^^^^^^^^^^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:468:9: Error: No named parameter with the name 'height'.
+        height: height,
+        ^^^^^^
+lib/features/jarvis/widgets/hud_panel.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const HudPanel({
+        ^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:481:9: Error: No named parameter with the name 'height'.
+        height: height,
+        ^^^^^^
+lib/features/jarvis/widgets/hud_panel.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const HudPanel({
+        ^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:496:9: Error: No named parameter with the name 'height'.
+        height: height,
+        ^^^^^^
+lib/features/jarvis/widgets/hud_panel.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const HudPanel({
+        ^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:507:9: Error: No named parameter with the name 'height'.
+        height: height,
+        ^^^^^^
+lib/features/jarvis/widgets/hud_panel.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const HudPanel({
+        ^^^^^^^^
+lib/features/jarvis/ui/home_screen.dart:542:21: Error: No named parameter with the name 'size'.
+                    size: layout.orbSize,
+                    ^^^^
+lib/features/jarvis/widgets/jarvis_circle.dart:9:9: Context: Found this candidate, but the arguments don't match.
+  const JarvisCircle({
+        ^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Users\Michael\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 31s
+Running Gradle task 'assembleDebug'...                             32,4s
+Error: Gradle task assembleDebug failed with exit code 1
