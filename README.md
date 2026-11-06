@@ -1,3 +1,22 @@
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/refresh_chart_data.py
+Refreshing OHLC chart data for AAPL
+Refreshing OHLC chart data for ALV
+Refreshing OHLC chart data for ALV.DE
+Refreshing OHLC chart data for AMD
+Refreshing OHLC chart data for AMZN
+Refreshing OHLC chart data for ASML
+Refreshing OHLC chart data for AVGO
+Refreshing OHLC chart data for DEFT
+Refreshing OHLC chart data for DRO.AX
+Refreshing OHLC chart data for GEV
+Refreshing OHLC chart data for GOOGL
+Refreshing OHLC chart data for MUV2
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: MUV2"}}}
+$MUV2: possibly delisted; no price data found  (period=5y) (Yahoo error = "No data found, symbol may be delisted")
+Refreshing OHLC chart data for NFLX
+Refreshing OHLC chart data for NVDA
+Refreshing OHLC chart data for SAP
+OHLC chart data refresh complete.
 (.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_exit_research_validation tests.test_exit_strategy_research tests.test_portfolio_intelligence
 >> 
 ..EE.
@@ -26,34 +45,4 @@ AttributeError: 'types.SimpleNamespace' object has no attribute 'high_price'
 ----------------------------------------------------------------------
 Ran 5 tests in 0.005s
 
-FAILED (errors=2)(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_portfolio_lots tests.test_portfolio_foundation
-.E
-======================================================================
-ERROR: test_position_can_be_added_and_fully_closed (tests.test_portfolio_foundation.PortfolioFoundationTest.test_position_can_be_added_and_fully_closed)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_portfolio_foundation.py", line 31, in test_position_can_be_added_and_fully_closed
-    position_id=position.id, sale_date="2026-10-31",
-                ^^^^^^^^^^^
-AttributeError: 'tuple' object has no attribute 'id'
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.159s
-
-FAILED (errors=1)
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_portfolio_foundation                          
->> 
-E
-======================================================================
-ERROR: test_position_can_be_added_and_fully_closed (tests.test_portfolio_foundation.PortfolioFoundationTest.test_position_can_be_added_and_fully_closed)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_portfolio_foundation.py", line 31, in test_position_can_be_added_and_fully_closed
-    position_id=position.id, sale_date="2026-10-31",
-                ^^^^^^^^^^^
-AttributeError: 'tuple' object has no attribute 'id'
-
-----------------------------------------------------------------------
-Ran 1 test in 0.075s
-
-FAILED (errors=1)
+FAILED (errors=2)
