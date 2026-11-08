@@ -1,7 +1,0 @@
-from dataclasses import dataclass
-@dataclass(frozen=True)
-class WatchlistDashboardStock:
- symbol:str;company_name:str;opportunity_score:float;confidence:float;historical_success_rate:float;risk_level:str;signal:str;fitted_active:bool=False;fitted_strategy_name:str|None=None;fitted_signal:str|None=None;fitted_base_profile:str|None=None
-@dataclass(frozen=True)
-class WatchlistDashboardResult:
- stock_count:int;buy_count:int;hold_count:int;sell_count:int;hot_opportunities:int;stocks:list[WatchlistDashboardStock]
