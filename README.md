@@ -1,18 +1,25 @@
-(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_daily_mail_v3 tests.test_daily_mail_use_case tests.test_productive_exit_engine
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python scripts/apply_rc1_consensus_patch.py
 >> 
-.F...
+Patched src\stockmind\application\dashboard\use_cases\stock_detail_dashboard_use_case.py
+(.venv) PS D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform> python -m unittest tests.test_individual_activation_hardening tests.test_fitted_profile_activation tests.test_individual_daily_refresh_policy
+..E..
 ======================================================================
-FAIL: test_buy_section_contains_stock_if_any_profile_is_buy (tests.test_daily_mail_use_case.DailyMailUseCaseTest.test_buy_section_contains_stock_if_any_profile_is_buy)
+ERROR: test_only_validated_candidate_can_be_activated (tests.test_fitted_profile_activation.FittedProfileActivationTest.test_only_validated_candidate_can_be_activated)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py", line 1432, in patched
     return func(*newargs, **newkeywargs)
-  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_daily_mail_use_case.py", line 16, in test_buy_section_contains_stock_if_any_profile_is_buy
-    html=DailyMailRenderer().render(result);self.assertIn("84%",html);self.assertIn("38 Perioden",html)
-                                            ~~~~~~~~~~~~~^^^^^^^^^^^^
-AssertionError: '84%' not found in "<!doctype html><html><body style='font-family:Arial,sans-serif;color:#222;max-width:980px;margin:auto;background:#fff'><h1 style='color:#17365d'>StockMind Daily Action Briefing</h1><p><b>Datenstand:</b> 2026-09-25 &nbsp; | &nbsp; <b>Vergleich:</b> 2026-09-24</p><div style='display:flex;gap:8px;flex-wrap:wrap;margin:16px 0'><span style='background:#e9f7ee;color:#087f23;padding:8px 12px;border-radius:18px;font-weight:bold'>1 Entry</span><span style='background:#fdeeee;color:#b71c1c;padding:8px 12px;border-radius:18px;font-weight:bold'>1 Exit Review</span><span style='background:#fff9e6;color:#8a6d00;padding:8px 12px;border-radius:18px;font-weight:bold'>0 Watch</span></div><h2 style='color:#087f23'>🟢 Entry Opportunities</h2><div style='border-left:5px solid #087f23;padding:12px;margin:9px 0;background:#fafafa;border-radius:4px'><b>Nvidia (NVDA)</b><br><b style='color:#087f23'>🟢 BUY · Einstieg prüfen</b><br><small>BUY-Profile: Balanced</small><table style='margin-top:8px'><tr><td>Primärprofil</td><td><b>Balanced</b></td></tr><tr><td>Opportunity Score</td><td>-</td></tr><tr><td>Confidence</td><td>-</td></tr><tr><td>Historical Hit</td><td>84.0%</td></tr><tr><td>Sample</td><td>38 · MEDIUM</td></tr><tr><td>Risk</td><td>-</td></tr></table></div><h2 style='color:#b71c1c'>🔴 Exit Review</h2><div style='border-left:5px solid #b71c1c;padding:12px;margin:9px 0;background:#fafafa;border-radius:4px'><b>SAP SE (SAP)</b><br><b style='color:#b71c1c'>🔴 EXIT REVIEW · Verkauf prüfen</b><br>P/L: -6.6% (-39.73 €) · Tag 622/60 · Rest 0 Tage<br>Strategie: CONFIDENCE_DROP_15P · Validation: ROBUST_CANDIDATE<br>Gründe: TIME_LIMIT_REACHED</div><h2 style='color:#8a6d00'>🟡 Watch</h2><p>Keine Position benötigt aktuell erhöhte Aufmerksamkeit.</p><h2 style='color:#2f75b5'>🔵 Portfolio Summary</h2><div style='background:#eef6ff;padding:12px;border-radius:8px'><b>Investiert:</b> 601.84 € &nbsp; <b>Marktwert:</b> 562.11 € &nbsp; <b>Unrealisiert:</b> -39.73 € &nbsp; <b>Realisiert YTD:</b> +0.00 €</div><p>Keine HOLD-Positionen.</p><h2>📈 DailyChanges</h2><p>Keine wesentlichen Veränderungen zum vorherigen Handelstag.</p><h2>📋 Watchlist</h2><table style='border-collapse:collapse;width:100%;font-size:13px'><tr><th style='text-align:left;padding:7px;border-bottom:2px solid #ddd'>Aktie</th><th style='text-align:left;padding:7px;border-bottom:2px solid #ddd'>Profilentscheidungen</th></tr><tr><td><b>Nvidia</b><br>NVDA</td><td>Conservative: HOLD | Balanced: BUY | Aggressive: HOLD</td></tr></table><p style='font-size:12px;color:#777;margin-top:24px'>BUY bedeutet Einstieg prüfen. EXIT REVIEW bedeutet Verkauf manuell prüfen. StockMind führt keine Transaktionen aus.</p></body></html>"
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\tests\test_fitted_profile_activation.py", line 9, in test_only_validated_candidate_can_be_activated
+    result=ActivateFittedProfileUseCase().execute('p1');repo_type.return_value.activate.assert_called_once_with('p1','NVDA');self.assertEqual(result.status,'ACTIVE')
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\strategy\activate_fitted_profile_use_case.py", line 5, in execute
+    def execute(self,profile_id):return IndividualProfileActivationOrchestrator(self._database_path).execute(profile_id).profile
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Users\Michael\Dokumente\16_AppDev\stockmind-platform\src\stockmind\application\strategy\individual_profile_activation_orchestrator.py", line 15, in execute
+    if candidate is None:raise ValueError('Fitted Profile wurde nicht gefunden.')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Fitted Profile wurde nicht gefunden.
 
 ----------------------------------------------------------------------
-Ran 5 tests in 1.219s
+Ran 5 tests in 0.017s
 
-FAILED (failures=1)
+FAILED (errors=1)
