@@ -1,0 +1,32 @@
+name: "StockMind"
+description: "StockMind V3.0.3 stock analysis, API, dashboard and notifications"
+version: "3.0.3"
+slug: "stockmind"
+init: false
+startup: services
+boot: auto
+arch:
+  - aarch64
+ports:
+  8000/tcp: 8000
+  8501/tcp: 8501
+ports_description:
+  8000/tcp: "StockMind FastAPI"
+  8501/tcp: "Streamlit Dashboard"
+map:
+  - type: share
+    read_only: false
+options:
+  smtp_host: "smtp.web.de"
+  smtp_port: 587
+  smtp_user: "mymichael.adolf@web.de"
+  smtp_pass: "H6PL52UHTMGTC4S2XHO7"
+  smtp_to: "mymichael.adolf@web.de"
+  smtp_from: "mymichael.adolf@web.de"
+schema:
+  smtp_host: str
+  smtp_port: int
+  smtp_user: str
+  smtp_pass: password
+  smtp_to: str
+  smtp_from: str
